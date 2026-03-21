@@ -95,14 +95,17 @@ export async function POST(req: NextRequest) {
     const text =
       message.content[0].type === "text" ? message.content[0].text : "";
 
-    const parsed = JSON.parse(text);
+    // Strip markdown fences if present
+    const cleaned = text.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+    const parsed = JSON.parse(cleaned);
 
     return NextResponse.json({
       improved: parsed.improved,
       tips: parsed.tips || [],
     });
-  } catch (error) {
-    console.error("Improve API error:", error);
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error("Improve API error:", errMsg);
     return NextResponse.json(
       { error: "Failed to improve resume" },
       { status: 500 }
