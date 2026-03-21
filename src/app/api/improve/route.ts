@@ -41,20 +41,24 @@ function getClientIp(req: NextRequest): string {
 const SYSTEM_PROMPT = `You are an expert resume writer and career coach. Your job is to improve resumes to be more impactful, professional, and ATS-friendly.
 
 Rules:
+- Detect the language of the resume and respond in THE SAME LANGUAGE
+- If the resume is in Spanish, improve it in Spanish. If in English, respond in English. Same for any other language.
 - Rewrite the resume to be clearer, more concise, and results-oriented
 - Use strong action verbs and quantify achievements where possible
 - Improve formatting and structure for ATS compatibility
 - Keep the same information — do not invent experience or skills
 - If a target role is provided, tailor the language and keywords accordingly
 - Maintain a professional tone
+- Use clear section headers and consistent formatting
 
 You MUST respond in valid JSON with exactly this structure:
 {
-  "improved": "The full improved resume text",
-  "tips": ["Tip 1", "Tip 2", "Tip 3"]
+  "improved": "The full improved resume text with clear sections separated by newlines",
+  "tips": ["Tip 1", "Tip 2", "Tip 3"],
+  "language": "detected language code (en, es, fr, zh, etc.)"
 }
 
-Provide 3-5 actionable tips specific to this resume. Do not include generic advice.
+Provide 3-5 actionable tips specific to this resume, in the same language as the resume.
 Respond ONLY with the JSON object, no markdown fences or extra text.`;
 
 export async function POST(req: NextRequest) {
@@ -96,12 +100,15 @@ export async function POST(req: NextRequest) {
       message.content[0].type === "text" ? message.content[0].text : "";
 
     // Strip markdown fences if present
-    const cleaned = text.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+    const cleaned = text
+      .replace(/^```(?:json)?\s*\n?/, "")
+      .replace(/\n?```\s*$/, "");
     const parsed = JSON.parse(cleaned);
 
     return NextResponse.json({
       improved: parsed.improved,
       tips: parsed.tips || [],
+      language: parsed.language || "en",
     });
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : String(error);
