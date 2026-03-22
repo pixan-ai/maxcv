@@ -4,61 +4,16 @@ import Anthropic from "@anthropic-ai/sdk";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const anthropic = new Anthropic();
 
-// Use Claude to extract text from any document (PDF, DOCX, etc.)
-async function extractWithClaude(
-  buffer: Buffer,
-  mediaType: string
-): Promise<string> {
-  const base64 = buffer.toString("base64");
+const MEDIA_TYPES: Record<string, string> = {
+  ".pdf": "application/pdf",
+  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ".doc": "application/msword",
+  ".txt": "text/plain",
+  ".rtf": "application/rtf",
+};
 
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 8192,
-    temperature: 0,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "document",
-            source: {
-              type: "base64",
-              media_type: mediaType,
-              data: base64,
-            },
-          },
-          {
-            type: "text",
-            text: "Extract ALL text from this document exactly as written. Preserve structure: sections, bullet points, dates, job titles, company names. Return ONLY the raw text content. No commentary, no 'Here is the text', no formatting markers. Just the plain text.",
-          },
-        ],
-      },
-    ],
-  });
-
-  const text =
-    response.content[0].type === "text" ? response.content[0].text : "";
-  return text;
-}
-
-// Try mammoth for DOCX, fallback to Claude
-async function extractDocxText(buffer: Buffer): Promise<string> {
-  try {
-    const mammoth = (await import("mammoth")).default;
-    const result = await mammoth.extractRawText({ buffer });
-    if (result.value && result.value.trim().length > 10) {
-      return result.value;
-    }
-  } catch (e) {
-    console.error("mammoth failed, falling back to Claude:", e);
-  }
-
-  // Fallback: use Claude to read DOCX
-  return extractWithClaude(
-    buffer,
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  );
-}
+const EXTRACT_PROMPT =
+  "Extract ALL text from this document exactly as written. Preserve structure: sections, bullet points, dates, job titles, company names. Return ONLY the raw text. No commentary, no introductions, no formatting markers. Just the plain text content.";
 
 export async function POST(req: NextRequest) {
   try {
@@ -73,7 +28,7 @@ export async function POST(req: NextRequest) {
 
     if (!file) {
       return NextResponse.json(
-        { error: "No file or URL provided" },
+        { error: "No se proporcionó archivo." },
         { status: 400 }
       );
     }
@@ -85,42 +40,59 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const fileName = file.name.toLowerCase();
-    let text = "";
+    const ext = "." + file.name.split(".").pop()?.toLowerCase();
+    const mediaType = MEDIA_TYPES[ext];
 
-    try {
-      if (fileName.endsWith(".pdf")) {
-        text = await extractWithClaude(buffer, "application/pdf");
-      } else if (fileName.endsWith(".docx")) {
-        text = await extractDocxText(buffer);
-      } else if (fileName.endsWith(".doc")) {
-        // .doc (legacy) — try Claude directly
-        text = await extractWithClaude(buffer, "application/msword");
-      } else if (fileName.endsWith(".txt")) {
-        text = buffer.toString("utf-8");
-      } else {
-        return NextResponse.json(
-          { error: "Tipo de archivo no soportado. Usa PDF, DOCX o TXT." },
-          { status: 400 }
-        );
-      }
-    } catch (e) {
-      console.error(`File extraction error (${fileName}):`, e);
+    if (!mediaType) {
       return NextResponse.json(
-        {
-          error:
-            "No pudimos leer tu archivo. Intenta abrirlo, seleccionar todo (Ctrl+A), copiar (Ctrl+C), y pegar en la pestaña 'Pegar texto'.",
-        },
+        { error: "Tipo de archivo no soportado. Usa PDF, DOCX, DOC, TXT o RTF." },
         { status: 400 }
       );
     }
+
+    // TXT: just read directly, no need for Claude
+    if (ext === ".txt") {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const text = buffer.toString("utf-8").trim();
+      if (text.length < 10) {
+        return NextResponse.json(
+          { error: "El archivo parece estar vacío." },
+          { status: 400 }
+        );
+      }
+      return NextResponse.json({ text });
+    }
+
+    // Everything else: Claude reads it
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const base64 = buffer.toString("base64");
+
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 8192,
+      temperature: 0,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "document",
+              source: { type: "base64", media_type: mediaType, data: base64 },
+            },
+            { type: "text", text: EXTRACT_PROMPT },
+          ],
+        },
+      ],
+    });
+
+    const text =
+      response.content[0].type === "text" ? response.content[0].text : "";
 
     if (!text || text.trim().length < 10) {
       return NextResponse.json(
         {
           error:
-            "No pudimos extraer texto del archivo. Puede estar vacío o ser una imagen. Intenta pegando el texto directamente.",
+            "No pudimos extraer texto. El archivo puede estar vacío o ser una imagen escaneada sin texto. Intenta pegando el texto en 'Pegar texto'.",
         },
         { status: 400 }
       );
@@ -151,28 +123,26 @@ async function parseGoogleSheets(url: string): Promise<string> {
   const res = await fetch(csvUrl, { redirect: "follow" });
 
   if (!res.ok)
-    throw new Error(
-      "No pudimos acceder al Google Sheet. Asegúrate de que esté compartido."
-    );
+    throw new Error("No pudimos acceder al Google Sheet. Verifica que esté compartido.");
 
   const csv = await res.text();
   if (!csv || csv.trim().length < 10)
     throw new Error("El Google Sheet parece estar vacío");
 
-  const lines = csv.split("\n").map((line) => {
-    const fields: string[] = [];
-    let current = "";
-    let inQuotes = false;
-    for (const char of line) {
-      if (char === '"') inQuotes = !inQuotes;
-      else if (char === "," && !inQuotes) {
-        fields.push(current.trim());
-        current = "";
-      } else current += char;
-    }
-    fields.push(current.trim());
-    return fields.filter(Boolean).join("\t");
-  });
-
-  return lines.filter(Boolean).join("\n");
+  return csv
+    .split("\n")
+    .map((line) => {
+      const fields: string[] = [];
+      let current = "";
+      let inQuotes = false;
+      for (const char of line) {
+        if (char === '"') inQuotes = !inQuotes;
+        else if (char === "," && !inQuotes) { fields.push(current.trim()); current = ""; }
+        else current += char;
+      }
+      fields.push(current.trim());
+      return fields.filter(Boolean).join("\t");
+    })
+    .filter(Boolean)
+    .join("\n");
 }
