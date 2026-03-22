@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import DonationBanner from "@/components/DonationBanner";
 import AboutUs from "@/components/AboutUs";
 import AtsExplainer from "@/components/AtsExplainer";
+import CVInput from "@/components/CVInput";
 
 type ResultData = {
   improved: string;
@@ -13,20 +14,12 @@ type ResultData = {
   language: string;
 };
 
-type InputMode = "text" | "file" | "sheets";
-
 const UI_TEXT = {
   en: {
     heroTitle: "Improve your resume",
     heroHighlight: "in seconds",
     heroSub:
-      "Paste your CV, upload a file, or link a Google Sheet — AI rewrites it to stand out. Free, no sign-up required.",
-    labelCv: "Your current resume",
-    placeholderCv: "Paste your resume text here...",
-    labelRole: "Target role or industry",
-    optional: "(optional)",
-    placeholderRole:
-      "e.g. Senior Frontend Developer, Marketing Manager...",
+      "Paste your CV, upload a file, or link a Google Sheet \u2014 AI rewrites it to stand out. Free, no sign-up required.",
     button: "Improve my resume",
     loading: "Improving your resume...",
     resultTitle: "Improved Resume",
@@ -40,63 +33,28 @@ const UI_TEXT = {
     errorConnection:
       "Connection error. Please check your internet and try again.",
     errorLength: "Please paste at least 50 characters of resume text.",
-    // File upload
-    tabText: "Paste text",
-    tabFile: "Upload file",
-    tabSheets: "Google Sheets",
-    uploadLabel: "Upload your resume",
-    uploadHint: "PDF, Word (.docx), or plain text — max 5MB",
-    uploadButton: "Choose file",
-    uploadDrop: "or drag and drop here",
-    sheetsLabel: "Google Sheets link",
-    sheetsPlaceholder: "https://docs.google.com/spreadsheets/d/...",
-    sheetsHint: "Make sure the sheet is shared as \"Anyone with the link\"",
-    parsing: "Reading your file...",
-    parseError: "Could not read the file. Try pasting your resume instead.",
-    sheetsError:
-      "Could not access Google Sheet. Make sure it is shared publicly.",
+    tryAgain: "Improve another CV",
   },
   es: {
-    heroTitle: "Mejora tu currículum",
+    heroTitle: "Mejora tu curr\u00edculum",
     heroHighlight: "en segundos",
     heroSub:
-      "Pega tu CV, sube un archivo o vincula un Google Sheet — la IA lo reescribe para destacar. Gratis, sin registro.",
-    labelCv: "Tu currículum actual",
-    placeholderCv: "Pega el texto de tu currículum aquí...",
-    labelRole: "Puesto o industria objetivo",
-    optional: "(opcional)",
-    placeholderRole:
-      "ej. Gerente de Ventas, Desarrollador Frontend Senior...",
-    button: "Mejorar mi currículum",
-    loading: "Mejorando tu currículum...",
-    resultTitle: "Currículum Mejorado",
+      "Pega tu CV, sube un archivo o vincula un Google Sheet \u2014 la IA lo reescribe para destacar. Gratis, sin registro.",
+    button: "Mejorar mi curr\u00edculum",
+    loading: "Mejorando tu curr\u00edculum...",
+    resultTitle: "Curr\u00edculum Mejorado",
     copy: "Copiar",
-    copied: "¡Copiado!",
+    copied: "\u00a1Copiado!",
     downloadPdf: "Descargar PDF",
     tipsTitle: "Consejos para fortalecer tu perfil",
-    errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
+    errorGeneric: "Algo sali\u00f3 mal. Int\u00e9ntalo de nuevo.",
     errorLimit:
-      "Has alcanzado el límite diario (3 mejoras por día). ¡Vuelve mañana!",
+      "Has alcanzado el l\u00edmite diario (3 mejoras por d\u00eda). \u00a1Vuelve ma\u00f1ana!",
     errorConnection:
-      "Error de conexión. Revisa tu internet e inténtalo de nuevo.",
+      "Error de conexi\u00f3n. Revisa tu internet e int\u00e9ntalo de nuevo.",
     errorLength:
-      "Por favor pega al menos 50 caracteres de texto de currículum.",
-    // File upload
-    tabText: "Pegar texto",
-    tabFile: "Subir archivo",
-    tabSheets: "Google Sheets",
-    uploadLabel: "Sube tu currículum",
-    uploadHint: "PDF, Word (.docx) o texto plano — máx 5MB",
-    uploadButton: "Elegir archivo",
-    uploadDrop: "o arrastra y suelta aquí",
-    sheetsLabel: "Enlace de Google Sheets",
-    sheetsPlaceholder: "https://docs.google.com/spreadsheets/d/...",
-    sheetsHint: "Asegúrate de que la hoja esté compartida como \"Cualquier persona con el enlace\"",
-    parsing: "Leyendo tu archivo...",
-    parseError:
-      "No se pudo leer el archivo. Intenta pegando tu currículum en su lugar.",
-    sheetsError:
-      "No se pudo acceder al Google Sheet. Asegúrate de que esté compartido públicamente.",
+      "Por favor pega al menos 50 caracteres de texto de curr\u00edculum.",
+    tryAgain: "Mejorar otro CV",
   },
 };
 
@@ -141,7 +99,7 @@ function generateAndDownloadPdf(text: string) {
         window.onload = function() {
           setTimeout(function() { window.print(); window.close(); }, 500);
         };
-      </script>
+      <\/script>
     </body>
     </html>
   `);
@@ -153,92 +111,15 @@ export default function Home() {
   const [targetRole, setTargetRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ResultData | null>(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [lang, setLang] = useState<"en" | "es">("en");
-  const [inputMode, setInputMode] = useState<InputMode>("text");
-  const [parsing, setParsing] = useState(false);
-  const [fileName, setFileName] = useState("");
-  const [sheetsUrl, setSheetsUrl] = useState("");
-  const [dragOver, setDragOver] = useState(false);
+  const [lang, setLang] = useState<"en" | "es">("es");
   const resultRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const t = UI_TEXT[lang];
+  const isEs = lang === "es";
 
-  const handleFileUpload = async (file: File) => {
-    setParsing(true);
-    setError("");
-    setFileName(file.name);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/parse", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || t.parseError);
-        setFileName("");
-        return;
-      }
-
-      setCvText(data.text);
-      setInputMode("text");
-    } catch {
-      setError(t.parseError);
-      setFileName("");
-    } finally {
-      setParsing(false);
-    }
-  };
-
-  const handleSheetsImport = async () => {
-    if (!sheetsUrl.trim()) return;
-
-    setParsing(true);
-    setError("");
-
-    try {
-      const formData = new FormData();
-      formData.append("sheetsUrl", sheetsUrl);
-
-      const res = await fetch("/api/parse", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || t.sheetsError);
-        return;
-      }
-
-      setCvText(data.text);
-      setInputMode("text");
-      setSheetsUrl("");
-    } catch {
-      setError(t.sheetsError);
-    } finally {
-      setParsing(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFileUpload(file);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!cvText.trim()) return;
 
     if (cvText.trim().length < 50) {
@@ -247,7 +128,7 @@ export default function Home() {
     }
 
     setLoading(true);
-    setError("");
+    setError(null);
     setResult(null);
 
     try {
@@ -270,7 +151,6 @@ export default function Home() {
       const data = await res.json();
       setResult(data);
 
-      // Switch UI language if the API detected Spanish
       if (data.language === "es" && lang !== "es") {
         setLang("es");
       }
@@ -302,7 +182,6 @@ export default function Home() {
       <Header lang={lang} onToggleLang={() => setLang(lang === "en" ? "es" : "en")} />
 
       <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-12">
-        {/* Hero */}
         <section className="text-center mb-12">
           <h1 className="text-4xl font-bold tracking-tight mb-3">
             {t.heroTitle}
@@ -314,245 +193,24 @@ export default function Home() {
           </p>
         </section>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 mb-8">
-          {/* Input mode tabs */}
-          <div className="flex border-b border-border">
-            {(["text", "file", "sheets"] as InputMode[]).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setInputMode(mode)}
-                className={`px-4 py-2.5 text-sm font-medium transition cursor-pointer ${
-                  inputMode === mode
-                    ? "text-accent border-b-2 border-accent -mb-px"
-                    : "text-muted hover:text-gray-900"
-                }`}
-              >
-                {mode === "text" ? t.tabText : mode === "file" ? t.tabFile : t.tabSheets}
-              </button>
-            ))}
-          </div>
-
-          {/* Text input */}
-          {inputMode === "text" && (
-            <div>
-              <label htmlFor="cv" className="block text-sm font-medium mb-1.5">
-                {t.labelCv}
-              </label>
-              <textarea
-                id="cv"
-                rows={10}
-                value={cvText}
-                onChange={(e) => setCvText(e.target.value)}
-                placeholder={t.placeholderCv}
-                className="w-full rounded-lg border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent resize-y transition placeholder:text-gray-400"
-                required
-              />
-            </div>
-          )}
-
-          {/* File upload */}
-          {inputMode === "file" && (
-            <div>
-              <label className="block text-sm font-medium mb-1.5">
-                {t.uploadLabel}
-              </label>
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition ${
-                  dragOver
-                    ? "border-accent bg-accent-light"
-                    : "border-border hover:border-gray-400"
-                }`}
-              >
-                {parsing ? (
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted">
-                    <svg
-                      className="animate-spin h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
-                    {t.parsing}
-                  </div>
-                ) : (
-                  <>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".pdf,.docx,.doc,.txt"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleFileUpload(file);
-                      }}
-                    />
-                    {/* Upload icon */}
-                    <svg
-                      className="mx-auto h-10 w-10 text-gray-300 mb-3"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-                      />
-                    </svg>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="text-sm font-medium text-accent hover:text-accent-hover transition cursor-pointer"
-                    >
-                      {t.uploadButton}
-                    </button>
-                    <p className="text-xs text-muted mt-1">{t.uploadDrop}</p>
-                    <p className="text-xs text-muted mt-2">{t.uploadHint}</p>
-                    {fileName && (
-                      <p className="text-xs text-accent mt-2 font-medium">
-                        {fileName}
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Google Sheets */}
-          {inputMode === "sheets" && (
-            <div className="space-y-3">
-              <div>
-                <label
-                  htmlFor="sheets"
-                  className="block text-sm font-medium mb-1.5"
-                >
-                  {t.sheetsLabel}
-                </label>
-                <input
-                  id="sheets"
-                  type="url"
-                  value={sheetsUrl}
-                  onChange={(e) => setSheetsUrl(e.target.value)}
-                  placeholder={t.sheetsPlaceholder}
-                  className="w-full rounded-lg border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition placeholder:text-gray-400"
-                />
-                <p className="text-xs text-muted mt-1.5">{t.sheetsHint}</p>
-              </div>
-              <button
-                type="button"
-                onClick={handleSheetsImport}
-                disabled={parsing || !sheetsUrl.trim()}
-                className="w-full bg-accent text-white font-medium py-3 px-6 rounded-lg hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
-              >
-                {parsing ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg
-                      className="animate-spin h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
-                    {t.parsing}
-                  </span>
-                ) : (
-                  lang === "en" ? "Import from Google Sheets" : "Importar de Google Sheets"
-                )}
-              </button>
-            </div>
-          )}
-
-          <div>
-            <label htmlFor="role" className="block text-sm font-medium mb-1.5">
-              {t.labelRole}{" "}
-              <span className="text-muted font-normal">{t.optional}</span>
-            </label>
-            <input
-              id="role"
-              type="text"
-              value={targetRole}
-              onChange={(e) => setTargetRole(e.target.value)}
-              placeholder={t.placeholderRole}
-              className="w-full rounded-lg border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition placeholder:text-gray-400"
+        {!result && (
+          <div className="mb-8">
+            <CVInput
+              cvText={cvText}
+              setCvText={setCvText}
+              targetRole={targetRole}
+              setTargetRole={setTargetRole}
+              onSubmit={handleSubmit}
+              loading={loading}
+              error={error}
+              setError={setError}
+              isEs={isEs}
+              submitLabel={t.button}
+              loadingLabel={t.loading}
             />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || !cvText.trim()}
-            className="w-full bg-accent text-white font-medium py-3 px-6 rounded-lg hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg
-                  className="animate-spin h-4 w-4"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-                {t.loading}
-              </span>
-            ) : (
-              t.button
-            )}
-          </button>
-        </form>
-
-        {/* Error */}
-        {error && (
-          <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg mb-6">
-            {error}
           </div>
         )}
 
-        {/* Result */}
         {result && (
           <div ref={resultRef} className="space-y-6">
             <div className="border border-border rounded-lg p-6">
@@ -594,14 +252,18 @@ export default function Home() {
               </div>
             )}
 
+            <button
+              onClick={() => { setResult(null); setCvText(""); setTargetRole(""); }}
+              className="w-full bg-accent text-white font-medium py-3 px-6 rounded-lg hover:bg-accent-hover transition cursor-pointer"
+            >
+              {t.tryAgain}
+            </button>
+
             <DonationBanner lang={lang} />
           </div>
         )}
 
-        {/* ATS Explainer */}
         <AtsExplainer lang={lang} />
-
-        {/* About Us */}
         <AboutUs lang={lang} />
       </main>
 
