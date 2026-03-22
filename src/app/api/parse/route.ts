@@ -4,13 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const anthropic = new Anthropic();
 
-type DocMediaType = "application/pdf" | "text/plain" | "text/html" | "text/csv";
-
-const MEDIA_TYPES: Record<string, DocMediaType> = {
-  ".pdf": "application/pdf",
-  ".docx": "application/pdf", // Claude reads DOCX when sent as PDF type
-  ".doc": "application/pdf",
-};
+const SUPPORTED_EXTENSIONS = new Set([".pdf", ".docx", ".doc", ".txt", ".rtf"]);
 
 const EXTRACT_PROMPT =
   "Extract ALL text from this document exactly as written. Preserve structure: sections, bullet points, dates, job titles, company names. Return ONLY the raw text. No commentary, no introductions, no formatting markers. Just the plain text content.";
@@ -42,9 +36,17 @@ export async function POST(req: NextRequest) {
 
     const ext = "." + file.name.split(".").pop()?.toLowerCase();
 
-    // TXT: read directly
+    if (!SUPPORTED_EXTENSIONS.has(ext)) {
+      return NextResponse.json(
+        { error: "Tipo de archivo no soportado. Usa PDF, DOCX, DOC o TXT." },
+        { status: 400 }
+      );
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    // TXT/RTF: read directly
     if (ext === ".txt" || ext === ".rtf") {
-      const buffer = Buffer.from(await file.arrayBuffer());
       const text = buffer.toString("utf-8").trim();
       if (text.length < 10) {
         return NextResponse.json(
@@ -55,54 +57,55 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ text });
     }
 
-    // PDF, DOCX, DOC: Claude reads it
-    const mediaType = MEDIA_TYPES[ext];
-    if (!mediaType) {
-      return NextResponse.json(
-        { error: "Tipo de archivo no soportado. Usa PDF, DOCX, DOC o TXT." },
-        { status: 400 }
-      );
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const base64 = buffer.toString("base64");
-
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 8192,
-      temperature: 0,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "document",
-              source: {
-                type: "base64",
-                media_type: mediaType,
-                data: base64,
+    // PDF, DOCX, DOC: Claude reads it as PDF document
+    try {
+      const base64 = buffer.toString("base64");
+      const response = await anthropic.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 8192,
+        temperature: 0,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "document",
+                source: {
+                  type: "base64",
+                  media_type: "application/pdf" as const,
+                  data: base64,
+                },
               },
-            },
-            { type: "text", text: EXTRACT_PROMPT },
-          ],
-        },
-      ],
-    });
+              { type: "text", text: EXTRACT_PROMPT },
+            ],
+          },
+        ],
+      });
 
-    const text =
-      response.content[0].type === "text" ? response.content[0].text : "";
+      const text =
+        response.content[0].type === "text" ? response.content[0].text : "";
 
-    if (!text || text.trim().length < 10) {
+      if (!text || text.trim().length < 10) {
+        return NextResponse.json(
+          {
+            error:
+              "No pudimos extraer texto del archivo. Intenta pegando el texto en 'Pegar texto'.",
+          },
+          { status: 400 }
+        );
+      }
+
+      return NextResponse.json({ text: text.trim() });
+    } catch (e) {
+      console.error("Claude document extraction error:", e);
       return NextResponse.json(
         {
           error:
-            "No pudimos extraer texto del archivo. Intenta pegando el texto en 'Pegar texto'.",
+            "No pudimos leer tu archivo. Intenta abrirlo, seleccionar todo (Ctrl+A), copiar (Ctrl+C), y pegar en 'Pegar texto'.",
         },
         { status: 400 }
       );
     }
-
-    return NextResponse.json({ text: text.trim() });
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : String(error);
     console.error("Parse API error:", errMsg);
