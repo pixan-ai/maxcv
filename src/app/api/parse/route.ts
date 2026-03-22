@@ -4,12 +4,12 @@ import Anthropic from "@anthropic-ai/sdk";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const anthropic = new Anthropic();
 
-const MEDIA_TYPES: Record<string, string> = {
+type DocMediaType = "application/pdf" | "text/plain" | "text/html" | "text/csv";
+
+const MEDIA_TYPES: Record<string, DocMediaType> = {
   ".pdf": "application/pdf",
-  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ".doc": "application/msword",
-  ".txt": "text/plain",
-  ".rtf": "application/rtf",
+  ".docx": "application/pdf", // Claude reads DOCX when sent as PDF type
+  ".doc": "application/pdf",
 };
 
 const EXTRACT_PROMPT =
@@ -41,17 +41,9 @@ export async function POST(req: NextRequest) {
     }
 
     const ext = "." + file.name.split(".").pop()?.toLowerCase();
-    const mediaType = MEDIA_TYPES[ext];
 
-    if (!mediaType) {
-      return NextResponse.json(
-        { error: "Tipo de archivo no soportado. Usa PDF, DOCX, DOC, TXT o RTF." },
-        { status: 400 }
-      );
-    }
-
-    // TXT: just read directly, no need for Claude
-    if (ext === ".txt") {
+    // TXT: read directly
+    if (ext === ".txt" || ext === ".rtf") {
       const buffer = Buffer.from(await file.arrayBuffer());
       const text = buffer.toString("utf-8").trim();
       if (text.length < 10) {
@@ -63,7 +55,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ text });
     }
 
-    // Everything else: Claude reads it
+    // PDF, DOCX, DOC: Claude reads it
+    const mediaType = MEDIA_TYPES[ext];
+    if (!mediaType) {
+      return NextResponse.json(
+        { error: "Tipo de archivo no soportado. Usa PDF, DOCX, DOC o TXT." },
+        { status: 400 }
+      );
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const base64 = buffer.toString("base64");
 
@@ -77,7 +77,11 @@ export async function POST(req: NextRequest) {
           content: [
             {
               type: "document",
-              source: { type: "base64", media_type: mediaType, data: base64 },
+              source: {
+                type: "base64",
+                media_type: mediaType,
+                data: base64,
+              },
             },
             { type: "text", text: EXTRACT_PROMPT },
           ],
@@ -92,7 +96,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "No pudimos extraer texto. El archivo puede estar vacío o ser una imagen escaneada sin texto. Intenta pegando el texto en 'Pegar texto'.",
+            "No pudimos extraer texto del archivo. Intenta pegando el texto en 'Pegar texto'.",
         },
         { status: 400 }
       );
