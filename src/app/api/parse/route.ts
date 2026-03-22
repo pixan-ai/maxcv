@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import mammoth from "mammoth";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const anthropic = new Anthropic();
 
 const EXTRACT_PROMPT =
-  "Extract ALL text from this document exactly as written. Preserve structure: sections, bullet points, dates, job titles, company names. Return ONLY the raw text. No commentary, no introductions, no formatting markers. Just the plain text content.";
+  "Extract ALL text from this PDF exactly as written. Preserve structure: sections, bullet points, dates, job titles, company names. Return ONLY the raw text. No commentary, no introductions, no formatting markers. Just the plain text content.";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,67 +32,67 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
     const ext = file.name.split(".").pop()?.toLowerCase() || "";
-    let text = "";
 
-    if (ext === "pdf") {
-      // PDF: Claude reads it natively
-      try {
-        const base64 = buffer.toString("base64");
-        const response = await anthropic.messages.create({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 8192,
-          temperature: 0,
-          messages: [
-            {
-              role: "user",
-              content: [
-                {
-                  type: "document",
-                  source: {
-                    type: "base64",
-                    media_type: "application/pdf" as const,
-                    data: base64,
-                  },
-                },
-                { type: "text", text: EXTRACT_PROMPT },
-              ],
-            },
-          ],
-        });
-        text = response.content[0].type === "text" ? response.content[0].text : "";
-      } catch (e) {
-        console.error("PDF extraction error:", e);
+    // TXT: read directly
+    if (ext === "txt") {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const text = buffer.toString("utf-8").trim();
+      if (text.length < 10) {
         return NextResponse.json(
-          { error: "No pudimos leer tu PDF. Intenta pegando el texto en 'Pegar texto'." },
+          { error: "El archivo parece estar vacío." },
           { status: 400 }
         );
       }
-    } else if (ext === "docx" || ext === "doc") {
-      // DOCX/DOC: mammoth extracts text
-      try {
-        const result = await mammoth.extractRawText({ buffer });
-        text = result.value;
-      } catch (e) {
-        console.error("DOCX extraction error:", e);
-        return NextResponse.json(
-          { error: "No pudimos leer tu Word. Intenta pegando el texto en 'Pegar texto'." },
-          { status: 400 }
-        );
-      }
-    } else if (ext === "txt" || ext === "rtf") {
-      text = buffer.toString("utf-8");
-    } else {
+      return NextResponse.json({ text });
+    }
+
+    // Only PDF accepted for document parsing
+    if (ext !== "pdf") {
       return NextResponse.json(
-        { error: "Tipo de archivo no soportado. Usa PDF, DOCX o TXT." },
+        {
+          error:
+            "Solo aceptamos archivos PDF. Si tu CV está en Word, guárdalo como PDF (Archivo → Guardar como → PDF) y súbelo de nuevo.",
+        },
         { status: 400 }
       );
     }
 
+    // PDF: Claude reads it natively
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const base64 = buffer.toString("base64");
+
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 8192,
+      temperature: 0,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "document",
+              source: {
+                type: "base64",
+                media_type: "application/pdf" as const,
+                data: base64,
+              },
+            },
+            { type: "text", text: EXTRACT_PROMPT },
+          ],
+        },
+      ],
+    });
+
+    const text =
+      response.content[0].type === "text" ? response.content[0].text : "";
+
     if (!text || text.trim().length < 10) {
       return NextResponse.json(
-        { error: "No pudimos extraer texto. Intenta pegando el texto directamente." },
+        {
+          error:
+            "No pudimos extraer texto del PDF. Puede estar vacío o ser una imagen escaneada. Intenta pegando el texto en 'Pegar texto'.",
+        },
         { status: 400 }
       );
     }
@@ -103,7 +102,10 @@ export async function POST(req: NextRequest) {
     const errMsg = error instanceof Error ? error.message : String(error);
     console.error("Parse API error:", errMsg);
     return NextResponse.json(
-      { error: "Error al procesar archivo. Intenta pegando el texto en 'Pegar texto'." },
+      {
+        error:
+          "Error al procesar el PDF. Intenta pegando el texto en 'Pegar texto'.",
+      },
       { status: 500 }
     );
   }
@@ -120,7 +122,9 @@ async function parseGoogleSheets(url: string): Promise<string> {
   const res = await fetch(csvUrl, { redirect: "follow" });
 
   if (!res.ok)
-    throw new Error("No pudimos acceder al Google Sheet. Verifica que esté compartido.");
+    throw new Error(
+      "No pudimos acceder al Google Sheet. Verifica que esté compartido."
+    );
 
   const csv = await res.text();
   if (!csv || csv.trim().length < 10)
@@ -134,8 +138,10 @@ async function parseGoogleSheets(url: string): Promise<string> {
       let inQuotes = false;
       for (const char of line) {
         if (char === '"') inQuotes = !inQuotes;
-        else if (char === "," && !inQuotes) { fields.push(current.trim()); current = ""; }
-        else current += char;
+        else if (char === "," && !inQuotes) {
+          fields.push(current.trim());
+          current = "";
+        } else current += char;
       }
       fields.push(current.trim());
       return fields.filter(Boolean).join("\t");
