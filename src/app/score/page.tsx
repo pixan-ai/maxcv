@@ -41,49 +41,36 @@ interface ScoreResult {
   share_text: string;
 }
 
-const DIMENSIONS: { key: keyof ScoreResult["dimensions"]; label: string; labelEn: string; desc: string; descEn: string }[] = [
-  { key: "ats_compatibility", label: "Compatibilidad ATS", labelEn: "ATS Compatibility", desc: "¿Los sistemas de reclutamiento pueden leer tu CV correctamente?", descEn: "Can recruitment systems parse your CV correctly?" },
-  { key: "achievement_impact", label: "Impacto de logros", labelEn: "Achievement Impact", desc: "¿Tus bullets muestran resultados medibles o solo listan tareas?", descEn: "Do your bullets show measurable results or just list duties?" },
-  { key: "structure_format", label: "Estructura y formato", labelEn: "Structure & Format", desc: "¿Tu CV está bien organizado con la extensión adecuada?", descEn: "Is your CV well-organized with appropriate length?" },
-  { key: "keyword_relevance", label: "Palabras clave", labelEn: "Keywords", desc: "¿Tu CV contiene los términos que buscan los reclutadores?", descEn: "Does your CV contain the terms recruiters search for?" },
-  { key: "writing_clarity", label: "Claridad de redacción", labelEn: "Writing Clarity", desc: "¿Tu escritura es directa, profesional y sin errores?", descEn: "Is your writing direct, professional, and error-free?" },
-  { key: "completeness", label: "Completitud", labelEn: "Completeness", desc: "¿Están todas las secciones que los reclutadores esperan?", descEn: "Are all expected sections present?" },
+const DIMENSIONS: { key: keyof ScoreResult["dimensions"]; label: string; labelEn: string; desc: string; descEn: string; icon: string }[] = [
+  { key: "ats_compatibility", label: "Compatibilidad ATS", labelEn: "ATS Compatibility", desc: "¿Los sistemas de reclutamiento pueden leer tu CV?", descEn: "Can recruitment systems parse your CV?", icon: "🤖" },
+  { key: "achievement_impact", label: "Impacto de logros", labelEn: "Achievement Impact", desc: "¿Tus bullets muestran resultados medibles?", descEn: "Do your bullets show measurable results?", icon: "🎯" },
+  { key: "structure_format", label: "Estructura y formato", labelEn: "Structure & Format", desc: "¿Tu CV está bien organizado?", descEn: "Is your CV well-organized?", icon: "📐" },
+  { key: "keyword_relevance", label: "Palabras clave", labelEn: "Keywords", desc: "¿Tu CV tiene los términos que buscan los reclutadores?", descEn: "Does your CV have recruiter-searched terms?", icon: "🔑" },
+  { key: "writing_clarity", label: "Claridad de redacción", labelEn: "Writing Clarity", desc: "¿Tu escritura es directa y profesional?", descEn: "Is your writing direct and professional?", icon: "✍️" },
+  { key: "completeness", label: "Completitud", labelEn: "Completeness", desc: "¿Están todas las secciones esperadas?", descEn: "Are all expected sections present?", icon: "📋" },
 ];
 
 function scoreColor(s: number) { return s >= 80 ? "text-emerald-600" : s >= 60 ? "text-amber-500" : "text-red-500"; }
 function scoreBg(s: number) { return s >= 80 ? "bg-emerald-500" : s >= 60 ? "bg-amber-400" : "bg-red-500"; }
 function scoreRing(s: number) { return s >= 80 ? "stroke-emerald-500" : s >= 60 ? "stroke-amber-400" : "stroke-red-500"; }
+function scoreBorder(s: number) { return s >= 80 ? "border-emerald-200 dark:border-emerald-800" : s >= 60 ? "border-amber-200 dark:border-amber-800" : "border-red-200 dark:border-red-800"; }
 function catLabel(c: string, l: string) { const m: any = { excellent:{es:"Excelente",en:"Excellent"}, good:{es:"Bueno",en:"Good"}, fair:{es:"Regular",en:"Fair"}, low:{es:"Bajo",en:"Low"}, critical:{es:"Crítico",en:"Critical"} }; return m[c]?.[l==="es"?"es":"en"]||c; }
-function statusIcon(s: string) { return s === "pass" ? "\u2705" : s === "warning" ? "\u26A0\uFE0F" : "\u274C"; }
-function statusColor(s: string) { return s === "pass" ? "text-emerald-600 dark:text-emerald-400" : s === "warning" ? "text-amber-500" : "text-red-500"; }
+function statusIcon(s: string) { return s === "pass" ? "✅" : s === "warning" ? "⚠️" : "❌"; }
+function statusBg(s: string) { return s === "pass" ? "bg-emerald-50 dark:bg-emerald-900/20" : s === "warning" ? "bg-amber-50 dark:bg-amber-900/20" : "bg-red-50 dark:bg-red-900/20"; }
 
 function Ring({ score, animate }: { score: number; animate: boolean }) {
   const c = 2 * Math.PI * 54;
   return (
-    <div className="relative w-40 h-40 mx-auto">
+    <div className="relative w-36 h-36 mx-auto">
       <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
         <circle cx="60" cy="60" r="54" fill="none" className="stroke-stone-200 dark:stroke-stone-700" strokeWidth="7"/>
         <circle cx="60" cy="60" r="54" fill="none" className={`${scoreRing(score)} transition-all duration-[1.5s] ease-out`} strokeWidth="7" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={animate ? c*(1-score/100) : c}/>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={`text-4xl font-semibold tabular-nums ${scoreColor(score)}`}>{animate?score:0}</span>
+        <span className={`text-3xl font-semibold tabular-nums ${scoreColor(score)}`}>{animate?score:0}</span>
         <span className="text-xs text-stone-400 mt-0.5">de 100</span>
       </div>
     </div>
-  );
-}
-
-function DimBar({ label, score, animate, delay, onClick, expanded }: { label: string; score: number; animate: boolean; delay: number; onClick: () => void; expanded: boolean }) {
-  return (
-    <button onClick={onClick} className={`w-full text-left py-3 px-4 rounded-xl transition-colors hover:bg-stone-50 dark:hover:bg-stone-800/50 ${expanded?"bg-stone-50 dark:bg-stone-800/50":""}`}>
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{label}</span>
-        <span className={`text-sm font-semibold tabular-nums ${scoreColor(score)}`}>{score}</span>
-      </div>
-      <div className="w-full h-1.5 bg-stone-100 dark:bg-stone-700 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full transition-all ease-out ${scoreBg(score)}`} style={{width:animate?`${score}%`:"0%",transitionDuration:"1.2s",transitionDelay:`${delay}ms`}}/>
-      </div>
-    </button>
   );
 }
 
@@ -91,7 +78,7 @@ function PrivacyAnimation({ isEs }: { isEs: boolean }) {
   return (
     <div className="flex items-center justify-center gap-3 py-4">
       <div className="flex flex-col items-center">
-        <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-lg animate-pulse">{"\uD83D\uDCC4"}</div>
+        <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-lg animate-pulse">📄</div>
         <span className="text-[10px] text-stone-400 mt-1">{isEs?"Tu CV":"Your CV"}</span>
       </div>
       <div className="flex items-center gap-1">
@@ -100,7 +87,7 @@ function PrivacyAnimation({ isEs }: { isEs: boolean }) {
         <div className="w-2 h-2 rounded-full bg-emerald-400 animate-[ping_1.5s_ease-in-out_infinite_0.3s]"/>
       </div>
       <div className="flex flex-col items-center">
-        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-lg">{"\uD83D\uDD12"}</div>
+        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-lg">🔒</div>
         <span className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1">{isEs?"Análisis":"Analysis"}</span>
       </div>
       <div className="flex items-center gap-1">
@@ -109,16 +96,107 @@ function PrivacyAnimation({ isEs }: { isEs: boolean }) {
         <div className="w-2 h-2 rounded-full bg-emerald-400 animate-[ping_1.5s_ease-in-out_infinite_0.9s]"/>
       </div>
       <div className="flex flex-col items-center">
-        <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-lg">{"\u2705"}</div>
+        <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-lg">✅</div>
         <span className="text-[10px] text-stone-400 mt-1">Score</span>
       </div>
-      <div className="flex items-center gap-1">
-        <div className="w-8 h-0.5 bg-red-300 dark:bg-red-800"/>
-      </div>
+      <div className="flex items-center gap-1"><div className="w-8 h-0.5 bg-red-300 dark:bg-red-800"/></div>
       <div className="flex flex-col items-center">
-        <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center justify-center text-lg">{"\uD83D\uDDD1\uFE0F"}</div>
+        <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center justify-center text-lg">🗑️</div>
         <span className="text-[10px] text-red-500 mt-1">{isEs?"CV eliminado":"CV deleted"}</span>
       </div>
+    </div>
+  );
+}
+
+function DimensionCard({ dim, meta, isEs, score }: { dim: DimensionResult; meta: typeof DIMENSIONS[0]; isEs: boolean; score: number }) {
+  const passCount = dim.criteria_checked ? Object.values(dim.criteria_checked).filter(c => c.status === "pass").length : 0;
+  const totalCount = dim.criteria_checked ? Object.keys(dim.criteria_checked).length : 0;
+
+  return (
+    <div className={`bg-white dark:bg-stone-900 rounded-2xl border ${scoreBorder(score)} p-5 shadow-sm`}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{meta.icon}</span>
+          <div>
+            <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-200">{isEs ? meta.label : meta.labelEn}</h3>
+            <p className="text-xs text-stone-400">{isEs ? meta.desc : meta.descEn}</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <span className={`text-2xl font-bold tabular-nums ${scoreColor(score)}`}>{score}</span>
+          <div className="text-[10px] text-stone-400">{passCount}/{totalCount} {isEs?"pasaron":"passed"}</div>
+        </div>
+      </div>
+
+      {/* Score bar */}
+      <div className="w-full h-2 bg-stone-100 dark:bg-stone-700 rounded-full overflow-hidden mb-4">
+        <div className={`h-full rounded-full ${scoreBg(score)} transition-all duration-1000 ease-out`} style={{width:`${score}%`}}/>
+      </div>
+
+      {/* Criteria checklist */}
+      {dim.criteria_checked && (
+        <div className="space-y-1.5 mb-4">
+          {Object.entries(dim.criteria_checked).map(([key, val]) => (
+            <div key={key} className={`flex items-start gap-2 p-2 rounded-lg ${statusBg(val.status)} text-sm`}>
+              <span className="shrink-0 text-xs mt-0.5">{statusIcon(val.status)}</span>
+              <div className="min-w-0">
+                <span className="font-medium text-stone-700 dark:text-stone-300">{key.replace(/_/g," ")}</span>
+                <span className="text-stone-500 dark:text-stone-400"> — {val.detail}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Evidence */}
+      {dim.evidence && (
+        <div className="mb-3 p-3 rounded-lg bg-stone-50 dark:bg-stone-800/50 border-l-2 border-stone-300 dark:border-stone-600">
+          <p className="text-xs font-medium text-stone-500 mb-1">{isEs?"Evidencia del CV:":"CV evidence:"}</p>
+          <p className="text-sm text-stone-600 dark:text-stone-400 italic">{dim.evidence}</p>
+        </div>
+      )}
+
+      {/* Achievement example */}
+      {meta.key === "achievement_impact" && dim.example_improvement && (
+        <div className="mb-3 p-3 rounded-lg bg-stone-50 dark:bg-stone-800/50">
+          <p className="text-xs font-medium text-stone-500 mb-2">{isEs?"Ejemplo de mejora:":"Improvement example:"}</p>
+          <p className="text-sm text-red-600/80 dark:text-red-400/80 line-through">{dim.example_improvement.before}</p>
+          <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium mt-1">→ {dim.example_improvement.after}</p>
+        </div>
+      )}
+
+      {/* Keywords */}
+      {meta.key === "keyword_relevance" && (dim.found_keywords?.length || dim.missing_keywords?.length) && (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {dim.found_keywords?.map((kw,i) => <span key={`f${i}`} className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">{kw}</span>)}
+          {dim.missing_keywords?.map((kw,i) => <span key={`m${i}`} className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800 border-dashed">+ {kw}</span>)}
+        </div>
+      )}
+
+      {/* Completeness sections */}
+      {meta.key === "completeness" && (dim.present_sections?.length || dim.missing_sections?.length) && (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {dim.present_sections?.map((s,i) => <span key={`p${i}`} className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">✓ {s}</span>)}
+          {dim.missing_sections?.map((s,i) => <span key={`m${i}`} className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 border border-dashed border-red-200 dark:border-red-800">+ {s}</span>)}
+        </div>
+      )}
+
+      {/* Issues */}
+      {dim.issues && dim.issues.length > 0 && (
+        <div className="mb-3">
+          <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-1.5">{isEs?"Problemas:":"Issues:"}</p>
+          <ul className="space-y-1">{dim.issues.map((issue,i) => <li key={i} className="text-sm text-stone-600 dark:text-stone-400 pl-3 border-l-2 border-red-200 dark:border-red-800">{issue}</li>)}</ul>
+        </div>
+      )}
+
+      {/* Suggestions */}
+      {dim.suggestions && dim.suggestions.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1.5">{isEs?"Sugerencias:":"Suggestions:"}</p>
+          <ul className="space-y-1">{dim.suggestions.map((s,i) => <li key={i} className="text-sm text-stone-600 dark:text-stone-400 pl-3 border-l-2 border-emerald-200 dark:border-emerald-800">{s}</li>)}</ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -130,7 +208,6 @@ export default function ScorePage() {
   const [result, setResult] = useState<ScoreResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [animateScore, setAnimateScore] = useState(false);
-  const [expandedDim, setExpandedDim] = useState<string | null>(null);
   const [inputTab, setInputTab] = useState<"paste"|"upload"|"sheets">("paste");
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState("");
@@ -140,37 +217,30 @@ export default function ScorePage() {
   useEffect(() => { if (result) { const t = setTimeout(() => setAnimateScore(true), 100); return () => clearTimeout(t); } }, [result]);
 
   async function handleFileUpload(file: File) {
-    setUploading(true);
-    setError(null);
-    setFileName(file.name);
+    setUploading(true); setError(null); setFileName(file.name);
     try {
-      const form = new FormData();
-      form.append("file", file);
+      const form = new FormData(); form.append("file", file);
       const res = await fetch("/api/parse", { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Error al procesar el archivo."); setUploading(false); return; }
-      setCvText(data.text);
-      setInputTab("paste");
+      setCvText(data.text); setInputTab("paste");
     } catch { setError("Error al subir el archivo."); } finally { setUploading(false); }
   }
 
   async function handleSheets(url: string) {
-    setUploading(true);
-    setError(null);
+    setUploading(true); setError(null);
     try {
-      const form = new FormData();
-      form.append("sheetsUrl", url);
+      const form = new FormData(); form.append("sheetsUrl", url);
       const res = await fetch("/api/parse", { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Error al acceder a Google Sheets."); setUploading(false); return; }
-      setCvText(data.text);
-      setInputTab("paste");
+      setCvText(data.text); setInputTab("paste");
     } catch { setError("Error al procesar Google Sheets."); } finally { setUploading(false); }
   }
 
   async function handleScore() {
     if (cvText.trim().length < 100) { setError("Pega tu CV completo. El texto es muy corto."); return; }
-    setLoading(true); setError(null); setResult(null); setAnimateScore(false); setExpandedDim(null);
+    setLoading(true); setError(null); setResult(null); setAnimateScore(false);
     try {
       const res = await fetch("/api/score", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cvText: cvText.trim(), targetRole: targetRole.trim() || undefined }) });
       const data = await res.json();
@@ -181,8 +251,6 @@ export default function ScorePage() {
   }
 
   const isEs = !result || result?.detected_language === "es";
-  const dim = expandedDim ? result?.dimensions[expandedDim as keyof typeof result.dimensions] as DimensionResult : null;
-  const dimMeta = DIMENSIONS.find(d => d.key === expandedDim);
 
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-stone-950">
@@ -203,7 +271,6 @@ export default function ScorePage() {
 
         {!result && (
           <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-5 sm:p-6 shadow-sm">
-            {/* Tabs */}
             <div className="flex gap-1 mb-4 p-1 bg-stone-100 dark:bg-stone-800 rounded-xl">
               {(["paste","upload","sheets"] as const).map(tab => (
                 <button key={tab} onClick={() => setInputTab(tab)} className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${inputTab===tab?"bg-white dark:bg-stone-700 text-stone-900 dark:text-stone-100 shadow-sm":"text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"}`}>
@@ -212,7 +279,6 @@ export default function ScorePage() {
               ))}
             </div>
 
-            {/* Paste tab */}
             {inputTab==="paste" && (
               <div className="mb-4">
                 <label htmlFor="cv-input" className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">{isEs?"Pega tu CV aquí":"Paste your CV here"}</label>
@@ -226,12 +292,11 @@ export default function ScorePage() {
               </div>
             )}
 
-            {/* Upload tab */}
             {inputTab==="upload" && (
               <div className="mb-4">
                 <div onClick={() => fileRef.current?.click()} className="border-2 border-dashed border-stone-300 dark:border-stone-600 rounded-xl p-8 text-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 transition-colors">
                   <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={e => { if(e.target.files?.[0]) handleFileUpload(e.target.files[0]); }}/>
-                  <div className="text-3xl mb-2">{uploading?"\u23F3":"\uD83D\uDCC2"}</div>
+                  <div className="text-3xl mb-2">{uploading?"⏳":"📂"}</div>
                   <p className="text-sm font-medium text-stone-700 dark:text-stone-300">{uploading?(isEs?"Procesando...":"Processing..."):(isEs?"Haz clic o arrastra tu archivo":"Click or drag your file")}</p>
                   <p className="text-xs text-stone-400 mt-1">PDF — {isEs?"Máximo 5MB":"Max 5MB"}</p>
                   <p className="text-xs text-stone-400 mt-1">{isEs?"¿Tu CV es Word? Guárdalo como PDF primero.":"Word CV? Save as PDF first."}</p>
@@ -239,7 +304,6 @@ export default function ScorePage() {
               </div>
             )}
 
-            {/* Sheets tab */}
             {inputTab==="sheets" && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Google Sheets URL</label>
@@ -262,113 +326,54 @@ export default function ScorePage() {
               {loading?<span className="flex items-center justify-center gap-2"><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25"/><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75"/></svg>{isEs?"Evaluando tu CV...":"Evaluating..."}</span>:(isEs?"Evaluar mi CV":"Evaluate my CV")}
             </button>
 
-            {/* Privacy animation */}
             {loading && <PrivacyAnimation isEs={isEs}/>}
             {!loading && <p className="text-center text-xs text-stone-400 mt-3">{isEs?"Tu CV se procesa en tiempo real y no se almacena.":"Your CV is processed in real-time and not stored."}</p>}
           </div>
         )}
 
-        {/* Results */}
+        {/* ===== RESULTS ===== */}
         {result && (
-          <div ref={resultRef}>
-            <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-6 sm:p-8 shadow-sm mb-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
-                <div className="text-center">
+          <div ref={resultRef} className="space-y-4">
+            {/* Score overview card */}
+            <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="text-center shrink-0">
                   <Ring score={result.total_score} animate={animateScore}/>
-                  <div className="mt-3"><span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${result.total_score>=75?"bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400":result.total_score>=60?"bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400":"bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>{catLabel(result.category,result.detected_language)}</span></div>
-                  {result.inferred_role && <p className="text-xs text-stone-400 mt-2">{isEs?"Perfil:":"Profile:"} {result.inferred_role}</p>}
+                  <div className="mt-2"><span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${result.total_score>=75?"bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400":result.total_score>=60?"bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400":"bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>{catLabel(result.category,result.detected_language)}</span></div>
+                  {result.inferred_role && <p className="text-xs text-stone-400 mt-1">{isEs?"Perfil:":"Profile:"} {result.inferred_role}</p>}
                 </div>
-                <div className="space-y-0.5">
-                  {DIMENSIONS.map((d,i) => <DimBar key={d.key} label={isEs?d.label:d.labelEn} score={result.dimensions[d.key].score} animate={animateScore} delay={i*150} onClick={() => setExpandedDim(expandedDim===d.key?null:d.key)} expanded={expandedDim===d.key}/>)}
-                </div>
-              </div>
-              <div className="mt-6 pt-5 border-t border-stone-100 dark:border-stone-800">
-                <p className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">{result.summary}</p>
-              </div>
-            </div>
-
-            {/* Expanded Dimension with criteria */}
-            {expandedDim && dim && dimMeta && (
-              <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-5 shadow-sm mb-4">
-                <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-200">{isEs?dimMeta.label:dimMeta.labelEn}</h3>
-                <p className="text-xs text-stone-400 mb-4">{isEs?dimMeta.desc:dimMeta.descEn}</p>
-
-                {/* Criteria checklist */}
-                {dim.criteria_checked && (
-                  <div className="mb-4 space-y-1.5">
-                    <p className="text-xs font-medium text-stone-500 mb-1">{isEs?"Criterios evaluados:":"Criteria evaluated:"}</p>
-                    {Object.entries(dim.criteria_checked).map(([key, val]) => (
-                      <div key={key} className="flex items-start gap-2 text-sm">
-                        <span className={`shrink-0 text-xs ${statusColor(val.status)}`}>{statusIcon(val.status)}</span>
-                        <div>
-                          <span className="font-medium text-stone-700 dark:text-stone-300">{key.replace(/_/g," ")}</span>
-                          <span className="text-stone-500 dark:text-stone-400"> — {val.detail}</span>
+                <div className="flex-1">
+                  <p className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">{result.summary}</p>
+                  {/* Mini score bars */}
+                  <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2">
+                    {DIMENSIONS.map(d => (
+                      <div key={d.key} className="flex items-center gap-2">
+                        <span className="text-xs">{d.icon}</span>
+                        <div className="flex-1 h-1.5 bg-stone-100 dark:bg-stone-700 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${scoreBg(result.dimensions[d.key].score)}`} style={{width:`${result.dimensions[d.key].score}%`}}/>
                         </div>
+                        <span className={`text-xs font-semibold tabular-nums ${scoreColor(result.dimensions[d.key].score)}`}>{result.dimensions[d.key].score}</span>
                       </div>
                     ))}
                   </div>
-                )}
-
-                {/* Evidence */}
-                {dim.evidence && (
-                  <div className="mb-3 p-3 rounded-lg bg-stone-50 dark:bg-stone-800/50 border-l-2 border-stone-300 dark:border-stone-600">
-                    <p className="text-xs font-medium text-stone-500 mb-1">{isEs?"Evidencia del CV:":"CV evidence:"}</p>
-                    <p className="text-sm text-stone-600 dark:text-stone-400 italic">{dim.evidence}</p>
-                  </div>
-                )}
-
-                {/* Issues */}
-                {dim.issues && dim.issues.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-1.5">{isEs?"Problemas detectados:":"Issues found:"}</p>
-                    <ul className="space-y-1">{dim.issues.map((issue,i) => <li key={i} className="text-sm text-stone-600 dark:text-stone-400 pl-3 border-l-2 border-red-200 dark:border-red-800">{issue}</li>)}</ul>
-                  </div>
-                )}
-
-                {/* Suggestions */}
-                {dim.suggestions && dim.suggestions.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1.5">{isEs?"Sugerencias:":"Suggestions:"}</p>
-                    <ul className="space-y-1">{dim.suggestions.map((s,i) => <li key={i} className="text-sm text-stone-600 dark:text-stone-400 pl-3 border-l-2 border-emerald-200 dark:border-emerald-800">{s}</li>)}</ul>
-                  </div>
-                )}
-
-                {/* Achievement example */}
-                {expandedDim==="achievement_impact" && dim.example_improvement && (
-                  <div className="mt-3 p-3 rounded-lg bg-stone-50 dark:bg-stone-800/50">
-                    <p className="text-xs font-medium text-stone-500 mb-2">{isEs?"Ejemplo de mejora:":"Improvement example:"}</p>
-                    <p className="text-sm text-red-600/80 dark:text-red-400/80 line-through">{dim.example_improvement.before}</p>
-                    <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium mt-1">{dim.example_improvement.after}</p>
-                  </div>
-                )}
-
-                {/* Keywords */}
-                {expandedDim==="keyword_relevance" && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {dim.found_keywords?.map((kw,i) => <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">{kw}</span>)}
-                    {dim.missing_keywords?.map((kw,i) => <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800 border-dashed">+ {kw}</span>)}
-                  </div>
-                )}
-
-                {/* Completeness sections */}
-                {expandedDim==="completeness" && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {dim.present_sections?.map((s,i) => <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">{s}</span>)}
-                    {dim.missing_sections?.map((s,i) => <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 border border-dashed border-red-200 dark:border-red-800">+ {s}</span>)}
-                  </div>
-                )}
+                </div>
               </div>
-            )}
+            </div>
+
+            {/* All dimension cards — auto-expanded */}
+            {DIMENSIONS.map(d => (
+              <DimensionCard key={d.key} dim={result.dimensions[d.key]} meta={d} isEs={isEs} score={result.dimensions[d.key].score}/>
+            ))}
 
             {/* Top 3 Actions */}
-            <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-5 shadow-sm mb-4">
+            <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-5 shadow-sm">
               <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-200 mb-3">{isEs?"Las 3 acciones que más impacto tendrán:":"Top 3 highest-impact actions:"}</h3>
               <ol className="space-y-2.5">{result.top_3_actions.map((a,i) => <li key={i} className="flex gap-3 items-start"><span className="shrink-0 w-6 h-6 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 text-xs font-semibold flex items-center justify-center">{i+1}</span><span className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">{a}</span></li>)}</ol>
             </div>
 
             {/* CTAs */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-              <button onClick={() => {setResult(null);setAnimateScore(false);setExpandedDim(null);setCvText("");setFileName("");}} className="py-3 px-4 rounded-xl text-sm font-medium bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-stone-200 transition-all active:scale-[0.98]">{isEs?"Evaluar otro CV":"Score another CV"}</button>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button onClick={() => {setResult(null);setAnimateScore(false);setCvText("");setFileName("");}} className="py-3 px-4 rounded-xl text-sm font-medium bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-stone-200 transition-all active:scale-[0.98]">{isEs?"Evaluar otro CV":"Score another CV"}</button>
               <a href="/" className="py-3 px-4 rounded-xl text-sm font-medium text-center border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all">{isEs?"Mejorar mi CV":"Improve my CV"}</a>
               <button onClick={() => { if(navigator.share){navigator.share({text:result.share_text});}else{navigator.clipboard.writeText(result.share_text);alert(isEs?"Copiado":"Copied");}}} className="py-3 px-4 rounded-xl text-sm font-medium border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all">{isEs?"Compartir":"Share"}</button>
             </div>
