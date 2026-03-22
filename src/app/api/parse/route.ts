@@ -1,48 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
 import mammoth from "mammoth";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const anthropic = new Anthropic();
 
-async function extractPdfText(buffer: Buffer): Promise<string> {
-  // Try pdf-parse v2 API first
-  try {
-    const { PDFParse } = await import("pdf-parse");
-    const data = new Uint8Array(buffer);
-    const parser = new PDFParse({ data });
-    const result = await parser.getText();
-    await parser.destroy();
-    return result.text;
-  } catch (e1) {
-    console.error("pdf-parse v2 failed:", e1);
-  }
+async function extractPdfTextWithClaude(buffer: Buffer): Promise<string> {
+  const base64 = buffer.toString("base64");
 
-  // Fallback: try pdf-parse v1 API (default export)
-  try {
-    const pdfParse = (await import("pdf-parse")).default;
-    if (typeof pdfParse === "function") {
-      const result = await pdfParse(buffer);
-      return result.text;
-    }
-  } catch (e2) {
-    console.error("pdf-parse v1 fallback failed:", e2);
-  }
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 8192,
+    temperature: 0,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "document",
+            source: {
+              type: "base64",
+              media_type: "application/pdf",
+              data: base64,
+            },
+          },
+          {
+            type: "text",
+            text: "Extract ALL text content from this PDF exactly as written. Preserve the structure (sections, bullet points, dates). Return ONLY the raw text, no commentary or formatting. Do not add any introduction like 'Here is the text' — just output the text content directly.",
+          },
+        ],
+      },
+    ],
+  });
 
-  // Last resort: basic text extraction from PDF buffer
-  try {
-    const text = buffer.toString("utf-8");
-    // Look for readable text between stream markers
-    const readable = text
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\xFF]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (readable.length > 100) {
-      return readable;
-    }
-  } catch (e3) {
-    console.error("Raw text extraction failed:", e3);
-  }
-
-  throw new Error("PDF_PARSE_FAILED");
+  const text =
+    response.content[0].type === "text" ? response.content[0].text : "";
+  return text;
 }
 
 export async function POST(req: NextRequest) {
@@ -78,12 +71,13 @@ export async function POST(req: NextRequest) {
 
     if (fileName.endsWith(".pdf")) {
       try {
-        text = await extractPdfText(buffer);
-      } catch {
+        text = await extractPdfTextWithClaude(buffer);
+      } catch (e) {
+        console.error("PDF extraction error:", e);
         return NextResponse.json(
           {
             error:
-              "No pudimos leer tu PDF. Esto puede pasar con PDFs escaneados o protegidos. Intenta abrir tu PDF, seleccionar todo el texto (Ctrl+A), copiar (Ctrl+C), y pegarlo en la pestaña 'Pegar texto'.",
+              "No pudimos leer tu PDF. Intenta abrirlo, seleccionar todo (Ctrl+A), copiar (Ctrl+C), y pegar en la pestaña 'Pegar texto'.",
           },
           { status: 400 }
         );
@@ -92,11 +86,12 @@ export async function POST(req: NextRequest) {
       try {
         const result = await mammoth.extractRawText({ buffer });
         text = result.value;
-      } catch {
+      } catch (e) {
+        console.error("DOCX extraction error:", e);
         return NextResponse.json(
           {
             error:
-              "No pudimos leer tu archivo Word. Intenta abrirlo, seleccionar todo (Ctrl+A), copiar (Ctrl+C), y pegarlo en la pestaña 'Pegar texto'.",
+              "No pudimos leer tu Word. Intenta abrirlo, seleccionar todo (Ctrl+A), copiar (Ctrl+C), y pegar en la pestaña 'Pegar texto'.",
           },
           { status: 400 }
         );
@@ -114,7 +109,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "No pudimos extraer texto del archivo. El archivo puede estar vacío o ser una imagen escaneada. Intenta pegando el texto directamente.",
+            "No pudimos extraer texto del archivo. Puede estar vacío o ser una imagen. Intenta pegando el texto directamente.",
         },
         { status: 400 }
       );
@@ -127,7 +122,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Error al procesar el archivo. Intenta pegando el texto de tu CV directamente en la pestaña 'Pegar texto'.",
+          "Error al procesar el archivo. Intenta pegando el texto en la pestaña 'Pegar texto'.",
       },
       { status: 500 }
     );
@@ -145,7 +140,6 @@ async function parseGoogleSheets(url: string): Promise<string> {
   const gid = gidMatch ? gidMatch[1] : "0";
 
   const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-
   const res = await fetch(csvUrl, { redirect: "follow" });
 
   if (!res.ok) {
@@ -155,7 +149,6 @@ async function parseGoogleSheets(url: string): Promise<string> {
   }
 
   const csv = await res.text();
-
   if (!csv || csv.trim().length < 10) {
     throw new Error("El Google Sheet parece estar vacío");
   }
@@ -164,7 +157,6 @@ async function parseGoogleSheets(url: string): Promise<string> {
     const fields: string[] = [];
     let current = "";
     let inQuotes = false;
-
     for (const char of line) {
       if (char === '"') {
         inQuotes = !inQuotes;
@@ -176,7 +168,6 @@ async function parseGoogleSheets(url: string): Promise<string> {
       }
     }
     fields.push(current.trim());
-
     return fields.filter(Boolean).join("\t");
   });
 
