@@ -35,7 +35,7 @@ const T = {
     uploadTitle: "Drop your PDF here",
     uploadOr: "or",
     uploadButton: "Browse files",
-    uploadHint: "PDF only \u2014 max 5MB",
+    uploadHint: "PDF only — max 5MB",
     uploadWordHint: "Word CV? Save as PDF first.",
     parsing: "Reading your file...",
     parseError: "Could not read the file. Try pasting your resume instead.",
@@ -51,37 +51,39 @@ const T = {
     fileTooLarge: "File is too large. Maximum size is 5MB.",
     fileWrongType: "Only PDF files are accepted.",
     privacy: "Your CV is processed in real-time and never stored.",
+    fromFile: "from file",
   },
   es: {
     tabText: "Pegar texto",
     tabFile: "Subir PDF",
     tabSheets: "Google Sheets",
-    labelCv: "Tu curr\u00edculum",
-    placeholderCv: "Pega el texto de tu curr\u00edculum aqu\u00ed...",
+    labelCv: "Tu currículum",
+    placeholderCv: "Pega el texto de tu currículum aquí...",
     chars: "caracteres",
-    maxPages: "M\u00e1ximo ~5 p\u00e1ginas",
+    maxPages: "Máximo ~5 páginas",
     labelRole: "Puesto objetivo",
     optional: "opcional",
     placeholderRole: "ej. Product Manager, Ingeniero de Software...",
-    uploadTitle: "Arrastra tu PDF aqu\u00ed",
+    uploadTitle: "Arrastra tu PDF aquí",
     uploadOr: "o",
     uploadButton: "Buscar archivo",
-    uploadHint: "Solo PDF \u2014 m\u00e1x 5MB",
-    uploadWordHint: "\u00bfTu CV es Word? Gu\u00e1rdalo como PDF primero.",
+    uploadHint: "Solo PDF — máx 5MB",
+    uploadWordHint: "¿Tu CV es Word? Guárdalo como PDF primero.",
     parsing: "Leyendo tu archivo...",
-    parseError: "No se pudo leer el archivo. Intenta pegando tu curr\u00edculum.",
+    parseError: "No se pudo leer el archivo. Intenta pegando tu currículum.",
     uploadSuccess: "Archivo cargado correctamente",
     changeFile: "Cambiar archivo",
     clearText: "Limpiar",
     sheetsLabel: "Enlace de Google Sheets",
     sheetsPlaceholder: "https://docs.google.com/spreadsheets/d/...",
-    sheetsHint: "Aseg\u00farate de que est\u00e9 compartido como \"Cualquier persona con el enlace\"",
+    sheetsHint: "Asegúrate de que esté compartido como \"Cualquier persona con el enlace\"",
     sheetsButton: "Importar de Google Sheets",
     sheetsLoading: "Importando...",
-    sheetsError: "No se pudo acceder al Google Sheet. Aseg\u00farate de que est\u00e9 compartido.",
-    fileTooLarge: "El archivo es muy grande. M\u00e1ximo 5MB.",
+    sheetsError: "No se pudo acceder al Google Sheet. Asegúrate de que esté compartido.",
+    fileTooLarge: "El archivo es muy grande. Máximo 5MB.",
     fileWrongType: "Solo se aceptan archivos PDF.",
     privacy: "Tu CV se procesa en tiempo real y nunca se almacena.",
+    fromFile: "de archivo",
   },
 };
 
@@ -110,8 +112,6 @@ export default function CVInput({
 
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const isReady = cvText.trim().length >= 50;
-
   const validateFile = useCallback(
     (file: File): string | null => {
       if (file.size > MAX_FILE_SIZE) return t.fileTooLarge;
@@ -128,21 +128,25 @@ export default function CVInput({
         setError(validationError);
         return;
       }
+
       setUploading(true);
       setError(null);
       setFileName(file.name);
       setFileLoaded(false);
+
       try {
         const form = new FormData();
         form.append("file", file);
         const res = await fetch("/api/parse", { method: "POST", body: form });
         const data = await res.json();
+
         if (!res.ok) {
           setError(data.error || t.parseError);
           setFileName("");
           setUploading(false);
           return;
         }
+
         setCvText(data.text);
         setFileLoaded(true);
       } catch {
@@ -169,16 +173,19 @@ export default function CVInput({
     if (!sheetsUrl.trim()) return;
     setSheetsLoading(true);
     setError(null);
+
     try {
       const form = new FormData();
       form.append("sheetsUrl", sheetsUrl);
       const res = await fetch("/api/parse", { method: "POST", body: form });
       const data = await res.json();
+
       if (!res.ok) {
         setError(data.error || t.sheetsError);
         setSheetsLoading(false);
         return;
       }
+
       setCvText(data.text);
       setSheetsUrl("");
       setInputMode("text");
@@ -226,15 +233,12 @@ export default function CVInput({
       {inputMode === "file" && (
         <div>
           {fileLoaded && fileName ? (
-            <div className="border border-[--positive]/30 bg-[--positive]/5 rounded-lg p-6">
+            <div className="border border-[--accent]/20 bg-[--accent-ghost] rounded-lg p-6">
               <div className="flex items-center gap-4">
-                <div className="shrink-0 w-10 h-10 rounded-lg bg-[--positive]/10 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-[--positive]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-[--ink-900]">{t.uploadSuccess}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-[--accent]">{t.uploadSuccess}</span>
+                  </div>
                   <p className="text-sm text-[--ink-500] truncate mt-0.5">{fileName}</p>
                 </div>
                 <button
@@ -254,8 +258,8 @@ export default function CVInput({
               onClick={() => !uploading && fileRef.current?.click()}
               className={`border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-all ${
                 dragOver
-                  ? "border-[--accent] bg-[--accent-ghost] scale-[1.01]"
-                  : "border-[--ink-300] hover:border-[--ink-500] hover:bg-[--ink-000]"
+                  ? "border-[--accent] bg-[--accent-ghost]"
+                  : "border-[--ink-300] hover:border-[--ink-500]"
               }`}
             >
               <input
@@ -275,19 +279,8 @@ export default function CVInput({
                 </div>
               ) : (
                 <>
-                  <svg
-                    className={`mx-auto h-8 w-8 mb-4 transition-colors ${dragOver ? "text-[--accent]" : "text-[--ink-300]"}`}
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                  </svg>
-                  <p className="text-sm font-medium text-[--ink-900] mb-1">{t.uploadTitle}</p>
-                  <p className="text-xs text-[--ink-500] mb-3">
-                    {t.uploadOr}{" "}
-                    <span className="text-[--accent] font-medium">{t.uploadButton.toLowerCase()}</span>
-                  </p>
-                  <p className="text-xs text-[--ink-300]">{t.uploadHint}</p>
-                  <p className="text-xs text-[--ink-300] mt-1">{t.uploadWordHint}</p>
+                  <p className="text-sm text-[--ink-900] mb-2">{t.uploadTitle}</p>
+                  <p className="text-xs text-[--ink-300]">{isEs ? "PDF o Word · gratis · sin registro" : "PDF or Word · free · no sign-up"}</p>
                 </>
               )}
             </div>
@@ -324,7 +317,7 @@ export default function CVInput({
           <div className="flex justify-between mt-1">
             <span className="text-xs text-[--ink-500]">
               {cvText.length > 0 ? `${cvText.length.toLocaleString()} ${t.chars}` : ""}
-              {fileName ? ` \u2014 ${fileName}` : ""}
+              {fileName ? ` — ${fileName}` : ""}
             </span>
             <span className="text-xs text-[--ink-500]">{t.maxPages}</span>
           </div>
@@ -352,7 +345,7 @@ export default function CVInput({
             type="button"
             onClick={handleSheetsImport}
             disabled={sheetsLoading || !sheetsUrl.trim()}
-            className="w-full bg-[--accent] text-white font-medium py-3 px-6 rounded-lg hover:bg-[--accent-dim] disabled:bg-[--ink-100] disabled:text-[--ink-300] disabled:cursor-not-allowed transition cursor-pointer"
+            className="w-full bg-[--accent] text-white font-medium py-3 px-6 rounded-lg hover:bg-[--accent-dim] disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
           >
             {sheetsLoading ? (
               <span className="flex items-center justify-center gap-2">
@@ -387,11 +380,8 @@ export default function CVInput({
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg flex items-start gap-2">
-          <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-          </svg>
-          <span>{error}</span>
+        <div className="bg-[--ink-100] text-[--ink-900] text-sm px-4 py-3 rounded-lg">
+          {error}
         </div>
       )}
 
@@ -399,12 +389,8 @@ export default function CVInput({
       <button
         type="button"
         onClick={onSubmit}
-        disabled={loading || !isReady}
-        className={`w-full font-medium py-3 px-6 rounded-lg transition cursor-pointer font-[family-name:var(--font-mono)] ${
-          loading || !isReady
-            ? "bg-[--ink-100] text-[--ink-300] cursor-not-allowed"
-            : "bg-[--accent] text-white hover:bg-[--accent-dim]"
-        }`}
+        disabled={loading || cvText.trim().length < 50}
+        className="w-full bg-[--accent] text-white font-[family-name:var(--font-mono)] text-sm tracking-wide py-3 px-6 rounded-lg hover:bg-[--accent-dim] transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? (
           <span className="flex items-center justify-center gap-2">

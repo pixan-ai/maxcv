@@ -5,7 +5,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DonationBanner from "@/components/DonationBanner";
 import AboutUs from "@/components/AboutUs";
-import AtsExplainer from "@/components/AtsExplainer";
 import CVInput from "@/components/CVInput";
 
 type ResultData = {
@@ -182,7 +181,7 @@ export default function Home() {
 
       <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-12">
         <section className="text-center mb-12">
-          <h1 className="text-4xl font-light tracking-tight mb-3 text-[--ink-900]">
+          <h1 className="text-4xl tracking-tight mb-3 text-[--ink-900] font-light">
             {t.heroTitle}
             <br />
             <span className="text-[--accent]">{t.heroHighlight}</span>
@@ -253,7 +252,7 @@ export default function Home() {
 
             <button
               onClick={() => { setResult(null); setCvText(""); setTargetRole(""); }}
-              className="w-full bg-[--accent] text-white font-medium py-3 px-6 rounded-lg hover:bg-[--accent-dim] transition cursor-pointer font-[family-name:var(--font-mono)]"
+              className="w-full bg-[--accent] text-white font-[family-name:var(--font-mono)] text-sm tracking-wide py-3 px-6 rounded-lg hover:bg-[--accent-dim] transition-colors duration-150 cursor-pointer"
             >
               {t.tryAgain}
             </button>
@@ -262,7 +261,6 @@ export default function Home() {
           </div>
         )}
 
-        <AtsExplainer lang={lang} />
         <AboutUs lang={lang} />
       </main>
 
