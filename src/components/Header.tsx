@@ -21,6 +21,7 @@ export default function Header({
           <span className="text-xs text-muted">
             Powered by Claude Opus 4.6
           </span>
+          <span className="text-xs text-muted/50">v1.1</span>
         </div>
       </div>
     </header>

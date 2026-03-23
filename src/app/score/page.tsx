@@ -407,6 +407,15 @@ export default function ScorePage() {
             >
               {t.tagline}
             </span>
+            <span
+              className="text-ink-200"
+              style={{
+                fontSize: "11px",
+                fontFamily: "var(--font-geist-mono)",
+              }}
+            >
+              v2.0
+            </span>
           </div>
         </div>
       </header>
