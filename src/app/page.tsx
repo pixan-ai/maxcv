@@ -13,95 +13,53 @@ type ResultData = {
   language: string;
 };
 
-const UI_TEXT = {
+const UI = {
   en: {
-    heroTitle: "Improve your resume",
-    heroHighlight: "in seconds",
-    heroSub:
-      "Paste your CV, upload a file, or link a Google Sheet — AI rewrites it to stand out. Free, no sign-up required.",
+    badge: "AI-powered resume improver",
+    heroTitle: "Your resume,",
+    heroHighlight: "reimagined",
+    heroSub: "Paste, upload, or link your CV. Our AI rewrites it to stand out — optimized for ATS, tailored to your target role.",
     button: "Improve my resume",
-    loading: "Improving your resume...",
-    resultTitle: "Improved Resume",
+    loading: "Improving...",
+    resultTitle: "Your improved resume",
     copy: "Copy",
     copied: "Copied!",
     downloadPdf: "Download PDF",
-    tipsTitle: "Tips to strengthen your profile",
+    tipsTitle: "Actionable tips",
     errorGeneric: "Something went wrong. Please try again.",
-    errorLimit:
-      "You've reached the daily limit (3 improvements per day). Come back tomorrow!",
-    errorConnection:
-      "Connection error. Please check your internet and try again.",
-    errorLength: "Please paste at least 50 characters of resume text.",
+    errorLimit: "Daily limit reached (3/day). Come back tomorrow!",
+    errorConnection: "Connection error. Check your internet.",
+    errorLength: "Please paste at least 50 characters.",
     tryAgain: "Improve another CV",
   },
   es: {
-    heroTitle: "Mejora tu currículum",
-    heroHighlight: "en segundos",
-    heroSub:
-      "Pega tu CV, sube un archivo o vincula un Google Sheet — la IA lo reescribe para destacar. Gratis, sin registro.",
+    badge: "Mejora de CV con IA",
+    heroTitle: "Tu currículum,",
+    heroHighlight: "reinventado",
+    heroSub: "Pega, sube o vincula tu CV. Nuestra IA lo reescribe para destacar — optimizado para ATS, adaptado a tu puesto objetivo.",
     button: "Mejorar mi currículum",
-    loading: "Mejorando tu currículum...",
-    resultTitle: "Currículum Mejorado",
+    loading: "Mejorando...",
+    resultTitle: "Tu currículum mejorado",
     copy: "Copiar",
     copied: "¡Copiado!",
     downloadPdf: "Descargar PDF",
-    tipsTitle: "Consejos para fortalecer tu perfil",
+    tipsTitle: "Consejos accionables",
     errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
-    errorLimit:
-      "Has alcanzado el límite diario (3 mejoras por día). ¡Vuelve mañana!",
-    errorConnection:
-      "Error de conexión. Revisa tu internet e inténtalo de nuevo.",
-    errorLength:
-      "Por favor pega al menos 50 caracteres de texto de currículum.",
+    errorLimit: "Límite diario alcanzado (3/día). ¡Vuelve mañana!",
+    errorConnection: "Error de conexión. Revisa tu internet.",
+    errorLength: "Pega al menos 50 caracteres.",
     tryAgain: "Mejorar otro CV",
   },
 };
 
 function generateAndDownloadPdf(text: string) {
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) return;
-
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>maxcv Resume</title>
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-          font-family: system-ui, -apple-system, sans-serif;
-          font-size: 11pt;
-          line-height: 1.5;
-          color: #1a1a1a;
-          padding: 40px 50px;
-          max-width: 800px;
-          margin: 0 auto;
-        }
-        pre {
-          white-space: pre-wrap;
-          word-wrap: break-word;
-          font-family: system-ui, -apple-system, sans-serif;
-          font-size: 11pt;
-          line-height: 1.5;
-        }
-        @media print {
-          body { padding: 0; }
-          @page { margin: 2cm; }
-        }
-      </style>
-    </head>
-    <body>
-      <pre>${text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
-      <script>
-        window.onload = function() {
-          setTimeout(function() { window.print(); window.close(); }, 500);
-        };
-      <\/script>
-    </body>
-    </html>
-  `);
-  printWindow.document.close();
+  const w = window.open("", "_blank");
+  if (!w) return;
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>maxcv</title>
+    <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;font-size:11pt;line-height:1.6;color:#1a1a1a;padding:40px 50px;max-width:800px;margin:0 auto}pre{white-space:pre-wrap;word-wrap:break-word;font-family:inherit;font-size:inherit;line-height:inherit}@media print{body{padding:0}@page{margin:2cm}}</style>
+    </head><body><pre>${text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+    <script>window.onload=function(){setTimeout(function(){window.print();window.close()},500)};<\/script></body></html>`);
+  w.document.close();
 }
 
 export default function Home() {
@@ -113,136 +71,98 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [lang, setLang] = useState<"en" | "es">("es");
   const resultRef = useRef<HTMLDivElement>(null);
-
-  const t = UI_TEXT[lang];
-  const isEs = lang === "es";
+  const t = UI[lang];
 
   const handleSubmit = async () => {
-    if (!cvText.trim()) return;
-
-    if (cvText.trim().length < 50) {
-      setError(t.errorLength);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
+    if (!cvText.trim() || cvText.trim().length < 50) { setError(t.errorLength); return; }
+    setLoading(true); setError(null); setResult(null);
     try {
       const res = await fetch("/api/improve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cvText, targetRole }),
       });
-
-      if (res.status === 429) {
-        setError(t.errorLimit);
-        return;
-      }
-
-      if (!res.ok) {
-        setError(t.errorGeneric);
-        return;
-      }
-
+      if (res.status === 429) { setError(t.errorLimit); return; }
+      if (!res.ok) { setError(t.errorGeneric); return; }
       const data = await res.json();
       setResult(data);
-
-      if (data.language === "es" && lang !== "es") {
-        setLang("es");
-      }
-
-      setTimeout(() => {
-        resultRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    } catch {
-      setError(t.errorConnection);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCopy = async () => {
-    if (!result) return;
-    await navigator.clipboard.writeText(result.improved);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleDownloadPdf = () => {
-    if (!result) return;
-    generateAndDownloadPdf(result.improved);
+      if (data.language === "es" && lang !== "es") setLang("es");
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    } catch { setError(t.errorConnection); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header lang={lang} onToggleLang={() => setLang(lang === "en" ? "es" : "en")} />
+    <div className="min-h-screen flex flex-col bg-[--ink-000]">
+      <Header lang={lang} onToggleLang={() => setLang(lang === "en" ? "es" : "en")} active="improve" />
 
-      <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-12">
-        <section className="text-center mb-12">
-          <h1 className="text-4xl tracking-tight mb-3 text-[--ink-900] font-light">
+      <main className="flex-1 w-full max-w-2xl mx-auto px-5 py-12">
+        {/* Hero */}
+        <section className="text-center mb-10">
+          <div className="inline-flex items-center gap-1.5 bg-[--accent-ghost] text-[--accent] text-xs font-medium px-3 py-1 rounded-full mb-5">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+            {t.badge}
+          </div>
+          <h1 className="text-4xl sm:text-5xl tracking-tight mb-4 text-[--ink-900]">
             {t.heroTitle}
             <br />
             <span className="text-[--accent]">{t.heroHighlight}</span>
           </h1>
-          <p className="text-[--ink-500] text-lg max-w-md mx-auto">
+          <p className="text-[--ink-500] text-base sm:text-lg max-w-lg mx-auto leading-relaxed">
             {t.heroSub}
           </p>
         </section>
 
+        {/* Input */}
         {!result && (
           <div className="mb-8">
             <CVInput
-              cvText={cvText}
-              setCvText={setCvText}
-              targetRole={targetRole}
-              setTargetRole={setTargetRole}
-              onSubmit={handleSubmit}
-              loading={loading}
-              error={error}
-              setError={setError}
-              isEs={isEs}
-              submitLabel={t.button}
-              loadingLabel={t.loading}
+              cvText={cvText} setCvText={setCvText}
+              targetRole={targetRole} setTargetRole={setTargetRole}
+              onSubmit={handleSubmit} loading={loading}
+              error={error} setError={setError}
+              isEs={lang === "es"} submitLabel={t.button} loadingLabel={t.loading}
             />
           </div>
         )}
 
+        {/* Results */}
         {result && (
           <div ref={resultRef} className="space-y-6">
-            <div className="border border-[--ink-100] rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-[--ink-900]">{t.resultTitle}</h2>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleCopy}
-                    className="text-sm text-[--accent] hover:text-[--accent-dim] font-medium transition cursor-pointer"
-                  >
+            {/* Improved resume card */}
+            <div className="bg-white border border-[--ink-100] rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-[--ink-100] bg-[--ink-050]">
+                <h2 className="text-sm font-medium text-[--ink-900]">{t.resultTitle}</h2>
+                <div className="flex gap-3">
+                  <button onClick={async () => {
+                    if (!result) return;
+                    await navigator.clipboard.writeText(result.improved);
+                    setCopied(true); setTimeout(() => setCopied(false), 2000);
+                  }}
+                    className="text-xs text-[--accent] hover:text-[--accent-dim] font-medium transition cursor-pointer">
                     {copied ? t.copied : t.copy}
                   </button>
-                  <button
-                    onClick={handleDownloadPdf}
-                    className="text-sm text-[--ink-500] hover:text-[--ink-900] font-medium transition cursor-pointer"
-                  >
+                  <button onClick={() => result && generateAndDownloadPdf(result.improved)}
+                    className="text-xs text-[--ink-400] hover:text-[--ink-700] font-medium transition cursor-pointer">
                     {t.downloadPdf}
                   </button>
                 </div>
               </div>
-              <pre className="whitespace-pre-wrap text-sm leading-relaxed text-[--ink-900]">
+              <pre className="whitespace-pre-wrap text-sm leading-relaxed text-[--ink-900] p-5 sm:p-6">
                 {result.improved}
               </pre>
             </div>
 
+            {/* Tips */}
             {result.tips.length > 0 && (
-              <div className="bg-[--accent-ghost] rounded-lg p-6">
-                <h3 className="text-sm font-medium mb-3 text-[--ink-900]">{t.tipsTitle}</h3>
-                <ul className="space-y-2">
+              <div className="bg-[--accent-ghost] border border-[--accent]/10 rounded-xl p-5 sm:p-6">
+                <h3 className="text-sm font-medium text-[--ink-900] mb-3">{t.tipsTitle}</h3>
+                <ul className="space-y-2.5">
                   {result.tips.map((tip, i) => (
-                    <li key={i} className="text-sm text-[--ink-500] flex gap-2">
-                      <span className="text-[--accent] mt-0.5 shrink-0">
-                        &bull;
-                      </span>
+                    <li key={i} className="text-sm text-[--ink-500] flex gap-2.5 leading-relaxed">
+                      <span className="w-5 h-5 rounded-full bg-[--accent]/10 text-[--accent] text-xs flex items-center justify-center shrink-0 mt-0.5 font-medium">{i + 1}</span>
                       {tip}
                     </li>
                   ))}
@@ -250,10 +170,9 @@ export default function Home() {
               </div>
             )}
 
-            <button
-              onClick={() => { setResult(null); setCvText(""); setTargetRole(""); }}
-              className="w-full bg-[--accent] text-white font-[family-name:var(--font-mono)] text-sm tracking-wide py-3 px-6 rounded-lg hover:bg-[--accent-dim] transition-colors duration-150 cursor-pointer"
-            >
+            {/* Try again */}
+            <button onClick={() => { setResult(null); setCvText(""); setTargetRole(""); }}
+              className="w-full bg-[--ink-900] text-white font-medium py-3.5 px-6 rounded-xl hover:bg-[--ink-700] transition-colors cursor-pointer text-sm">
               {t.tryAgain}
             </button>
 
@@ -264,7 +183,7 @@ export default function Home() {
         <AboutUs lang={lang} />
       </main>
 
-      <Footer />
+      <Footer lang={lang} />
     </div>
   );
 }

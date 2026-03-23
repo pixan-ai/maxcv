@@ -1,18 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  --accent:       oklch(60% 0.18 145);
-  --accent-dim:   oklch(45% 0.14 145);
-  --accent-ghost: oklch(96% 0.04 145);
-  --ink-900: oklch(12% 0 0);
-  --ink-500: oklch(50% 0 0);
-  --ink-300: oklch(75% 0 0);
-  --ink-100: oklch(95% 0 0);
-  --ink-000: oklch(99% 0 0);
+  /* Accent — vibrant green with depth */
+  --accent:       oklch(55% 0.17 155);
+  --accent-dim:   oklch(48% 0.15 155);
+  --accent-ghost: oklch(97% 0.02 155);
+
+  /* Ink — warm neutrals, not pure gray */
+  --ink-900: oklch(15% 0.005 260);
+  --ink-700: oklch(30% 0.005 260);
+  --ink-500: oklch(52% 0.005 260);
+  --ink-400: oklch(62% 0.005 260);
+  --ink-300: oklch(78% 0.005 260);
+  --ink-200: oklch(88% 0.005 260);
+  --ink-100: oklch(94% 0.003 260);
+  --ink-050: oklch(97% 0.002 260);
+  --ink-000: oklch(99.5% 0.001 260);
+
+  /* Semantic */
   --positive: oklch(55% 0.15 155);
+  --positive-ghost: oklch(97% 0.02 155);
+  --warning: oklch(65% 0.15 80);
+  --warning-ghost: oklch(97% 0.03 80);
 }
 
-/* Scroll-driven reveal animation (pure CSS, zero JS) */
+/* Scroll-driven reveal */
 @supports (animation-timeline: view()) {
   .reveal {
     animation: reveal linear both;
@@ -20,20 +32,10 @@
     animation-range: entry 0% entry 30%;
   }
 }
-
 @supports not (animation-timeline: view()) {
-  .reveal {
-    opacity: 1;
-  }
+  .reveal { opacity: 1; }
 }
-
 @keyframes reveal {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
