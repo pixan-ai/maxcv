@@ -93,6 +93,8 @@ export default function CVInput({
   const [sheetsLoading, setSheetsLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const isReady = !loading && cvText.trim().length >= 50;
+
   const validateFile = useCallback((file: File): string | null => {
     if (file.size > MAX_FILE_SIZE) return t.fileTooLarge;
     if (!file.name.toLowerCase().endsWith(".pdf")) return t.fileWrongType;
@@ -249,8 +251,13 @@ export default function CVInput({
               className="w-full rounded-xl border border-[--ink-200] bg-white px-4 py-3 text-sm text-[--ink-900] focus:outline-none focus:ring-2 focus:ring-[--accent]/20 focus:border-[--accent] transition placeholder:text-[--ink-300]" />
             <p className="text-xs text-[--ink-400] mt-1.5">{t.sheetsHint}</p>
           </div>
-          <button type="button" onClick={handleSheetsImport} disabled={sheetsLoading || !sheetsUrl.trim()}
-            className="w-full bg-[--accent] text-white font-medium py-3 px-6 rounded-xl hover:bg-[--accent-dim] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer">
+          <button type="button" onClick={handleSheetsImport}
+            disabled={sheetsLoading || !sheetsUrl.trim()}
+            className={`w-full font-medium py-3 px-6 rounded-xl transition-colors cursor-pointer ${
+              sheetsLoading || !sheetsUrl.trim()
+                ? "bg-[--ink-100] text-[--ink-300] cursor-not-allowed"
+                : "bg-[--accent] text-white hover:bg-[--accent-dim]"
+            }`}>
             {sheetsLoading ? <Spinner label={t.sheetsLoading} /> : t.sheetsButton}
           </button>
         </div>
@@ -274,8 +281,12 @@ export default function CVInput({
       )}
 
       {/* Submit */}
-      <button type="button" onClick={onSubmit} disabled={loading || cvText.trim().length < 50}
-        className="w-full bg-[--accent] text-white font-medium py-3.5 px-6 rounded-xl hover:bg-[--accent-dim] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer text-sm">
+      <button type="button" onClick={onSubmit} disabled={!isReady}
+        className={`w-full font-medium py-3.5 px-6 rounded-xl transition-colors text-sm ${
+          isReady
+            ? "bg-[--accent] text-white hover:bg-[--accent-dim] cursor-pointer"
+            : "bg-[--ink-100] text-[--ink-300] cursor-not-allowed"
+        }`}>
         {loading ? <Spinner label={loadingLabel} /> : submitLabel}
       </button>
 
