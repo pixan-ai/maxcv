@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  /* Legacy tokens (improve page) */
   --color-accent: #2563eb;
   --color-accent-hover: #1d4ed8;
   --color-accent-light: #eff6ff;
@@ -8,4 +9,53 @@
   --color-border: #e5e7eb;
   --color-muted: #6b7280;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Style Guide v2.0 — OKLCH ink scale */
+  --color-ink-000: oklch(1 0 0);
+  --color-ink-050: oklch(0.97 0 0);
+  --color-ink-100: oklch(0.93 0 0);
+  --color-ink-200: oklch(0.87 0 0);
+  --color-ink-300: oklch(0.75 0 0);
+  --color-ink-400: oklch(0.65 0 0);
+  --color-ink-500: oklch(0.55 0 0);
+  --color-ink-600: oklch(0.45 0 0);
+  --color-ink-700: oklch(0.35 0 0);
+  --color-ink-800: oklch(0.25 0 0);
+  --color-ink-900: oklch(0.15 0 0);
+
+  /* v2.0 accent (OKLCH) */
+  --color-v2-accent: oklch(0.55 0.2 260);
+  --color-v2-accent-hover: oklch(0.48 0.2 260);
+  --color-v2-accent-light: oklch(0.95 0.03 260);
+
+  /* v2.0 semantic */
+  --color-positive: oklch(0.55 0.15 155);
+  --color-positive-light: oklch(0.95 0.03 155);
+}
+
+/* Scroll-driven reveal animation (pure CSS, zero JS) */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 30%;
+  }
+}
+
+/* Fallback: just visible when scroll-driven not supported */
+@supports not (animation-timeline: view()) {
+  .reveal {
+    opacity: 1;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import DonationBanner from "@/components/DonationBanner";
-import CVInput from "@/components/CVInput";
+import { useState, useRef } from "react";
+import { motion } from "motion/react";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-interface CriterionStatus { status: string; detail: string; }
-interface DimensionResult {
+// -- Types (matching the rich API response) ----------------------------------
+
+type CriterionStatus = {
+  status: "pass" | "warning" | "fail";
+  detail: string;
+};
+
+type Dimension = {
   score: number;
-  criteria_checked?: Record<string, CriterionStatus>;
+  criteria_checked: Record<string, CriterionStatus>;
   evidence?: string;
   issues?: string[];
   suggestions?: string[];
@@ -19,268 +21,883 @@ interface DimensionResult {
   weak_bullets_count?: number;
   strong_bullets_count?: number;
   error_count?: number;
-  detected_pages?: string;
-  recommended_pages?: string;
   present_sections?: string[];
   missing_sections?: string[];
   example_improvement?: { before: string; after: string };
-}
+};
 
-interface ScoreResult {
-  score_version: string;
-  detected_language: string;
-  inferred_role: string;
+type ScoreResult = {
   total_score: number;
   category: string;
   summary: string;
+  detected_language: string;
+  inferred_role?: string;
   dimensions: {
-    ats_compatibility: DimensionResult;
-    achievement_impact: DimensionResult;
-    structure_format: DimensionResult;
-    keyword_relevance: DimensionResult;
-    writing_clarity: DimensionResult;
-    completeness: DimensionResult;
+    ats_compatibility: Dimension;
+    achievement_impact: Dimension;
+    structure_format: Dimension;
+    keyword_relevance: Dimension;
+    writing_clarity: Dimension;
+    completeness: Dimension;
   };
   top_3_actions: string[];
-  share_text: string;
+};
+
+type InputMode = "text" | "file" | "sheets";
+
+// Flattened improvement item for the hero list
+type ImprovementItem = {
+  dimension: string;
+  issue: string;
+  suggestion: string;
+  score: number;
+};
+
+// Flattened strength item
+type StrengthItem = {
+  dimension: string;
+  detail: string;
+};
+
+// -- Spring config (Style Guide v2.0) ----------------------------------------
+
+const spring = { stiffness: 300, damping: 30 };
+const stagger = 0.06;
+
+// -- Dimension display names -------------------------------------------------
+
+const DIMENSION_NAMES: Record<string, { en: string; es: string }> = {
+  ats_compatibility: { en: "ATS Compatibility", es: "Compatibilidad ATS" },
+  achievement_impact: { en: "Achievement Impact", es: "Impacto de Logros" },
+  structure_format: { en: "Structure & Format", es: "Estructura y Formato" },
+  keyword_relevance: { en: "Keyword Relevance", es: "Relevancia de Palabras Clave" },
+  writing_clarity: { en: "Writing Clarity", es: "Claridad de Escritura" },
+  completeness: { en: "Completeness", es: "Completitud" },
+};
+
+// -- Extract improvements and strengths from dimensions ----------------------
+
+function extractImprovements(dimensions: ScoreResult["dimensions"]): ImprovementItem[] {
+  const items: ImprovementItem[] = [];
+
+  for (const [key, dim] of Object.entries(dimensions)) {
+    const issues = dim.issues || [];
+    const suggestions = dim.suggestions || [];
+
+    for (let i = 0; i < issues.length; i++) {
+      items.push({
+        dimension: key,
+        issue: issues[i],
+        suggestion: suggestions[i] || "",
+        score: dim.score,
+      });
+    }
+  }
+
+  // Sort by dimension score ascending (worst dimensions first = highest impact)
+  items.sort((a, b) => a.score - b.score);
+  return items;
 }
 
-const DIMENSIONS: { key: keyof ScoreResult["dimensions"]; label: string; labelEn: string; weight: string }[] = [
-  { key: "ats_compatibility", label: "Compatibilidad ATS", labelEn: "ATS Compatibility", weight: "25%" },
-  { key: "achievement_impact", label: "Impacto de logros", labelEn: "Achievement Impact", weight: "20%" },
-  { key: "structure_format", label: "Estructura y formato", labelEn: "Structure & Format", weight: "15%" },
-  { key: "keyword_relevance", label: "Palabras clave", labelEn: "Keywords", weight: "20%" },
-  { key: "writing_clarity", label: "Claridad de redacci\u00f3n", labelEn: "Writing Clarity", weight: "10%" },
-  { key: "completeness", label: "Completitud", labelEn: "Completeness", weight: "10%" },
-];
+function extractStrengths(
+  dimensions: ScoreResult["dimensions"],
+  lang: "en" | "es"
+): StrengthItem[] {
+  const items: StrengthItem[] = [];
 
-function scoreColor(s: number) { return s >= 80 ? "text-emerald-600" : s >= 60 ? "text-amber-500" : "text-red-500"; }
-function scoreBg(s: number) { return s >= 80 ? "bg-emerald-500" : s >= 60 ? "bg-amber-400" : "bg-red-500"; }
-function scoreRing(s: number) { return s >= 80 ? "stroke-emerald-500" : s >= 60 ? "stroke-amber-400" : "stroke-red-500"; }
-function catLabel(c: string, l: string) { const m: any = { excellent:{es:"Excelente",en:"Excellent"}, good:{es:"Bueno",en:"Good"}, fair:{es:"Regular",en:"Fair"}, low:{es:"Bajo",en:"Low"}, critical:{es:"Cr\u00edtico",en:"Critical"} }; return m[c]?.[l==="es"?"es":"en"]||c; }
-function statusIcon(s: string) { return s === "pass" ? "\u2705" : s === "warning" ? "\u26A0\uFE0F" : "\u274C"; }
-function statusBg(s: string) { return s === "pass" ? "bg-emerald-50" : s === "warning" ? "bg-amber-50" : "bg-red-50"; }
+  for (const [key, dim] of Object.entries(dimensions)) {
+    if (dim.score >= 70) {
+      // Find passing criteria as strengths
+      const passing = Object.entries(dim.criteria_checked || {})
+        .filter(([, c]) => c.status === "pass")
+        .map(([, c]) => c.detail)
+        .filter(Boolean);
 
-function Ring({ score, animate }: { score: number; animate: boolean }) {
-  const c = 2 * Math.PI * 54;
-  return (
-    <div className="relative w-36 h-36 mx-auto">
-      <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-        <circle cx="60" cy="60" r="54" fill="none" className="stroke-gray-200" strokeWidth="7"/>
-        <circle cx="60" cy="60" r="54" fill="none" className={`${scoreRing(score)} transition-all duration-[1.5s] ease-out`} strokeWidth="7" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={animate ? c*(1-score/100) : c}/>
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={`text-3xl font-semibold tabular-nums ${scoreColor(score)}`}>{animate?score:0}</span>
-        <span className="text-xs text-muted mt-0.5">de 100</span>
-      </div>
-    </div>
-  );
+      if (passing.length > 0) {
+        items.push({
+          dimension: key,
+          detail: passing.slice(0, 2).join(". "),
+        });
+      }
+    }
+  }
+
+  // If no criteria-based strengths, use dimensions with high scores
+  if (items.length === 0) {
+    for (const [key, dim] of Object.entries(dimensions)) {
+      if (dim.score >= 60 && dim.evidence) {
+        items.push({
+          dimension: key,
+          detail:
+            lang === "en"
+              ? `Scored ${dim.score}/100 — ${dim.evidence.slice(0, 120)}`
+              : `Puntuación ${dim.score}/100 — ${dim.evidence.slice(0, 120)}`,
+        });
+      }
+    }
+  }
+
+  return items.slice(0, 4);
 }
 
-function DimensionCard({ dim, meta, isEs, score }: { dim: DimensionResult; meta: typeof DIMENSIONS[0]; isEs: boolean; score: number }) {
-  const passCount = dim.criteria_checked ? Object.values(dim.criteria_checked).filter(c => c.status === "pass").length : 0;
-  const totalCount = dim.criteria_checked ? Object.keys(dim.criteria_checked).length : 0;
+// -- Bilingual copy ----------------------------------------------------------
 
-  return (
-    <div className="border border-border rounded-lg p-5">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="text-sm font-semibold">{isEs ? meta.label : meta.labelEn}</h3>
-          <span className="text-xs text-muted">{meta.weight} {isEs?"del puntaje":"of score"} \u00b7 {passCount}/{totalCount} {isEs?"pasaron":"passed"}</span>
-        </div>
-        <span className={`text-2xl font-bold tabular-nums ${scoreColor(score)}`}>{score}</span>
-      </div>
-      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-4">
-        <div className={`h-full rounded-full ${scoreBg(score)} transition-all duration-1000 ease-out`} style={{width:`${score}%`}}/>
-      </div>
-      {dim.criteria_checked && (
-        <div className="space-y-1.5 mb-4">
-          {Object.entries(dim.criteria_checked).map(([key, val]) => (
-            <div key={key} className={`flex items-start gap-2 p-2 rounded-lg ${statusBg(val.status)} text-sm`}>
-              <span className="shrink-0 text-xs mt-0.5">{statusIcon(val.status)}</span>
-              <div className="min-w-0">
-                <span className="font-medium text-gray-700">{key.replace(/_/g," ")}</span>
-                <span className="text-gray-500"> \u2014 {val.detail}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      {dim.evidence && (
-        <div className="mb-3 p-3 rounded-lg bg-gray-50 border-l-2 border-gray-300">
-          <p className="text-xs font-medium text-muted mb-1">{isEs?"Evidencia del CV:":"CV evidence:"}</p>
-          <p className="text-sm text-gray-600 italic">{dim.evidence}</p>
-        </div>
-      )}
-      {meta.key === "achievement_impact" && dim.example_improvement && (
-        <div className="mb-3 p-3 rounded-lg bg-gray-50">
-          <p className="text-xs font-medium text-muted mb-2">{isEs?"Ejemplo de mejora:":"Improvement example:"}</p>
-          <p className="text-sm text-red-600/80 line-through">{dim.example_improvement.before}</p>
-          <p className="text-sm text-emerald-700 font-medium mt-1">{dim.example_improvement.after}</p>
-        </div>
-      )}
-      {meta.key === "keyword_relevance" && (dim.found_keywords?.length || dim.missing_keywords?.length) && (
-        <div className="mb-3 flex flex-wrap gap-1.5">
-          {dim.found_keywords?.map((kw,i) => <span key={`f${i}`} className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">{kw}</span>)}
-          {dim.missing_keywords?.map((kw,i) => <span key={`m${i}`} className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200 border-dashed">+ {kw}</span>)}
-        </div>
-      )}
-      {meta.key === "completeness" && (dim.present_sections?.length || dim.missing_sections?.length) && (
-        <div className="mb-3 flex flex-wrap gap-1.5">
-          {dim.present_sections?.map((s,i) => <span key={`p${i}`} className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">{s}</span>)}
-          {dim.missing_sections?.map((s,i) => <span key={`m${i}`} className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-dashed border-red-200">+ {s}</span>)}
-        </div>
-      )}
-      {dim.issues && dim.issues.length > 0 && (
-        <div className="mb-3">
-          <p className="text-xs font-medium text-red-600 mb-1.5">{isEs?"Problemas:":"Issues:"}</p>
-          <ul className="space-y-1">{dim.issues.map((issue,i) => <li key={i} className="text-sm text-gray-600 pl-3 border-l-2 border-red-200">{issue}</li>)}</ul>
-        </div>
-      )}
-      {dim.suggestions && dim.suggestions.length > 0 && (
-        <div>
-          <p className="text-xs font-medium text-accent mb-1.5">{isEs?"Sugerencias:":"Suggestions:"}</p>
-          <ul className="space-y-1">{dim.suggestions.map((s,i) => <li key={i} className="text-sm text-gray-600 pl-3 border-l-2 border-emerald-200">{s}</li>)}</ul>
-        </div>
-      )}
-    </div>
-  );
-}
+const UI = {
+  en: {
+    logo: "maxcv",
+    langToggle: "Español",
+    tagline: "resume score",
+    tabText: "Paste text",
+    tabFile: "Upload file",
+    tabSheets: "Google Sheets",
+    labelCv: "Your current resume",
+    placeholderCv: "Paste your resume text here...",
+    labelRole: "Target role or industry",
+    optional: "(optional)",
+    placeholderRole: "e.g. Senior Frontend Developer, Marketing Manager...",
+    button: "Analyze my resume",
+    loading: "Analyzing...",
+    uploadLabel: "Upload your resume",
+    uploadHint: "PDF or plain text — max 5MB",
+    uploadButton: "Choose file",
+    uploadDrop: "or drag and drop here",
+    sheetsLabel: "Google Sheets link",
+    sheetsPlaceholder: "https://docs.google.com/spreadsheets/d/...",
+    sheetsHint: "Make sure the sheet is shared publicly",
+    sheetsButton: "Import from Google Sheets",
+    parsing: "Reading your file...",
+    scoreMeta: "current score",
+    improvementsTitle: "What you can improve",
+    improvementsSubtitle: "ordered by impact — start from the top",
+    strengthsTitle: "What already works",
+    strengthsSubtitle: "these areas are solid",
+    topActionsTitle: "Start here",
+    topActionsSubtitle: "the 3 changes with the most impact",
+    cta: "improve these sections with ai",
+    analyzeAnother: "analyze another resume",
+    errorGeneric: "Something went wrong. Please try again.",
+    errorLimit: "Limit reached (5 per hour). Try again later.",
+    errorConnection: "Connection error. Check your internet and try again.",
+    errorLength: "Please paste at least 50 characters of resume text.",
+    parseError: "Could not read the file. Try pasting your resume instead.",
+    sheetsError: "Could not access Google Sheet.",
+    footer: "maxcv — free for everyone, forever",
+  },
+  es: {
+    logo: "maxcv",
+    langToggle: "English",
+    tagline: "puntuación de cv",
+    tabText: "Pegar texto",
+    tabFile: "Subir archivo",
+    tabSheets: "Google Sheets",
+    labelCv: "Tu currículum actual",
+    placeholderCv: "Pega el texto de tu currículum aquí...",
+    labelRole: "Puesto o industria objetivo",
+    optional: "(opcional)",
+    placeholderRole: "ej. Gerente de Ventas, Desarrollador Frontend Senior...",
+    button: "Analizar mi currículum",
+    loading: "Analizando...",
+    uploadLabel: "Sube tu currículum",
+    uploadHint: "PDF o texto plano — máx 5MB",
+    uploadButton: "Elegir archivo",
+    uploadDrop: "o arrastra y suelta aquí",
+    sheetsLabel: "Enlace de Google Sheets",
+    sheetsPlaceholder: "https://docs.google.com/spreadsheets/d/...",
+    sheetsHint: "Asegúrate de que esté compartida públicamente",
+    sheetsButton: "Importar de Google Sheets",
+    parsing: "Leyendo tu archivo...",
+    scoreMeta: "puntuación actual",
+    improvementsTitle: "Lo que puedes mejorar",
+    improvementsSubtitle: "ordenado por impacto — empieza por arriba",
+    strengthsTitle: "Lo que ya funciona",
+    strengthsSubtitle: "estas áreas están bien",
+    topActionsTitle: "Empieza aquí",
+    topActionsSubtitle: "los 3 cambios con más impacto",
+    cta: "mejorar estas secciones con ia",
+    analyzeAnother: "analizar otro currículum",
+    errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
+    errorLimit: "Límite alcanzado (5 por hora). Intenta más tarde.",
+    errorConnection: "Error de conexión. Revisa tu internet.",
+    errorLength: "Por favor pega al menos 50 caracteres.",
+    parseError: "No se pudo leer el archivo. Intenta pegando el texto.",
+    sheetsError: "No se pudo acceder al Google Sheet.",
+    footer: "maxcv — gratis para todos, siempre",
+  },
+};
+
+// -- Component ---------------------------------------------------------------
 
 export default function ScorePage() {
   const [cvText, setCvText] = useState("");
   const [targetRole, setTargetRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScoreResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [animateScore, setAnimateScore] = useState(false);
-  const [lang, setLang] = useState<"en" | "es">("es");
+  const [error, setError] = useState("");
+  const [lang, setLang] = useState<"en" | "es">("en");
+  const [inputMode, setInputMode] = useState<InputMode>("text");
+  const [parsing, setParsing] = useState(false);
+  const [fileName, setFileName] = useState("");
+  const [sheetsUrl, setSheetsUrl] = useState("");
+  const [dragOver, setDragOver] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { if (result) { const t = setTimeout(() => setAnimateScore(true), 100); return () => clearTimeout(t); } }, [result]);
+  const t = UI[lang];
 
-  const isEs = result ? result.detected_language === "es" : lang === "es";
+  // -- File handling ---------------------------------------------------------
 
-  async function handleScore() {
-    if (cvText.trim().length < 100) { setError(isEs ? "Pega tu CV completo. El texto es muy corto." : "Paste your full CV. Text is too short."); return; }
-    setLoading(true); setError(null); setResult(null); setAnimateScore(false);
+  const handleFileUpload = async (file: File) => {
+    setParsing(true);
+    setError("");
+    setFileName(file.name);
+
     try {
-      const res = await fetch("/api/score", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cvText: cvText.trim(), targetRole: targetRole.trim() || undefined }) });
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/parse", { method: "POST", body: formData });
       const data = await res.json();
-      if (!res.ok) { setError(data.message || "Error al evaluar tu CV."); return; }
+
+      if (!res.ok) {
+        setError(data.error || t.parseError);
+        setFileName("");
+        return;
+      }
+      setCvText(data.text);
+      setInputMode("text");
+    } catch {
+      setError(t.parseError);
+      setFileName("");
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const handleSheetsImport = async () => {
+    if (!sheetsUrl.trim()) return;
+    setParsing(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("sheetsUrl", sheetsUrl);
+      const res = await fetch("/api/parse", { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || t.sheetsError);
+        return;
+      }
+      setCvText(data.text);
+      setInputMode("text");
+      setSheetsUrl("");
+    } catch {
+      setError(t.sheetsError);
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileUpload(file);
+  };
+
+  // -- Submit ----------------------------------------------------------------
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cvText.trim()) return;
+
+    if (cvText.trim().length < 50) {
+      setError(t.errorLength);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setResult(null);
+
+    try {
+      const res = await fetch("/api/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cvText, targetRole }),
+      });
+
+      if (res.status === 429) {
+        setError(t.errorLimit);
+        return;
+      }
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.message || t.errorGeneric);
+        return;
+      }
+
+      const data: ScoreResult = await res.json();
       setResult(data);
-      if (data.detected_language === "es" && lang !== "es") setLang("es");
-      if (data.detected_language === "en" && lang !== "en") setLang("en");
-      setTimeout(() => { resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 200);
-    } catch { setError(isEs ? "Error de conexi\u00f3n." : "Connection error."); } finally { setLoading(false); }
-  }
+
+      if (
+        data.detected_language === "es" ||
+        data.detected_language === "es-MX"
+      ) {
+        setLang("es");
+      }
+
+      setTimeout(() => {
+        resultRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } catch {
+      setError(t.errorConnection);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // -- CTA handler -----------------------------------------------------------
+
+  const handleImproveClick = () => {
+    try {
+      sessionStorage.setItem("maxcv_cv", cvText);
+      if (targetRole) sessionStorage.setItem("maxcv_role", targetRole);
+    } catch {
+      // sessionStorage unavailable
+    }
+    window.location.href = "/";
+  };
+
+  // -- Derived data ----------------------------------------------------------
+
+  const improvements = result ? extractImprovements(result.dimensions) : [];
+  const strengths = result ? extractStrengths(result.dimensions, lang) : [];
+  const dimName = (key: string) => DIMENSION_NAMES[key]?.[lang] || key;
+
+  // -- Render ----------------------------------------------------------------
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header lang={lang} onToggleLang={() => setLang(lang === "en" ? "es" : "en")} />
+    <div
+      className="min-h-screen flex flex-col bg-ink-000"
+      style={{ fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}
+    >
+      {/* Header */}
+      <header className="w-full border-b border-ink-100">
+        <div className="max-w-2xl mx-auto px-5 py-4 flex items-center justify-between">
+          <a
+            href="/score"
+            className="font-medium text-ink-800 tracking-tight"
+          >
+            {t.logo}
+          </a>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setLang(lang === "en" ? "es" : "en")}
+              className="text-ink-400 hover:text-ink-700 transition cursor-pointer"
+              style={{ fontSize: "13px" }}
+            >
+              {t.langToggle}
+            </button>
+            <span
+              className="text-ink-300 tracking-wide uppercase"
+              style={{
+                fontSize: "13px",
+                fontFamily: "var(--font-geist-mono)",
+              }}
+            >
+              {t.tagline}
+            </span>
+          </div>
+        </div>
+      </header>
 
-      <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-12">
+      <main className="flex-1 w-full max-w-2xl mx-auto px-5 py-12">
+        {/* Input form */}
         {!result && (
-          <section className="text-center mb-12">
-            <h1 className="text-4xl font-bold tracking-tight mb-3">
-              {isEs ? "Conoce el puntaje real" : "Get the real score"}
-              <br />
-              <span className="text-accent">{isEs ? "de tu CV" : "of your CV"}</span>
-            </h1>
-            <p className="text-muted text-lg max-w-md mx-auto">
-              {isEs
-                ? "Evaluamos tu CV en 6 dimensiones con IA avanzada. Sin registro, sin costo, sin almacenar datos."
-                : "We evaluate your CV across 6 dimensions with advanced AI. No sign-up, no cost, no data stored."}
-            </p>
-          </section>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Tabs */}
+            <div className="flex border-b border-ink-100">
+              {(["text", "file", "sheets"] as InputMode[]).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setInputMode(mode)}
+                  className={`px-4 py-2.5 font-medium transition cursor-pointer ${
+                    inputMode === mode
+                      ? "text-v2-accent border-b-2 border-v2-accent -mb-px"
+                      : "text-ink-400 hover:text-ink-700"
+                  }`}
+                  style={{ fontSize: "14px" }}
+                >
+                  {mode === "text"
+                    ? t.tabText
+                    : mode === "file"
+                      ? t.tabFile
+                      : t.tabSheets}
+                </button>
+              ))}
+            </div>
+
+            {/* Text input */}
+            {inputMode === "text" && (
+              <div>
+                <label
+                  htmlFor="cv"
+                  className="block font-medium text-ink-700 mb-1.5"
+                  style={{ fontSize: "14px" }}
+                >
+                  {t.labelCv}
+                </label>
+                <textarea
+                  id="cv"
+                  rows={10}
+                  value={cvText}
+                  onChange={(e) => setCvText(e.target.value)}
+                  placeholder={t.placeholderCv}
+                  className="w-full rounded-lg border border-ink-100 px-4 py-3 text-ink-700 focus:outline-none focus:ring-2 focus:ring-v2-accent/30 focus:border-v2-accent resize-y transition placeholder:text-ink-300"
+                  style={{ fontSize: "14px" }}
+                  required
+                />
+              </div>
+            )}
+
+            {/* File upload */}
+            {inputMode === "file" && (
+              <div>
+                <label
+                  className="block font-medium text-ink-700 mb-1.5"
+                  style={{ fontSize: "14px" }}
+                >
+                  {t.uploadLabel}
+                </label>
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOver(true);
+                  }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition ${
+                    dragOver
+                      ? "border-v2-accent bg-v2-accent-light"
+                      : "border-ink-100 hover:border-ink-300"
+                  }`}
+                >
+                  {parsing ? (
+                    <Spinner label={t.parsing} />
+                  ) : (
+                    <>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.txt"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(file);
+                        }}
+                      />
+                      <svg
+                        className="mx-auto h-10 w-10 text-ink-200 mb-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                        />
+                      </svg>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="font-medium text-v2-accent hover:text-v2-accent-hover transition cursor-pointer"
+                        style={{ fontSize: "14px" }}
+                      >
+                        {t.uploadButton}
+                      </button>
+                      <p className="text-ink-400 mt-1" style={{ fontSize: "13px" }}>
+                        {t.uploadDrop}
+                      </p>
+                      <p className="text-ink-400 mt-2" style={{ fontSize: "13px" }}>
+                        {t.uploadHint}
+                      </p>
+                      {fileName && (
+                        <p className="text-v2-accent font-medium mt-2" style={{ fontSize: "13px" }}>
+                          {fileName}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Google Sheets */}
+            {inputMode === "sheets" && (
+              <div className="space-y-3">
+                <div>
+                  <label
+                    htmlFor="sheets"
+                    className="block font-medium text-ink-700 mb-1.5"
+                    style={{ fontSize: "14px" }}
+                  >
+                    {t.sheetsLabel}
+                  </label>
+                  <input
+                    id="sheets"
+                    type="url"
+                    value={sheetsUrl}
+                    onChange={(e) => setSheetsUrl(e.target.value)}
+                    placeholder={t.sheetsPlaceholder}
+                    className="w-full rounded-lg border border-ink-100 px-4 py-3 text-ink-700 focus:outline-none focus:ring-2 focus:ring-v2-accent/30 focus:border-v2-accent transition placeholder:text-ink-300"
+                    style={{ fontSize: "14px" }}
+                  />
+                  <p className="text-ink-400 mt-1.5" style={{ fontSize: "13px" }}>
+                    {t.sheetsHint}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSheetsImport}
+                  disabled={parsing || !sheetsUrl.trim()}
+                  className="w-full bg-v2-accent text-ink-000 font-medium py-3 px-6 rounded-lg hover:bg-v2-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
+                  style={{ fontSize: "14px" }}
+                >
+                  {parsing ? <Spinner label={t.parsing} /> : t.sheetsButton}
+                </button>
+              </div>
+            )}
+
+            {/* Target role */}
+            <div>
+              <label
+                htmlFor="role"
+                className="block font-medium text-ink-700 mb-1.5"
+                style={{ fontSize: "14px" }}
+              >
+                {t.labelRole}{" "}
+                <span className="text-ink-400 font-normal">{t.optional}</span>
+              </label>
+              <input
+                id="role"
+                type="text"
+                value={targetRole}
+                onChange={(e) => setTargetRole(e.target.value)}
+                placeholder={t.placeholderRole}
+                className="w-full rounded-lg border border-ink-100 px-4 py-3 text-ink-700 focus:outline-none focus:ring-2 focus:ring-v2-accent/30 focus:border-v2-accent transition placeholder:text-ink-300"
+                style={{ fontSize: "14px" }}
+              />
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading || !cvText.trim()}
+              className="w-full bg-v2-accent text-ink-000 font-medium py-3 px-6 rounded-lg hover:bg-v2-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
+              style={{
+                fontSize: "14px",
+                fontFamily: "var(--font-geist-mono)",
+              }}
+            >
+              {loading ? <Spinner label={t.loading} /> : t.button}
+            </button>
+          </form>
         )}
 
-        {!result && (
-          <div className="mb-8">
-            <CVInput
-              cvText={cvText}
-              setCvText={setCvText}
-              targetRole={targetRole}
-              setTargetRole={setTargetRole}
-              onSubmit={handleScore}
-              loading={loading}
-              error={error}
-              setError={setError}
-              isEs={isEs}
-              submitLabel={isEs ? "Evaluar mi CV" : "Evaluate my CV"}
-              loadingLabel={isEs ? "Evaluando tu CV..." : "Evaluating your CV..."}
-            />
+        {/* Error */}
+        {error && (
+          <div
+            className="bg-ink-050 text-ink-600 px-4 py-3 rounded-lg mb-6 mt-4"
+            style={{ fontSize: "14px" }}
+          >
+            {error}
           </div>
         )}
 
+        {/* Results */}
         {result && (
-          <div ref={resultRef} className="space-y-6">
-            <div className="border border-border rounded-lg p-6">
-              <div className="flex flex-col sm:flex-row items-center gap-6">
-                <div className="text-center shrink-0">
-                  <Ring score={result.total_score} animate={animateScore}/>
-                  <div className="mt-2">
-                    <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${
-                      result.total_score >= 75 ? "bg-emerald-50 text-emerald-700"
-                      : result.total_score >= 60 ? "bg-amber-50 text-amber-700"
-                      : "bg-red-50 text-red-700"
-                    }`}>
-                      {catLabel(result.category, result.detected_language)}
-                    </span>
-                  </div>
-                  {result.inferred_role && <p className="text-xs text-muted mt-1">{isEs?"Perfil:":"Profile:"} {result.inferred_role}</p>}
+          <div ref={resultRef} className="space-y-16">
+            {/* Score metadata — discrete, not the hero */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="text-center"
+            >
+              <p
+                className="tracking-wide uppercase text-ink-500 font-light"
+                style={{
+                  fontSize: "13px",
+                  fontFamily: "var(--font-geist-mono)",
+                }}
+              >
+                {t.scoreMeta} &middot; {result.total_score} / 100
+              </p>
+              {/* Summary — empathetic, starts with a strength */}
+              <p
+                className="text-ink-600 mt-4 max-w-lg mx-auto"
+                style={{ fontSize: "14px", lineHeight: "1.7" }}
+              >
+                {result.summary}
+              </p>
+            </motion.div>
+
+            {/* TOP 3 ACTIONS — the quick wins */}
+            {result.top_3_actions && result.top_3_actions.length > 0 && (
+              <section className="reveal">
+                <div className="mb-5">
+                  <h2
+                    className="font-medium text-ink-800"
+                    style={{ fontSize: "18px" }}
+                  >
+                    {t.topActionsTitle}
+                  </h2>
+                  <p className="text-ink-400 mt-1" style={{ fontSize: "13px" }}>
+                    {t.topActionsSubtitle}
+                  </p>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600 leading-relaxed">{result.summary}</p>
-                  <div className="mt-4 space-y-2">
-                    {DIMENSIONS.map(d => (
-                      <div key={d.key} className="flex items-center gap-3">
-                        <span className="text-xs text-muted w-28 shrink-0 truncate">{isEs?d.label:d.labelEn}</span>
-                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full ${scoreBg(result.dimensions[d.key].score)}`} style={{width:`${result.dimensions[d.key].score}%`}}/>
-                        </div>
-                        <span className={`text-xs font-semibold tabular-nums w-7 text-right ${scoreColor(result.dimensions[d.key].score)}`}>{result.dimensions[d.key].score}</span>
+
+                <div className="space-y-3">
+                  {result.top_3_actions.map((action, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        type: "spring",
+                        ...spring,
+                        delay: i * stagger,
+                      }}
+                      className="flex gap-3 items-start"
+                    >
+                      <span
+                        className="flex-shrink-0 w-6 h-6 rounded-full bg-v2-accent text-ink-000 flex items-center justify-center mt-0.5"
+                        style={{
+                          fontSize: "12px",
+                          fontFamily: "var(--font-geist-mono)",
+                        }}
+                      >
+                        {i + 1}
+                      </span>
+                      <p
+                        className="text-ink-700"
+                        style={{ fontSize: "14px", lineHeight: "1.6" }}
+                      >
+                        {action}
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* HERO — Improvements by dimension */}
+            {improvements.length > 0 && (
+              <section className="reveal">
+                <div className="mb-6">
+                  <h2
+                    className="font-medium text-ink-800"
+                    style={{ fontSize: "18px" }}
+                  >
+                    {t.improvementsTitle}
+                  </h2>
+                  <p className="text-ink-400 mt-1" style={{ fontSize: "13px" }}>
+                    {t.improvementsSubtitle}
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {improvements.map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        type: "spring",
+                        ...spring,
+                        delay: (3 + i) * stagger,
+                      }}
+                      className="border-l-2 border-ink-100 pl-4 py-1"
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span
+                          className="font-medium text-ink-700"
+                          style={{ fontSize: "14px" }}
+                        >
+                          {dimName(item.dimension)}
+                        </span>
+                        <span
+                          className={`tracking-wide uppercase font-light ${
+                            item.score < 50
+                              ? "text-v2-accent"
+                              : "text-ink-400"
+                          }`}
+                          style={{
+                            fontSize: "11px",
+                            fontFamily: "var(--font-geist-mono)",
+                          }}
+                        >
+                          {item.score < 50
+                            ? lang === "en"
+                              ? "high impact"
+                              : "alto impacto"
+                            : lang === "en"
+                              ? "medium impact"
+                              : "impacto medio"}
+                        </span>
                       </div>
-                    ))}
-                  </div>
+
+                      <p
+                        className="text-ink-600"
+                        style={{ fontSize: "14px", lineHeight: "1.6" }}
+                      >
+                        {item.issue}
+                      </p>
+
+                      {item.suggestion && (
+                        <p
+                          className="text-ink-400 mt-1"
+                          style={{ fontSize: "13px", lineHeight: "1.5" }}
+                        >
+                          {item.suggestion}
+                        </p>
+                      )}
+                    </motion.div>
+                  ))}
                 </div>
-              </div>
-            </div>
+              </section>
+            )}
 
-            {DIMENSIONS.map(d => (
-              <DimensionCard key={d.key} dim={result.dimensions[d.key]} meta={d} isEs={isEs} score={result.dimensions[d.key].score}/>
-            ))}
+            {/* Strengths */}
+            {strengths.length > 0 && (
+              <section className="reveal">
+                <div className="mb-5">
+                  <h2
+                    className="font-medium text-ink-800"
+                    style={{ fontSize: "18px" }}
+                  >
+                    {t.strengthsTitle}
+                  </h2>
+                  <p className="text-ink-400 mt-1" style={{ fontSize: "13px" }}>
+                    {t.strengthsSubtitle}
+                  </p>
+                </div>
 
-            <div className="border border-border rounded-lg p-5">
-              <h3 className="text-sm font-semibold mb-3">{isEs?"Las 3 acciones que m\u00e1s impacto tendr\u00e1n:":"Top 3 highest-impact actions:"}</h3>
-              <ol className="space-y-3">
-                {result.top_3_actions.map((a,i) => (
-                  <li key={i} className="flex gap-3 items-start">
-                    <span className="shrink-0 w-6 h-6 rounded-full bg-accent text-white text-xs font-bold flex items-center justify-center mt-0.5">{i+1}</span>
-                    <span className="text-sm text-gray-600 leading-relaxed">{a}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
+                <div className="space-y-3">
+                  {strengths.map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        type: "spring",
+                        ...spring,
+                        delay: (3 + improvements.length + i) * stagger,
+                      }}
+                      className="border-l-2 border-positive pl-4 py-1"
+                    >
+                      <span
+                        className="font-medium text-ink-700"
+                        style={{ fontSize: "14px" }}
+                      >
+                        {dimName(item.dimension)}
+                      </span>
+                      <p
+                        className="text-ink-500 mt-0.5"
+                        style={{ fontSize: "14px", lineHeight: "1.6" }}
+                      >
+                        {item.detail}
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+            )}
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button onClick={() => { setResult(null); setAnimateScore(false); setCvText(""); }} className="flex-1 bg-accent text-white font-medium py-3 px-6 rounded-lg hover:bg-accent-hover transition cursor-pointer">
-                {isEs ? "Evaluar otro CV" : "Score another CV"}
+            {/* CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                type: "spring",
+                ...spring,
+                delay: (3 + improvements.length + strengths.length) * stagger,
+              }}
+              className="reveal text-center"
+            >
+              <button
+                onClick={handleImproveClick}
+                className="bg-v2-accent text-ink-000 font-medium py-3 px-8 rounded-lg hover:bg-v2-accent-hover transition cursor-pointer tracking-wide"
+                style={{
+                  fontSize: "14px",
+                  fontFamily: "var(--font-geist-mono)",
+                }}
+              >
+                {t.cta}
               </button>
-              <a href="/" className="flex-1 text-center border border-border text-gray-700 font-medium py-3 px-6 rounded-lg hover:bg-gray-50 transition">
-                {isEs ? "Mejorar mi CV" : "Improve my CV"}
-              </a>
-              <button onClick={() => { if(navigator.share){navigator.share({text:result.share_text});}else{navigator.clipboard.writeText(result.share_text);alert(isEs?"Copiado":"Copied");}}} className="flex-1 border border-border text-gray-700 font-medium py-3 px-6 rounded-lg hover:bg-gray-50 transition cursor-pointer">
-                {isEs ? "Compartir" : "Share"}
+            </motion.div>
+
+            {/* Analyze another */}
+            <div className="text-center">
+              <button
+                onClick={() => {
+                  setResult(null);
+                  setCvText("");
+                  setTargetRole("");
+                  setError("");
+                }}
+                className="text-ink-400 hover:text-ink-600 transition cursor-pointer"
+                style={{ fontSize: "13px" }}
+              >
+                {t.analyzeAnother}
               </button>
             </div>
-
-            <DonationBanner lang={lang} />
           </div>
         )}
       </main>
 
-      <Footer />
+      {/* Footer */}
+      <footer className="w-full border-t border-ink-100">
+        <div className="max-w-2xl mx-auto px-5 py-6 text-center">
+          <span
+            className="text-ink-400"
+            style={{
+              fontSize: "13px",
+              fontFamily: "var(--font-geist-mono)",
+            }}
+          >
+            {t.footer}
+          </span>
+        </div>
+      </footer>
     </div>
+  );
+}
+
+// -- Spinner -----------------------------------------------------------------
+
+function Spinner({ label }: { label: string }) {
+  return (
+    <span className="flex items-center justify-center gap-2">
+      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+        />
+      </svg>
+      {label}
+    </span>
   );
 }
