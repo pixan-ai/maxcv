@@ -29,7 +29,7 @@ const TEXT = {
       "Tailor your resume for each application — one-size-fits-all doesn't work",
     ],
     stat: "75%+ of resumes are rejected by ATS before a human sees them.",
-    cta: "MaxCV optimizes your resume for ATS compatibility automatically — just paste your CV above and let AI do the work.",
+    cta: "maxcv optimizes your resume for ATS compatibility automatically — just paste your CV above and let AI do the work.",
   },
   es: {
     title: "¿Qué es un ATS?",
@@ -61,7 +61,7 @@ const TEXT = {
       "Personaliza tu currículum para cada solicitud — uno genérico no funciona",
     ],
     stat: "Más del 75% de los CVs son rechazados por el ATS antes de que un humano los vea.",
-    cta: "MaxCV optimiza tu currículum para compatibilidad con ATS automáticamente — solo pega tu CV arriba y deja que la IA haga el trabajo.",
+    cta: "maxcv optimiza tu currículum para compatibilidad con ATS automáticamente — solo pega tu CV arriba y deja que la IA haga el trabajo.",
   },
 };
 
@@ -69,27 +69,27 @@ export default function AtsExplainer({ lang }: { lang: "en" | "es" }) {
   const t = TEXT[lang];
 
   return (
-    <section className="border-t border-border pt-16 pb-8">
-      <h2 className="text-2xl font-bold tracking-tight mb-2 text-center">
+    <section className="border-t border-[--ink-100] pt-16 pb-8">
+      <h2 className="text-2xl font-light tracking-tight mb-2 text-center text-[--ink-900]">
         {t.title}
       </h2>
-      <p className="text-muted text-sm text-center mb-8">{t.subtitle}</p>
+      <p className="text-[--ink-500] text-sm text-center mb-8">{t.subtitle}</p>
 
       <div className="max-w-xl mx-auto space-y-8">
-        <p className="text-sm text-gray-600 leading-relaxed">{t.intro}</p>
+        <p className="text-sm text-[--ink-500] leading-relaxed">{t.intro}</p>
 
         {/* How it works */}
         <div>
-          <h3 className="text-base font-semibold mb-4">{t.howTitle}</h3>
+          <h3 className="text-base font-medium mb-4 text-[--ink-900]">{t.howTitle}</h3>
           <div className="space-y-4">
             {t.howSteps.map((step, i) => (
               <div key={i} className="flex gap-3">
-                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-accent text-white text-xs font-bold flex items-center justify-center mt-0.5">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[--accent] text-white text-xs font-medium flex items-center justify-center mt-0.5">
                   {i + 1}
                 </span>
                 <div>
-                  <p className="text-sm font-medium">{step.title}</p>
-                  <p className="text-sm text-gray-600">{step.desc}</p>
+                  <p className="text-sm font-medium text-[--ink-900]">{step.title}</p>
+                  <p className="text-sm text-[--ink-500]">{step.desc}</p>
                 </div>
               </div>
             ))}
@@ -98,11 +98,11 @@ export default function AtsExplainer({ lang }: { lang: "en" | "es" }) {
 
         {/* Tips */}
         <div>
-          <h3 className="text-base font-semibold mb-3">{t.tipsTitle}</h3>
+          <h3 className="text-base font-medium mb-3 text-[--ink-900]">{t.tipsTitle}</h3>
           <ul className="space-y-2">
             {t.tips.map((tip, i) => (
-              <li key={i} className="text-sm text-gray-600 flex gap-2">
-                <span className="text-accent mt-0.5 shrink-0">&bull;</span>
+              <li key={i} className="text-sm text-[--ink-500] flex gap-2">
+                <span className="text-[--accent] mt-0.5 shrink-0">&bull;</span>
                 {tip}
               </li>
             ))}
@@ -110,9 +110,9 @@ export default function AtsExplainer({ lang }: { lang: "en" | "es" }) {
         </div>
 
         {/* Stat callout */}
-        <div className="bg-accent-light rounded-lg p-5 text-center">
-          <p className="text-sm font-semibold text-accent">{t.stat}</p>
-          <p className="text-xs text-gray-600 mt-2">{t.cta}</p>
+        <div className="bg-[--accent-ghost] rounded-lg p-5 text-center">
+          <p className="text-sm font-medium text-[--accent]">{t.stat}</p>
+          <p className="text-xs text-[--ink-500] mt-2">{t.cta}</p>
         </div>
       </div>
     </section>

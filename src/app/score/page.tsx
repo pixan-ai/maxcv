@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { motion } from "motion/react";
 
-// -- Types (matching the rich API response) ----------------------------------
+// -- Types -------------------------------------------------------------------
 
 type CriterionStatus = {
   status: "pass" | "warning" | "fail";
@@ -45,7 +45,6 @@ type ScoreResult = {
 
 type InputMode = "text" | "file" | "sheets";
 
-// Flattened improvement item for the hero list
 type ImprovementItem = {
   dimension: string;
   issue: string;
@@ -53,18 +52,17 @@ type ImprovementItem = {
   score: number;
 };
 
-// Flattened strength item
 type StrengthItem = {
   dimension: string;
   detail: string;
 };
 
-// -- Spring config (Style Guide v2.0) ----------------------------------------
+// -- Spring config -----------------------------------------------------------
 
 const spring = { stiffness: 300, damping: 30 };
 const stagger = 0.06;
 
-// -- Dimension display names -------------------------------------------------
+// -- Dimension names ---------------------------------------------------------
 
 const DIMENSION_NAMES: Record<string, { en: string; es: string }> = {
   ats_compatibility: { en: "ATS Compatibility", es: "Compatibilidad ATS" },
@@ -75,15 +73,13 @@ const DIMENSION_NAMES: Record<string, { en: string; es: string }> = {
   completeness: { en: "Completeness", es: "Completitud" },
 };
 
-// -- Extract improvements and strengths from dimensions ----------------------
+// -- Extract data from dimensions --------------------------------------------
 
 function extractImprovements(dimensions: ScoreResult["dimensions"]): ImprovementItem[] {
   const items: ImprovementItem[] = [];
-
   for (const [key, dim] of Object.entries(dimensions)) {
     const issues = dim.issues || [];
     const suggestions = dim.suggestions || [];
-
     for (let i = 0; i < issues.length; i++) {
       items.push({
         dimension: key,
@@ -93,50 +89,35 @@ function extractImprovements(dimensions: ScoreResult["dimensions"]): Improvement
       });
     }
   }
-
-  // Sort by dimension score ascending (worst dimensions first = highest impact)
   items.sort((a, b) => a.score - b.score);
   return items;
 }
 
-function extractStrengths(
-  dimensions: ScoreResult["dimensions"],
-  lang: "en" | "es"
-): StrengthItem[] {
+function extractStrengths(dimensions: ScoreResult["dimensions"], lang: "en" | "es"): StrengthItem[] {
   const items: StrengthItem[] = [];
-
   for (const [key, dim] of Object.entries(dimensions)) {
     if (dim.score >= 70) {
-      // Find passing criteria as strengths
       const passing = Object.entries(dim.criteria_checked || {})
         .filter(([, c]) => c.status === "pass")
         .map(([, c]) => c.detail)
         .filter(Boolean);
-
       if (passing.length > 0) {
-        items.push({
-          dimension: key,
-          detail: passing.slice(0, 2).join(". "),
-        });
+        items.push({ dimension: key, detail: passing.slice(0, 2).join(". ") });
       }
     }
   }
-
-  // If no criteria-based strengths, use dimensions with high scores
   if (items.length === 0) {
     for (const [key, dim] of Object.entries(dimensions)) {
       if (dim.score >= 60 && dim.evidence) {
         items.push({
           dimension: key,
-          detail:
-            lang === "en"
-              ? `Scored ${dim.score}/100 — ${dim.evidence.slice(0, 120)}`
-              : `Puntuación ${dim.score}/100 — ${dim.evidence.slice(0, 120)}`,
+          detail: lang === "en"
+            ? `Scored ${dim.score}/100 — ${dim.evidence.slice(0, 120)}`
+            : `Puntuación ${dim.score}/100 — ${dim.evidence.slice(0, 120)}`,
         });
       }
     }
   }
-
   return items.slice(0, 4);
 }
 
@@ -244,57 +225,37 @@ export default function ScorePage() {
 
   const t = UI[lang];
 
-  // -- File handling ---------------------------------------------------------
-
   const handleFileUpload = async (file: File) => {
     setParsing(true);
     setError("");
     setFileName(file.name);
-
     try {
       const formData = new FormData();
       formData.append("file", file);
       const res = await fetch("/api/parse", { method: "POST", body: formData });
       const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || t.parseError);
-        setFileName("");
-        return;
-      }
+      if (!res.ok) { setError(data.error || t.parseError); setFileName(""); return; }
       setCvText(data.text);
       setInputMode("text");
-    } catch {
-      setError(t.parseError);
-      setFileName("");
-    } finally {
-      setParsing(false);
-    }
+    } catch { setError(t.parseError); setFileName(""); }
+    finally { setParsing(false); }
   };
 
   const handleSheetsImport = async () => {
     if (!sheetsUrl.trim()) return;
     setParsing(true);
     setError("");
-
     try {
       const formData = new FormData();
       formData.append("sheetsUrl", sheetsUrl);
       const res = await fetch("/api/parse", { method: "POST", body: formData });
       const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || t.sheetsError);
-        return;
-      }
+      if (!res.ok) { setError(data.error || t.sheetsError); return; }
       setCvText(data.text);
       setInputMode("text");
       setSheetsUrl("");
-    } catch {
-      setError(t.sheetsError);
-    } finally {
-      setParsing(false);
-    }
+    } catch { setError(t.sheetsError); }
+    finally { setParsing(false); }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -304,118 +265,60 @@ export default function ScorePage() {
     if (file) handleFileUpload(file);
   };
 
-  // -- Submit ----------------------------------------------------------------
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cvText.trim()) return;
-
-    if (cvText.trim().length < 50) {
-      setError(t.errorLength);
-      return;
-    }
-
+    if (cvText.trim().length < 50) { setError(t.errorLength); return; }
     setLoading(true);
     setError("");
     setResult(null);
-
     try {
       const res = await fetch("/api/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cvText, targetRole }),
       });
-
-      if (res.status === 429) {
-        setError(t.errorLimit);
-        return;
-      }
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        setError(data?.message || t.errorGeneric);
-        return;
-      }
-
+      if (res.status === 429) { setError(t.errorLimit); return; }
+      if (!res.ok) { const data = await res.json().catch(() => null); setError(data?.message || t.errorGeneric); return; }
       const data: ScoreResult = await res.json();
       setResult(data);
-
-      if (
-        data.detected_language === "es" ||
-        data.detected_language === "es-MX"
-      ) {
-        setLang("es");
-      }
-
-      setTimeout(() => {
-        resultRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    } catch {
-      setError(t.errorConnection);
-    } finally {
-      setLoading(false);
-    }
+      if (data.detected_language === "es" || data.detected_language === "es-MX") setLang("es");
+      setTimeout(() => { resultRef.current?.scrollIntoView({ behavior: "smooth" }); }, 100);
+    } catch { setError(t.errorConnection); }
+    finally { setLoading(false); }
   };
-
-  // -- CTA handler -----------------------------------------------------------
 
   const handleImproveClick = () => {
     try {
       sessionStorage.setItem("maxcv_cv", cvText);
       if (targetRole) sessionStorage.setItem("maxcv_role", targetRole);
-    } catch {
-      // sessionStorage unavailable
-    }
+    } catch { /* noop */ }
     window.location.href = "/";
   };
-
-  // -- Derived data ----------------------------------------------------------
 
   const improvements = result ? extractImprovements(result.dimensions) : [];
   const strengths = result ? extractStrengths(result.dimensions, lang) : [];
   const dimName = (key: string) => DIMENSION_NAMES[key]?.[lang] || key;
 
-  // -- Render ----------------------------------------------------------------
-
   return (
-    <div
-      className="min-h-screen flex flex-col bg-ink-000"
-      style={{ fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}
-    >
+    <div className="min-h-screen flex flex-col bg-[--ink-000]">
       {/* Header */}
-      <header className="w-full border-b border-ink-100">
+      <header className="w-full border-b border-[--ink-100]">
         <div className="max-w-2xl mx-auto px-5 py-4 flex items-center justify-between">
-          <a
-            href="/score"
-            className="font-medium text-ink-800 tracking-tight"
-          >
-            {t.logo}
+          <a href="/score" className="font-[family-name:var(--font-mono)] text-base tracking-tight text-[--ink-900]">
+            max<span className="text-[--accent]">cv</span>
           </a>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setLang(lang === "en" ? "es" : "en")}
-              className="text-ink-400 hover:text-ink-700 transition cursor-pointer"
-              style={{ fontSize: "13px" }}
+              className="text-[--ink-500] hover:text-[--ink-900] transition cursor-pointer text-xs"
             >
               {t.langToggle}
             </button>
-            <span
-              className="text-ink-300 tracking-wide uppercase"
-              style={{
-                fontSize: "13px",
-                fontFamily: "var(--font-geist-mono)",
-              }}
-            >
+            <span className="font-[family-name:var(--font-mono)] text-[--ink-300] tracking-wide uppercase text-xs">
               {t.tagline}
             </span>
-            <span
-              className="text-ink-200"
-              style={{
-                fontSize: "11px",
-                fontFamily: "var(--font-geist-mono)",
-              }}
-            >
-              v2.0
-            </span>
+            <span className="text-[--ink-300] font-[family-name:var(--font-mono)] text-[11px]">v2.1</span>
           </div>
         </div>
       </header>
@@ -425,24 +328,19 @@ export default function ScorePage() {
         {!result && (
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Tabs */}
-            <div className="flex border-b border-ink-100">
+            <div className="flex border-b border-[--ink-100]">
               {(["text", "file", "sheets"] as InputMode[]).map((mode) => (
                 <button
                   key={mode}
                   type="button"
                   onClick={() => setInputMode(mode)}
-                  className={`px-4 py-2.5 font-medium transition cursor-pointer ${
+                  className={`px-4 py-2.5 text-sm font-medium transition cursor-pointer ${
                     inputMode === mode
-                      ? "text-v2-accent border-b-2 border-v2-accent -mb-px"
-                      : "text-ink-400 hover:text-ink-700"
+                      ? "text-[--accent] border-b-2 border-[--accent] -mb-px"
+                      : "text-[--ink-500] hover:text-[--ink-900]"
                   }`}
-                  style={{ fontSize: "14px" }}
                 >
-                  {mode === "text"
-                    ? t.tabText
-                    : mode === "file"
-                      ? t.tabFile
-                      : t.tabSheets}
+                  {mode === "text" ? t.tabText : mode === "file" ? t.tabFile : t.tabSheets}
                 </button>
               ))}
             </div>
@@ -450,11 +348,7 @@ export default function ScorePage() {
             {/* Text input */}
             {inputMode === "text" && (
               <div>
-                <label
-                  htmlFor="cv"
-                  className="block font-medium text-ink-700 mb-1.5"
-                  style={{ fontSize: "14px" }}
-                >
+                <label htmlFor="cv" className="block text-sm font-medium text-[--ink-900] mb-1.5">
                   {t.labelCv}
                 </label>
                 <textarea
@@ -463,8 +357,7 @@ export default function ScorePage() {
                   value={cvText}
                   onChange={(e) => setCvText(e.target.value)}
                   placeholder={t.placeholderCv}
-                  className="w-full rounded-lg border border-ink-100 px-4 py-3 text-ink-700 focus:outline-none focus:ring-2 focus:ring-v2-accent/30 focus:border-v2-accent resize-y transition placeholder:text-ink-300"
-                  style={{ fontSize: "14px" }}
+                  className="w-full rounded-lg border border-[--ink-100] px-4 py-3 text-sm text-[--ink-900] focus:outline-none focus:ring-2 focus:ring-[--accent]/30 focus:border-[--accent] resize-y transition placeholder:text-[--ink-300]"
                   required
                 />
               </div>
@@ -473,71 +366,31 @@ export default function ScorePage() {
             {/* File upload */}
             {inputMode === "file" && (
               <div>
-                <label
-                  className="block font-medium text-ink-700 mb-1.5"
-                  style={{ fontSize: "14px" }}
-                >
-                  {t.uploadLabel}
-                </label>
+                <label className="block text-sm font-medium text-[--ink-900] mb-1.5">{t.uploadLabel}</label>
                 <div
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setDragOver(true);
-                  }}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
                   onDrop={handleDrop}
                   className={`border-2 border-dashed rounded-lg p-8 text-center transition ${
-                    dragOver
-                      ? "border-v2-accent bg-v2-accent-light"
-                      : "border-ink-100 hover:border-ink-300"
+                    dragOver ? "border-[--accent] bg-[--accent-ghost]" : "border-[--ink-300] hover:border-[--ink-500]"
                   }`}
                 >
                   {parsing ? (
                     <Spinner label={t.parsing} />
                   ) : (
                     <>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".pdf,.txt"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleFileUpload(file);
-                        }}
-                      />
-                      <svg
-                        className="mx-auto h-10 w-10 text-ink-200 mb-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={1.5}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-                        />
+                      <input ref={fileInputRef} type="file" accept=".pdf,.txt" className="hidden"
+                        onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(file); }} />
+                      <svg className="mx-auto h-8 w-8 text-[--ink-300] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                       </svg>
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="font-medium text-v2-accent hover:text-v2-accent-hover transition cursor-pointer"
-                        style={{ fontSize: "14px" }}
-                      >
+                      <button type="button" onClick={() => fileInputRef.current?.click()}
+                        className="text-sm font-medium text-[--accent] hover:text-[--accent-dim] transition cursor-pointer">
                         {t.uploadButton}
                       </button>
-                      <p className="text-ink-400 mt-1" style={{ fontSize: "13px" }}>
-                        {t.uploadDrop}
-                      </p>
-                      <p className="text-ink-400 mt-2" style={{ fontSize: "13px" }}>
-                        {t.uploadHint}
-                      </p>
-                      {fileName && (
-                        <p className="text-v2-accent font-medium mt-2" style={{ fontSize: "13px" }}>
-                          {fileName}
-                        </p>
-                      )}
+                      <p className="text-xs text-[--ink-500] mt-1">{t.uploadDrop}</p>
+                      <p className="text-xs text-[--ink-300] mt-2">{t.uploadHint}</p>
+                      {fileName && <p className="text-xs text-[--accent] font-medium mt-2">{fileName}</p>}
                     </>
                   )}
                 </div>
@@ -548,33 +401,14 @@ export default function ScorePage() {
             {inputMode === "sheets" && (
               <div className="space-y-3">
                 <div>
-                  <label
-                    htmlFor="sheets"
-                    className="block font-medium text-ink-700 mb-1.5"
-                    style={{ fontSize: "14px" }}
-                  >
-                    {t.sheetsLabel}
-                  </label>
-                  <input
-                    id="sheets"
-                    type="url"
-                    value={sheetsUrl}
-                    onChange={(e) => setSheetsUrl(e.target.value)}
+                  <label htmlFor="sheets" className="block text-sm font-medium text-[--ink-900] mb-1.5">{t.sheetsLabel}</label>
+                  <input id="sheets" type="url" value={sheetsUrl} onChange={(e) => setSheetsUrl(e.target.value)}
                     placeholder={t.sheetsPlaceholder}
-                    className="w-full rounded-lg border border-ink-100 px-4 py-3 text-ink-700 focus:outline-none focus:ring-2 focus:ring-v2-accent/30 focus:border-v2-accent transition placeholder:text-ink-300"
-                    style={{ fontSize: "14px" }}
-                  />
-                  <p className="text-ink-400 mt-1.5" style={{ fontSize: "13px" }}>
-                    {t.sheetsHint}
-                  </p>
+                    className="w-full rounded-lg border border-[--ink-100] px-4 py-3 text-sm text-[--ink-900] focus:outline-none focus:ring-2 focus:ring-[--accent]/30 focus:border-[--accent] transition placeholder:text-[--ink-300]" />
+                  <p className="text-xs text-[--ink-500] mt-1.5">{t.sheetsHint}</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleSheetsImport}
-                  disabled={parsing || !sheetsUrl.trim()}
-                  className="w-full bg-v2-accent text-ink-000 font-medium py-3 px-6 rounded-lg hover:bg-v2-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
-                  style={{ fontSize: "14px" }}
-                >
+                <button type="button" onClick={handleSheetsImport} disabled={parsing || !sheetsUrl.trim()}
+                  className="w-full bg-[--accent] text-white font-medium py-3 px-6 rounded-lg hover:bg-[--accent-dim] disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer">
                   {parsing ? <Spinner label={t.parsing} /> : t.sheetsButton}
                 </button>
               </div>
@@ -582,35 +416,17 @@ export default function ScorePage() {
 
             {/* Target role */}
             <div>
-              <label
-                htmlFor="role"
-                className="block font-medium text-ink-700 mb-1.5"
-                style={{ fontSize: "14px" }}
-              >
-                {t.labelRole}{" "}
-                <span className="text-ink-400 font-normal">{t.optional}</span>
+              <label htmlFor="role" className="block text-sm font-medium text-[--ink-900] mb-1.5">
+                {t.labelRole} <span className="text-[--ink-500] font-normal">{t.optional}</span>
               </label>
-              <input
-                id="role"
-                type="text"
-                value={targetRole}
-                onChange={(e) => setTargetRole(e.target.value)}
+              <input id="role" type="text" value={targetRole} onChange={(e) => setTargetRole(e.target.value)}
                 placeholder={t.placeholderRole}
-                className="w-full rounded-lg border border-ink-100 px-4 py-3 text-ink-700 focus:outline-none focus:ring-2 focus:ring-v2-accent/30 focus:border-v2-accent transition placeholder:text-ink-300"
-                style={{ fontSize: "14px" }}
-              />
+                className="w-full rounded-lg border border-[--ink-100] px-4 py-3 text-sm text-[--ink-900] focus:outline-none focus:ring-2 focus:ring-[--accent]/30 focus:border-[--accent] transition placeholder:text-[--ink-300]" />
             </div>
 
             {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading || !cvText.trim()}
-              className="w-full bg-v2-accent text-ink-000 font-medium py-3 px-6 rounded-lg hover:bg-v2-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
-              style={{
-                fontSize: "14px",
-                fontFamily: "var(--font-geist-mono)",
-              }}
-            >
+            <button type="submit" disabled={loading || !cvText.trim()}
+              className="w-full bg-[--accent] text-white font-medium py-3 px-6 rounded-lg hover:bg-[--accent-dim] disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer font-[family-name:var(--font-mono)]">
               {loading ? <Spinner label={t.loading} /> : t.button}
             </button>
           </form>
@@ -618,161 +434,69 @@ export default function ScorePage() {
 
         {/* Error */}
         {error && (
-          <div
-            className="bg-ink-050 text-ink-600 px-4 py-3 rounded-lg mb-6 mt-4"
-            style={{ fontSize: "14px" }}
-          >
-            {error}
-          </div>
+          <div className="bg-[--ink-100] text-[--ink-900] text-sm px-4 py-3 rounded-lg mb-6 mt-4">{error}</div>
         )}
 
         {/* Results */}
         {result && (
           <div ref={resultRef} className="space-y-16">
-            {/* Score metadata — discrete, not the hero */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4 }}
-              className="text-center"
-            >
-              <p
-                className="tracking-wide uppercase text-ink-500 font-light"
-                style={{
-                  fontSize: "13px",
-                  fontFamily: "var(--font-geist-mono)",
-                }}
-              >
+            {/* Score metadata — discrete */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="text-center">
+              <p className="font-[family-name:var(--font-mono)] text-xs uppercase tracking-widest text-[--ink-500]">
                 {t.scoreMeta} &middot; {result.total_score} / 100
               </p>
-              {/* Summary — empathetic, starts with a strength */}
-              <p
-                className="text-ink-600 mt-4 max-w-lg mx-auto"
-                style={{ fontSize: "14px", lineHeight: "1.7" }}
-              >
+              <p className="text-[--ink-500] mt-4 max-w-lg mx-auto text-sm" style={{ lineHeight: "1.7" }}>
                 {result.summary}
               </p>
             </motion.div>
 
-            {/* TOP 3 ACTIONS — the quick wins */}
-            {result.top_3_actions && result.top_3_actions.length > 0 && (
+            {/* Top 3 actions */}
+            {result.top_3_actions?.length > 0 && (
               <section className="reveal">
-                <div className="mb-5">
-                  <h2
-                    className="font-medium text-ink-800"
-                    style={{ fontSize: "18px" }}
-                  >
-                    {t.topActionsTitle}
-                  </h2>
-                  <p className="text-ink-400 mt-1" style={{ fontSize: "13px" }}>
-                    {t.topActionsSubtitle}
-                  </p>
-                </div>
-
+                <h2 className="text-lg font-medium text-[--ink-900] mb-1">{t.topActionsTitle}</h2>
+                <p className="text-xs text-[--ink-500] mb-5">{t.topActionsSubtitle}</p>
                 <div className="space-y-3">
                   {result.top_3_actions.map((action, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 8 }}
+                    <motion.div key={i}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        type: "spring",
-                        ...spring,
-                        delay: i * stagger,
-                      }}
-                      className="flex gap-3 items-start"
-                    >
-                      <span
-                        className="flex-shrink-0 w-6 h-6 rounded-full bg-v2-accent text-ink-000 flex items-center justify-center mt-0.5"
-                        style={{
-                          fontSize: "12px",
-                          fontFamily: "var(--font-geist-mono)",
-                        }}
-                      >
+                      transition={{ type: "spring", ...spring, delay: i * stagger }}
+                      className="flex gap-3 items-start">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[--accent] text-white flex items-center justify-center mt-0.5 text-xs font-[family-name:var(--font-mono)]">
                         {i + 1}
                       </span>
-                      <p
-                        className="text-ink-700"
-                        style={{ fontSize: "14px", lineHeight: "1.6" }}
-                      >
-                        {action}
-                      </p>
+                      <p className="text-sm text-[--ink-900]" style={{ lineHeight: "1.6" }}>{action}</p>
                     </motion.div>
                   ))}
                 </div>
               </section>
             )}
 
-            {/* HERO — Improvements by dimension */}
+            {/* Improvements — HERO */}
             {improvements.length > 0 && (
               <section className="reveal">
-                <div className="mb-6">
-                  <h2
-                    className="font-medium text-ink-800"
-                    style={{ fontSize: "18px" }}
-                  >
-                    {t.improvementsTitle}
-                  </h2>
-                  <p className="text-ink-400 mt-1" style={{ fontSize: "13px" }}>
-                    {t.improvementsSubtitle}
-                  </p>
-                </div>
-
+                <h2 className="text-lg font-medium text-[--ink-900] mb-1">{t.improvementsTitle}</h2>
+                <p className="text-xs text-[--ink-500] mb-6">{t.improvementsSubtitle}</p>
                 <div className="space-y-4">
                   {improvements.map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 8 }}
+                    <motion.div key={i}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        type: "spring",
-                        ...spring,
-                        delay: (3 + i) * stagger,
-                      }}
-                      className="border-l-2 border-ink-100 pl-4 py-1"
-                    >
+                      transition={{ type: "spring", ...spring, delay: (3 + i) * stagger }}
+                      className="border-l-2 border-[--ink-100] pl-4 py-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span
-                          className="font-medium text-ink-700"
-                          style={{ fontSize: "14px" }}
-                        >
-                          {dimName(item.dimension)}
-                        </span>
-                        <span
-                          className={`tracking-wide uppercase font-light ${
-                            item.score < 50
-                              ? "text-v2-accent"
-                              : "text-ink-400"
-                          }`}
-                          style={{
-                            fontSize: "11px",
-                            fontFamily: "var(--font-geist-mono)",
-                          }}
-                        >
+                        <span className="text-sm font-medium text-[--ink-900]">{dimName(item.dimension)}</span>
+                        <span className={`font-[family-name:var(--font-mono)] tracking-wide uppercase text-[11px] ${
+                          item.score < 50 ? "text-[--accent]" : "text-[--ink-500]"
+                        }`}>
                           {item.score < 50
-                            ? lang === "en"
-                              ? "high impact"
-                              : "alto impacto"
-                            : lang === "en"
-                              ? "medium impact"
-                              : "impacto medio"}
+                            ? (lang === "en" ? "high impact" : "alto impacto")
+                            : (lang === "en" ? "medium impact" : "impacto medio")}
                         </span>
                       </div>
-
-                      <p
-                        className="text-ink-600"
-                        style={{ fontSize: "14px", lineHeight: "1.6" }}
-                      >
-                        {item.issue}
-                      </p>
-
+                      <p className="text-sm text-[--ink-500]" style={{ lineHeight: "1.6" }}>{item.issue}</p>
                       {item.suggestion && (
-                        <p
-                          className="text-ink-400 mt-1"
-                          style={{ fontSize: "13px", lineHeight: "1.5" }}
-                        >
-                          {item.suggestion}
-                        </p>
+                        <p className="text-xs text-[--ink-300] mt-1" style={{ lineHeight: "1.5" }}>{item.suggestion}</p>
                       )}
                     </motion.div>
                   ))}
@@ -783,43 +507,17 @@ export default function ScorePage() {
             {/* Strengths */}
             {strengths.length > 0 && (
               <section className="reveal">
-                <div className="mb-5">
-                  <h2
-                    className="font-medium text-ink-800"
-                    style={{ fontSize: "18px" }}
-                  >
-                    {t.strengthsTitle}
-                  </h2>
-                  <p className="text-ink-400 mt-1" style={{ fontSize: "13px" }}>
-                    {t.strengthsSubtitle}
-                  </p>
-                </div>
-
+                <h2 className="text-lg font-medium text-[--ink-900] mb-1">{t.strengthsTitle}</h2>
+                <p className="text-xs text-[--ink-500] mb-5">{t.strengthsSubtitle}</p>
                 <div className="space-y-3">
                   {strengths.map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 8 }}
+                    <motion.div key={i}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        type: "spring",
-                        ...spring,
-                        delay: (3 + improvements.length + i) * stagger,
-                      }}
-                      className="border-l-2 border-positive pl-4 py-1"
-                    >
-                      <span
-                        className="font-medium text-ink-700"
-                        style={{ fontSize: "14px" }}
-                      >
-                        {dimName(item.dimension)}
-                      </span>
-                      <p
-                        className="text-ink-500 mt-0.5"
-                        style={{ fontSize: "14px", lineHeight: "1.6" }}
-                      >
-                        {item.detail}
-                      </p>
+                      transition={{ type: "spring", ...spring, delay: (3 + improvements.length + i) * stagger }}
+                      className="border-l-2 border-[--positive] pl-4 py-1">
+                      <span className="text-sm font-medium text-[--ink-900]">{dimName(item.dimension)}</span>
+                      <p className="text-sm text-[--ink-500] mt-0.5" style={{ lineHeight: "1.6" }}>{item.detail}</p>
                     </motion.div>
                   ))}
                 </div>
@@ -828,23 +526,12 @@ export default function ScorePage() {
 
             {/* CTA */}
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{
-                type: "spring",
-                ...spring,
-                delay: (3 + improvements.length + strengths.length) * stagger,
-              }}
-              className="reveal text-center"
-            >
-              <button
-                onClick={handleImproveClick}
-                className="bg-v2-accent text-ink-000 font-medium py-3 px-8 rounded-lg hover:bg-v2-accent-hover transition cursor-pointer tracking-wide"
-                style={{
-                  fontSize: "14px",
-                  fontFamily: "var(--font-geist-mono)",
-                }}
-              >
+              transition={{ type: "spring", ...spring, delay: (3 + improvements.length + strengths.length) * stagger }}
+              className="reveal text-center">
+              <button onClick={handleImproveClick}
+                className="bg-[--accent] text-white font-medium py-3 px-8 rounded-lg hover:bg-[--accent-dim] transition cursor-pointer tracking-wide font-[family-name:var(--font-mono)] text-sm">
                 {t.cta}
               </button>
             </motion.div>
@@ -852,15 +539,8 @@ export default function ScorePage() {
             {/* Analyze another */}
             <div className="text-center">
               <button
-                onClick={() => {
-                  setResult(null);
-                  setCvText("");
-                  setTargetRole("");
-                  setError("");
-                }}
-                className="text-ink-400 hover:text-ink-600 transition cursor-pointer"
-                style={{ fontSize: "13px" }}
-              >
+                onClick={() => { setResult(null); setCvText(""); setTargetRole(""); setError(""); }}
+                className="text-[--ink-500] hover:text-[--ink-900] transition cursor-pointer text-xs">
                 {t.analyzeAnother}
               </button>
             </div>
@@ -869,42 +549,21 @@ export default function ScorePage() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-ink-100">
+      <footer className="w-full border-t border-[--ink-100]">
         <div className="max-w-2xl mx-auto px-5 py-6 text-center">
-          <span
-            className="text-ink-400"
-            style={{
-              fontSize: "13px",
-              fontFamily: "var(--font-geist-mono)",
-            }}
-          >
-            {t.footer}
-          </span>
+          <span className="text-[--ink-500] text-xs font-[family-name:var(--font-mono)]">{t.footer}</span>
         </div>
       </footer>
     </div>
   );
 }
 
-// -- Spinner -----------------------------------------------------------------
-
 function Spinner({ label }: { label: string }) {
   return (
     <span className="flex items-center justify-center gap-2">
       <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-        />
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
       </svg>
       {label}
     </span>

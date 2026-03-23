@@ -19,7 +19,7 @@ const UI_TEXT = {
     heroTitle: "Improve your resume",
     heroHighlight: "in seconds",
     heroSub:
-      "Paste your CV, upload a file, or link a Google Sheet \u2014 AI rewrites it to stand out. Free, no sign-up required.",
+      "Paste your CV, upload a file, or link a Google Sheet — AI rewrites it to stand out. Free, no sign-up required.",
     button: "Improve my resume",
     loading: "Improving your resume...",
     resultTitle: "Improved Resume",
@@ -36,24 +36,24 @@ const UI_TEXT = {
     tryAgain: "Improve another CV",
   },
   es: {
-    heroTitle: "Mejora tu curr\u00edculum",
+    heroTitle: "Mejora tu currículum",
     heroHighlight: "en segundos",
     heroSub:
-      "Pega tu CV, sube un archivo o vincula un Google Sheet \u2014 la IA lo reescribe para destacar. Gratis, sin registro.",
-    button: "Mejorar mi curr\u00edculum",
-    loading: "Mejorando tu curr\u00edculum...",
-    resultTitle: "Curr\u00edculum Mejorado",
+      "Pega tu CV, sube un archivo o vincula un Google Sheet — la IA lo reescribe para destacar. Gratis, sin registro.",
+    button: "Mejorar mi currículum",
+    loading: "Mejorando tu currículum...",
+    resultTitle: "Currículum Mejorado",
     copy: "Copiar",
-    copied: "\u00a1Copiado!",
+    copied: "¡Copiado!",
     downloadPdf: "Descargar PDF",
     tipsTitle: "Consejos para fortalecer tu perfil",
-    errorGeneric: "Algo sali\u00f3 mal. Int\u00e9ntalo de nuevo.",
+    errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
     errorLimit:
-      "Has alcanzado el l\u00edmite diario (3 mejoras por d\u00eda). \u00a1Vuelve ma\u00f1ana!",
+      "Has alcanzado el límite diario (3 mejoras por día). ¡Vuelve mañana!",
     errorConnection:
-      "Error de conexi\u00f3n. Revisa tu internet e int\u00e9ntalo de nuevo.",
+      "Error de conexión. Revisa tu internet e inténtalo de nuevo.",
     errorLength:
-      "Por favor pega al menos 50 caracteres de texto de curr\u00edculum.",
+      "Por favor pega al menos 50 caracteres de texto de currículum.",
     tryAgain: "Mejorar otro CV",
   },
 };
@@ -67,12 +67,11 @@ function generateAndDownloadPdf(text: string) {
     <html>
     <head>
       <meta charset="utf-8">
-      <title>MaxCV Resume</title>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+      <title>maxcv Resume</title>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-          font-family: 'Inter', sans-serif;
+          font-family: system-ui, -apple-system, sans-serif;
           font-size: 11pt;
           line-height: 1.5;
           color: #1a1a1a;
@@ -83,7 +82,7 @@ function generateAndDownloadPdf(text: string) {
         pre {
           white-space: pre-wrap;
           word-wrap: break-word;
-          font-family: 'Inter', sans-serif;
+          font-family: system-ui, -apple-system, sans-serif;
           font-size: 11pt;
           line-height: 1.5;
         }
@@ -183,12 +182,12 @@ export default function Home() {
 
       <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-12">
         <section className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-3">
+          <h1 className="text-4xl font-light tracking-tight mb-3 text-[--ink-900]">
             {t.heroTitle}
             <br />
-            <span className="text-accent">{t.heroHighlight}</span>
+            <span className="text-[--accent]">{t.heroHighlight}</span>
           </h1>
-          <p className="text-muted text-lg max-w-md mx-auto">
+          <p className="text-[--ink-500] text-lg max-w-md mx-auto">
             {t.heroSub}
           </p>
         </section>
@@ -213,36 +212,36 @@ export default function Home() {
 
         {result && (
           <div ref={resultRef} className="space-y-6">
-            <div className="border border-border rounded-lg p-6">
+            <div className="border border-[--ink-100] rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">{t.resultTitle}</h2>
+                <h2 className="text-lg font-medium text-[--ink-900]">{t.resultTitle}</h2>
                 <div className="flex gap-2">
                   <button
                     onClick={handleCopy}
-                    className="text-sm text-accent hover:text-accent-hover font-medium transition cursor-pointer"
+                    className="text-sm text-[--accent] hover:text-[--accent-dim] font-medium transition cursor-pointer"
                   >
                     {copied ? t.copied : t.copy}
                   </button>
                   <button
                     onClick={handleDownloadPdf}
-                    className="text-sm text-muted hover:text-gray-900 font-medium transition cursor-pointer"
+                    className="text-sm text-[--ink-500] hover:text-[--ink-900] font-medium transition cursor-pointer"
                   >
                     {t.downloadPdf}
                   </button>
                 </div>
               </div>
-              <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans">
+              <pre className="whitespace-pre-wrap text-sm leading-relaxed text-[--ink-900]">
                 {result.improved}
               </pre>
             </div>
 
             {result.tips.length > 0 && (
-              <div className="bg-accent-light rounded-lg p-6">
-                <h3 className="text-sm font-semibold mb-3">{t.tipsTitle}</h3>
+              <div className="bg-[--accent-ghost] rounded-lg p-6">
+                <h3 className="text-sm font-medium mb-3 text-[--ink-900]">{t.tipsTitle}</h3>
                 <ul className="space-y-2">
                   {result.tips.map((tip, i) => (
-                    <li key={i} className="text-sm text-gray-700 flex gap-2">
-                      <span className="text-accent mt-0.5 shrink-0">
+                    <li key={i} className="text-sm text-[--ink-500] flex gap-2">
+                      <span className="text-[--accent] mt-0.5 shrink-0">
                         &bull;
                       </span>
                       {tip}
@@ -254,7 +253,7 @@ export default function Home() {
 
             <button
               onClick={() => { setResult(null); setCvText(""); setTargetRole(""); }}
-              className="w-full bg-accent text-white font-medium py-3 px-6 rounded-lg hover:bg-accent-hover transition cursor-pointer"
+              className="w-full bg-[--accent] text-white font-medium py-3 px-6 rounded-lg hover:bg-[--accent-dim] transition cursor-pointer font-[family-name:var(--font-mono)]"
             >
               {t.tryAgain}
             </button>

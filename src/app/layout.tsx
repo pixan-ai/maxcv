@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
+const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
+
 export const metadata: Metadata = {
-  title: "MaxCV — AI-Powered Resume Improver",
+  title: "maxcv — AI-Powered Resume Improver",
   description:
-    "Improve your resume instantly with AI. Free to use, powered by Claude Opus 4.6.",
+    "Improve your resume instantly with AI. Free to use, powered by Claude.",
   openGraph: {
-    title: "MaxCV — AI-Powered Resume Improver",
+    title: "maxcv — AI-Powered Resume Improver",
     description:
-      "Improve your resume instantly with AI. Free to use, powered by Claude Opus 4.6.",
+      "Improve your resume instantly with AI. Free to use, powered by Claude.",
     url: "https://maxcv.org",
-    siteName: "MaxCV",
+    siteName: "maxcv",
     type: "website",
   },
 };
@@ -24,15 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
-      <head>
-        {/* Inter for legacy improve page */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="bg-white text-gray-900 font-sans antialiased">
+    <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
+      <body className="bg-[--ink-000] text-[--ink-900] font-[family-name:var(--font-geist)] antialiased">
         {children}
         <Analytics />
       </body>
