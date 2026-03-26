@@ -7,27 +7,21 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "maxcv — AI-Powered Resume Improver",
-  description:
-    "Improve your resume instantly with AI. Free to use, powered by Claude.",
+  title: "maxcv \u2014 AI-Powered Resume Improver",
+  description: "Improve your resume instantly with AI. Free to use, powered by Claude.",
   openGraph: {
-    title: "maxcv — AI-Powered Resume Improver",
-    description:
-      "Improve your resume instantly with AI. Free to use, powered by Claude.",
+    title: "maxcv \u2014 AI-Powered Resume Improver",
+    description: "Improve your resume instantly with AI. Free to use, powered by Claude.",
     url: "https://maxcv.org",
     siteName: "maxcv",
     type: "website",
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
-      <body className="bg-[--ink-000] text-[--ink-900] font-[family-name:var(--font-geist)] antialiased">
+      <body className="bg-ink-000 text-ink-900 font-[family-name:var(--font-geist)] antialiased">
         {children}
         <Analytics />
       </body>

@@ -1,43 +1,28 @@
 @import "tailwindcss";
 
-:root {
-  /* Accent — vibrant green with depth */
-  --accent:       oklch(55% 0.17 155);
-  --accent-dim:   oklch(48% 0.15 155);
-  --accent-ghost: oklch(97% 0.02 155);
-
-  /* Ink — warm neutrals, not pure gray */
-  --ink-900: oklch(15% 0.005 260);
-  --ink-700: oklch(30% 0.005 260);
-  --ink-500: oklch(52% 0.005 260);
-  --ink-400: oklch(62% 0.005 260);
-  --ink-300: oklch(78% 0.005 260);
-  --ink-200: oklch(88% 0.005 260);
-  --ink-100: oklch(94% 0.003 260);
-  --ink-050: oklch(97% 0.002 260);
-  --ink-000: oklch(99.5% 0.001 260);
-
-  /* Semantic */
-  --positive: oklch(55% 0.15 155);
-  --positive-ghost: oklch(97% 0.02 155);
-  --warning: oklch(65% 0.15 80);
-  --warning-ghost: oklch(97% 0.03 80);
+@theme {
+  --color-accent: oklch(55% 0.17 155);
+  --color-accent-dim: oklch(48% 0.15 155);
+  --color-accent-ghost: oklch(97% 0.02 155);
+  --color-ink-900: oklch(15% 0.005 260);
+  --color-ink-700: oklch(30% 0.005 260);
+  --color-ink-500: oklch(52% 0.005 260);
+  --color-ink-400: oklch(62% 0.005 260);
+  --color-ink-300: oklch(78% 0.005 260);
+  --color-ink-200: oklch(88% 0.005 260);
+  --color-ink-100: oklch(94% 0.003 260);
+  --color-ink-050: oklch(97% 0.002 260);
+  --color-ink-000: oklch(99.5% 0.001 260);
+  --color-positive: oklch(55% 0.15 155);
+  --color-positive-ghost: oklch(97% 0.02 155);
+  --color-warning: oklch(65% 0.15 80);
+  --color-warning-ghost: oklch(97% 0.03 80);
 }
 
-/* Hero text reveal — blur-to-sharp with stagger */
 @keyframes hero-reveal {
-  from {
-    opacity: 0;
-    filter: blur(10px);
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-    transform: translateY(0);
-  }
+  from { opacity: 0; filter: blur(10px); transform: translateY(8px); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0); }
 }
-
 .hero-reveal   { animation: hero-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .hero-reveal-1 { animation: hero-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
 .hero-reveal-2 { animation: hero-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
@@ -45,14 +30,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .hero-reveal, .hero-reveal-1, .hero-reveal-2, .hero-reveal-3 {
-    animation: none;
-    opacity: 1;
-    filter: none;
-    transform: none;
+    animation: none; opacity: 1; filter: none; transform: none;
   }
 }
 
-/* Scroll-driven reveal */
 @supports (animation-timeline: view()) {
   .reveal {
     animation: reveal linear both;
@@ -60,9 +41,7 @@
     animation-range: entry 0% entry 30%;
   }
 }
-@supports not (animation-timeline: view()) {
-  .reveal { opacity: 1; }
-}
+@supports not (animation-timeline: view()) { .reveal { opacity: 1; } }
 @keyframes reveal {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
