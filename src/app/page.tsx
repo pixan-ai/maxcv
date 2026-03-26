@@ -10,8 +10,8 @@ import CVInput from "@/components/CVInput";
 type ResultData = { improved: string; tips: string[]; language: string };
 
 const UI = {
-  en: { badge: "AI-powered resume improver", heroTitle: "Your resume,", heroHighlight: "reimagined", heroSub: "Paste, upload, or link your CV. Our AI rewrites it to stand out \u2014 optimized for ATS, tailored to your target role.", button: "Improve my resume", loading: "Improving...", resultTitle: "Your improved resume", copy: "Copy", copied: "Copied!", downloadPdf: "Download PDF", tipsTitle: "Actionable tips", errorGeneric: "Something went wrong. Please try again.", errorLimit: "Daily limit reached (3/day). Come back tomorrow!", errorConnection: "Connection error. Check your internet.", errorLength: "Please paste at least 50 characters.", tryAgain: "Improve another CV" },
-  es: { badge: "Mejora de CV con IA", heroTitle: "Tu curr\u00edculum,", heroHighlight: "reinventado", heroSub: "Pega, sube o vincula tu CV. Nuestra IA lo reescribe para destacar \u2014 optimizado para ATS, adaptado a tu puesto objetivo.", button: "Mejorar mi curr\u00edculum", loading: "Mejorando...", resultTitle: "Tu curr\u00edculum mejorado", copy: "Copiar", copied: "\u00a1Copiado!", downloadPdf: "Descargar PDF", tipsTitle: "Consejos accionables", errorGeneric: "Algo sali\u00f3 mal. Int\u00e9ntalo de nuevo.", errorLimit: "L\u00edmite diario alcanzado (3/d\u00eda). \u00a1Vuelve ma\u00f1ana!", errorConnection: "Error de conexi\u00f3n. Revisa tu internet.", errorLength: "Pega al menos 50 caracteres.", tryAgain: "Mejorar otro CV" },
+  en: { heroTitle: "Improve your resume.", heroHighlight: "Free, forever.", heroSub: "Our AI rewrites your resume optimized for the automated screening systems (ATS) that companies use.", button: "Improve my resume", loading: "Improving...", resultTitle: "Your improved resume", copy: "Copy", copied: "Copied!", downloadPdf: "Download PDF", tipsTitle: "Actionable tips", errorGeneric: "Something went wrong. Please try again.", errorLimit: "Daily limit reached (3/day). Come back tomorrow!", errorConnection: "Connection error. Check your internet.", errorLength: "Please paste at least 50 characters.", tryAgain: "Improve another CV" },
+  es: { heroTitle: "Mejora tu CV.", heroHighlight: "Sin costo, por siempre.", heroSub: "Nuestra IA reescribe tu CV pensando en los sistemas de filtrado autom\u00e1tico (ATS) que usan las empresas.", button: "Mejorar mi curr\u00edculum", loading: "Mejorando...", resultTitle: "Tu curr\u00edculum mejorado", copy: "Copiar", copied: "\u00a1Copiado!", downloadPdf: "Descargar PDF", tipsTitle: "Consejos accionables", errorGeneric: "Algo sali\u00f3 mal. Int\u00e9ntalo de nuevo.", errorLimit: "L\u00edmite diario alcanzado (3/d\u00eda). \u00a1Vuelve ma\u00f1ana!", errorConnection: "Error de conexi\u00f3n. Revisa tu internet.", errorLength: "Pega al menos 50 caracteres.", tryAgain: "Mejorar otro CV" },
 };
 
 function generateAndDownloadPdf(text: string) {
@@ -51,10 +51,6 @@ export default function Home() {
       <Header lang={lang} onToggleLang={() => setLang(lang === "en" ? "es" : "en")} active="improve" />
       <main className="flex-1 w-full max-w-2xl mx-auto px-5 py-8">
         <section className="text-center mb-6">
-          <div className="hero-reveal inline-flex items-center gap-1.5 bg-accent-ghost text-accent text-xs font-medium px-3 py-1 rounded-full mb-4">
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
-            {t.badge}
-          </div>
           <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-3 text-ink-900">
             <span className="hero-reveal-1 inline-block">{t.heroTitle}</span><br />
             <span className="hero-reveal-2 inline-block text-accent">{t.heroHighlight}</span>
