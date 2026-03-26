@@ -24,6 +24,34 @@
   --warning-ghost: oklch(97% 0.03 80);
 }
 
+/* Hero text reveal — blur-to-sharp with stagger */
+@keyframes hero-reveal {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+.hero-reveal   { animation: hero-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.hero-reveal-1 { animation: hero-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.hero-reveal-2 { animation: hero-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+.hero-reveal-3 { animation: hero-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.36s both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-reveal, .hero-reveal-1, .hero-reveal-2, .hero-reveal-3 {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
 /* Scroll-driven reveal */
 @supports (animation-timeline: view()) {
   .reveal {

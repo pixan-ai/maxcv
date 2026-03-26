@@ -33,7 +33,7 @@ const T = {
     placeholderRole: "e.g. Product Manager, Software Engineer...",
     uploadTitle: "Drop your PDF here",
     uploadSub: "or click to browse",
-    uploadMeta: "PDF only · max 5MB · Word? Save as PDF first",
+    uploadMeta: "PDF only \u00b7 max 5MB \u00b7 Word? Save as PDF first",
     parsing: "Reading your file...",
     parseError: "Could not read the file. Try pasting your resume instead.",
     uploadSuccess: "File loaded",
@@ -53,15 +53,15 @@ const T = {
     tabText: "Pegar texto",
     tabFile: "Subir PDF",
     tabSheets: "Google Sheets",
-    labelCv: "Tu currículum",
-    placeholderCv: "Pega el texto de tu currículum aquí...",
+    labelCv: "Tu curr\u00edculum",
+    placeholderCv: "Pega el texto de tu curr\u00edculum aqu\u00ed...",
     chars: "caracteres",
     labelRole: "Puesto objetivo",
     optional: "opcional",
     placeholderRole: "ej. Product Manager, Ingeniero de Software...",
-    uploadTitle: "Arrastra tu PDF aquí",
+    uploadTitle: "Arrastra tu PDF aqu\u00ed",
     uploadSub: "o haz clic para buscar",
-    uploadMeta: "Solo PDF · máx 5MB · ¿Word? Guárdalo como PDF",
+    uploadMeta: "Solo PDF \u00b7 m\u00e1x 5MB \u00b7 \u00bfWord? Gu\u00e1rdalo como PDF",
     parsing: "Leyendo tu archivo...",
     parseError: "No se pudo leer el archivo. Intenta pegando tu CV.",
     uploadSuccess: "Archivo cargado",
@@ -73,7 +73,7 @@ const T = {
     sheetsButton: "Importar",
     sheetsLoading: "Importando...",
     sheetsError: "No se pudo acceder al Google Sheet.",
-    fileTooLarge: "Archivo muy grande. Máximo 5MB.",
+    fileTooLarge: "Archivo muy grande. M\u00e1ximo 5MB.",
     fileWrongType: "Solo se aceptan archivos PDF.",
     privacy: "Tu CV se procesa en tiempo real y nunca se almacena.",
   },
@@ -148,15 +148,15 @@ export default function CVInput({
   ];
 
   return (
-    <div className="space-y-5">
-      {/* Tabs */}
-      <div className="flex gap-1 bg-[--ink-050] p-1 rounded-lg">
+    <div className="space-y-4">
+      {/* Tabs — underline style */}
+      <div className="flex border-b border-[--ink-100]">
         {tabs.map(({ mode, label }) => (
           <button key={mode} type="button" onClick={() => setInputMode(mode)}
-            className={`flex-1 px-3 py-2 text-sm rounded-md transition cursor-pointer ${
+            className={`flex-1 px-3 py-2.5 text-sm transition cursor-pointer -mb-px ${
               inputMode === mode
-                ? "bg-white text-[--ink-900] font-medium shadow-sm"
-                : "text-[--ink-500] hover:text-[--ink-700]"
+                ? "text-[--accent] border-b-2 border-[--accent] font-medium"
+                : "text-[--ink-400] hover:text-[--ink-700]"
             }`}>
             {label}
           </button>
@@ -188,28 +188,27 @@ export default function CVInput({
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onClick={() => !uploading && fileRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl py-12 px-6 text-center cursor-pointer transition-all ${
+              className={`border rounded-xl py-6 px-6 text-center cursor-pointer transition-all ${
                 dragOver
                   ? "border-[--accent] bg-[--accent-ghost] scale-[1.01]"
-                  : "border-[--ink-200] hover:border-[--ink-300] hover:bg-[--ink-050]"
+                  : "border-[--ink-200] bg-[--accent-ghost]/50 hover:border-[--accent]/30 hover:bg-[--accent-ghost]"
               }`}>
               <input ref={fileRef} type="file" accept=".pdf" className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }} />
               {uploading ? (
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-10 h-10 rounded-full border-2 border-[--accent] border-t-transparent animate-spin" />
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-8 h-8 rounded-full border-2 border-[--accent] border-t-transparent animate-spin" />
                   <p className="text-sm text-[--ink-500]">{t.parsing}</p>
                 </div>
               ) : (
                 <>
-                  <div className="w-12 h-12 rounded-xl bg-[--ink-050] flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-[--ink-400]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="w-10 h-10 rounded-lg bg-[--accent]/10 flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-5 h-5 text-[--accent]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                     </svg>
                   </div>
                   <p className="text-sm font-medium text-[--ink-900]">{t.uploadTitle}</p>
-                  <p className="text-sm text-[--ink-400] mt-1">{t.uploadSub}</p>
-                  <p className="text-xs text-[--ink-300] mt-3">{t.uploadMeta}</p>
+                  <p className="text-xs text-[--ink-300] mt-1">{t.uploadMeta}</p>
                 </>
               )}
             </div>
@@ -235,7 +234,7 @@ export default function CVInput({
           {cvText.length > 0 && (
             <p className="text-xs text-[--ink-400] mt-1.5">
               {cvText.length.toLocaleString()} {t.chars}
-              {fileName ? ` — ${fileName}` : ""}
+              {fileName ? ` \u2014 ${fileName}` : ""}
             </p>
           )}
         </div>

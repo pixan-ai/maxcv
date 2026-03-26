@@ -18,7 +18,7 @@ const UI = {
     badge: "AI-powered resume improver",
     heroTitle: "Your resume,",
     heroHighlight: "reimagined",
-    heroSub: "Paste, upload, or link your CV. Our AI rewrites it to stand out — optimized for ATS, tailored to your target role.",
+    heroSub: "Paste, upload, or link your CV. Our AI rewrites it to stand out \u2014 optimized for ATS, tailored to your target role.",
     button: "Improve my resume",
     loading: "Improving...",
     resultTitle: "Your improved resume",
@@ -34,19 +34,19 @@ const UI = {
   },
   es: {
     badge: "Mejora de CV con IA",
-    heroTitle: "Tu currículum,",
+    heroTitle: "Tu curr\u00edculum,",
     heroHighlight: "reinventado",
-    heroSub: "Pega, sube o vincula tu CV. Nuestra IA lo reescribe para destacar — optimizado para ATS, adaptado a tu puesto objetivo.",
-    button: "Mejorar mi currículum",
+    heroSub: "Pega, sube o vincula tu CV. Nuestra IA lo reescribe para destacar \u2014 optimizado para ATS, adaptado a tu puesto objetivo.",
+    button: "Mejorar mi curr\u00edculum",
     loading: "Mejorando...",
-    resultTitle: "Tu currículum mejorado",
+    resultTitle: "Tu curr\u00edculum mejorado",
     copy: "Copiar",
-    copied: "¡Copiado!",
+    copied: "\u00a1Copiado!",
     downloadPdf: "Descargar PDF",
     tipsTitle: "Consejos accionables",
-    errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
-    errorLimit: "Límite diario alcanzado (3/día). ¡Vuelve mañana!",
-    errorConnection: "Error de conexión. Revisa tu internet.",
+    errorGeneric: "Algo sali\u00f3 mal. Int\u00e9ntalo de nuevo.",
+    errorLimit: "L\u00edmite diario alcanzado (3/d\u00eda). \u00a1Vuelve ma\u00f1ana!",
+    errorConnection: "Error de conexi\u00f3n. Revisa tu internet.",
     errorLength: "Pega al menos 50 caracteres.",
     tryAgain: "Mejorar otro CV",
   },
@@ -96,28 +96,28 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-[--ink-000]">
       <Header lang={lang} onToggleLang={() => setLang(lang === "en" ? "es" : "en")} active="improve" />
 
-      <main className="flex-1 w-full max-w-2xl mx-auto px-5 py-12">
+      <main className="flex-1 w-full max-w-2xl mx-auto px-5 py-8">
         {/* Hero */}
-        <section className="text-center mb-10">
-          <div className="inline-flex items-center gap-1.5 bg-[--accent-ghost] text-[--accent] text-xs font-medium px-3 py-1 rounded-full mb-5">
+        <section className="text-center mb-6">
+          <div className="hero-reveal inline-flex items-center gap-1.5 bg-[--accent-ghost] text-[--accent] text-xs font-medium px-3 py-1 rounded-full mb-4">
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
             </svg>
             {t.badge}
           </div>
-          <h1 className="text-4xl sm:text-5xl tracking-tight mb-4 text-[--ink-900]">
-            {t.heroTitle}
+          <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-3 text-[--ink-900]">
+            <span className="hero-reveal-1 inline-block">{t.heroTitle}</span>
             <br />
-            <span className="text-[--accent]">{t.heroHighlight}</span>
+            <span className="hero-reveal-2 inline-block text-[--accent]">{t.heroHighlight}</span>
           </h1>
-          <p className="text-[--ink-500] text-base sm:text-lg max-w-lg mx-auto leading-relaxed">
+          <p className="hero-reveal-3 text-[--ink-500] text-base sm:text-lg max-w-lg mx-auto leading-relaxed">
             {t.heroSub}
           </p>
         </section>
 
         {/* Input */}
         {!result && (
-          <div className="mb-8">
+          <div className="mb-6">
             <CVInput
               cvText={cvText} setCvText={setCvText}
               targetRole={targetRole} setTargetRole={setTargetRole}

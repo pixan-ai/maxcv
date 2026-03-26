@@ -70,7 +70,7 @@ const UI = {
     topActionsTitle: "Start here",
     topActionsSubtitle: "The 3 changes with the most impact",
     improvementsTitle: "What you can improve",
-    improvementsSubtitle: "Ordered by impact — start from the top",
+    improvementsSubtitle: "Ordered by impact \u2014 start from the top",
     strengthsTitle: "What already works",
     strengthsSubtitle: "These areas are solid",
     cta: "Improve these sections with AI",
@@ -80,24 +80,24 @@ const UI = {
     errorConnection: "Connection error. Check your internet.",
   },
   es: {
-    badge: "Análisis de CV con IA",
+    badge: "An\u00e1lisis de CV con IA",
     heroTitle: "Conoce el score real",
     heroHighlight: "de tu CV",
-    heroSub: "Obtén un desglose detallado de lo que funciona, lo que no, y cómo corregirlo.",
-    submitLabel: "Analizar mi currículum",
+    heroSub: "Obt\u00e9n un desglose detallado de lo que funciona, lo que no, y c\u00f3mo corregirlo.",
+    submitLabel: "Analizar mi curr\u00edculum",
     loadingLabel: "Analizando...",
-    scoreMeta: "puntuación actual",
-    topActionsTitle: "Empieza aquí",
-    topActionsSubtitle: "Los 3 cambios con más impacto",
+    scoreMeta: "puntuaci\u00f3n actual",
+    topActionsTitle: "Empieza aqu\u00ed",
+    topActionsSubtitle: "Los 3 cambios con m\u00e1s impacto",
     improvementsTitle: "Lo que puedes mejorar",
-    improvementsSubtitle: "Ordenado por impacto — empieza por arriba",
+    improvementsSubtitle: "Ordenado por impacto \u2014 empieza por arriba",
     strengthsTitle: "Lo que ya funciona",
-    strengthsSubtitle: "Estas áreas están bien",
+    strengthsSubtitle: "Estas \u00e1reas est\u00e1n bien",
     cta: "Mejorar estas secciones con IA",
-    analyzeAnother: "Analizar otro currículum",
-    errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
-    errorLimit: "Límite alcanzado (5/hora). Intenta más tarde.",
-    errorConnection: "Error de conexión. Revisa tu internet.",
+    analyzeAnother: "Analizar otro curr\u00edculum",
+    errorGeneric: "Algo sali\u00f3 mal. Int\u00e9ntalo de nuevo.",
+    errorLimit: "L\u00edmite alcanzado (5/hora). Intenta m\u00e1s tarde.",
+    errorConnection: "Error de conexi\u00f3n. Revisa tu internet.",
   },
 };
 
@@ -125,7 +125,7 @@ function extractStrengths(dims: ScoreResult["dimensions"], lang: "en" | "es"): S
   if (items.length === 0) {
     for (const [key, dim] of Object.entries(dims)) {
       if (dim.score >= 60 && dim.evidence) {
-        items.push({ dimension: key, detail: `${lang === "en" ? "Scored" : "Puntuación"} ${dim.score}/100 — ${dim.evidence.slice(0, 120)}` });
+        items.push({ dimension: key, detail: `${lang === "en" ? "Scored" : "Puntuaci\u00f3n"} ${dim.score}/100 \u2014 ${dim.evidence.slice(0, 120)}` });
       }
     }
   }
@@ -171,23 +171,23 @@ export default function ScorePage() {
     <div className="min-h-screen flex flex-col bg-[--ink-000]">
       <Header lang={lang} onToggleLang={() => setLang(lang === "en" ? "es" : "en")} active="score" />
 
-      <main className="flex-1 w-full max-w-2xl mx-auto px-5 py-12">
+      <main className="flex-1 w-full max-w-2xl mx-auto px-5 py-8">
         {/* Hero + Input */}
         {!result && (
           <>
-            <section className="text-center mb-10">
-              <div className="inline-flex items-center gap-1.5 bg-[--accent-ghost] text-[--accent] text-xs font-medium px-3 py-1 rounded-full mb-5">
+            <section className="text-center mb-6">
+              <div className="hero-reveal inline-flex items-center gap-1.5 bg-[--accent-ghost] text-[--accent] text-xs font-medium px-3 py-1 rounded-full mb-4">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
                 </svg>
                 {t.badge}
               </div>
-              <h1 className="text-4xl sm:text-5xl tracking-tight mb-4 text-[--ink-900]">
-                {t.heroTitle}
+              <h1 className="text-4xl sm:text-5xl font-light tracking-tight mb-3 text-[--ink-900]">
+                <span className="hero-reveal-1 inline-block">{t.heroTitle}</span>
                 <br />
-                <span className="text-[--accent]">{t.heroHighlight}</span>
+                <span className="hero-reveal-2 inline-block text-[--accent]">{t.heroHighlight}</span>
               </h1>
-              <p className="text-[--ink-500] text-base sm:text-lg max-w-lg mx-auto leading-relaxed">
+              <p className="hero-reveal-3 text-[--ink-500] text-base sm:text-lg max-w-lg mx-auto leading-relaxed">
                 {t.heroSub}
               </p>
             </section>
