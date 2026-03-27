@@ -11,6 +11,7 @@ export default function Footer({ lang = "en" }: { lang?: "en" | "es" }) {
         <div className="flex items-center gap-4 text-xs text-ink-400">
           <Link href="/" className="hover:text-ink-700 transition">{lang === "en" ? "Improve" : "Mejorar"}</Link>
           <Link href="/score" className="hover:text-ink-700 transition">Score</Link>
+          <Link href="/security" className="hover:text-ink-700 transition">{lang === "en" ? "Security" : "Seguridad"}</Link>
         </div>
       </div>
     </footer>
