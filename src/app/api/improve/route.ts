@@ -45,7 +45,10 @@ Rules:
 - Maintain a professional tone
 - Preserve the EXACT section structure of the original resume
 - Use ALL CAPS for section headers (e.g., PROFESSIONAL EXPERIENCE, EDUCATION, SKILLS)
-- Use • for bullet points
+- Indent bullet points with 4 spaces before the bullet character, like:
+    • Bullet point text here
+    • Another bullet point here
+- Use • (bullet character) for all bullet points, never - or *
 - Separate sections with blank lines
 - The output must be copy-paste compatible with Microsoft Word
 
