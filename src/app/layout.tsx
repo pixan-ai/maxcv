@@ -7,11 +7,11 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "maxcv \u2014 AI-Powered Resume Improver",
-  description: "Improve your resume instantly with AI. Free to use, powered by Claude.",
+  title: "maxcv — AI Resume Analyzer & Improver",
+  description: "Analyze and improve your resume with AI. Professional score + instant rewrite. Free, no sign-up.",
   openGraph: {
-    title: "maxcv \u2014 AI-Powered Resume Improver",
-    description: "Improve your resume instantly with AI. Free to use, powered by Claude.",
+    title: "maxcv — AI Resume Analyzer & Improver",
+    description: "Analyze and improve your resume with AI. Professional score + instant rewrite. Free, no sign-up.",
     url: "https://maxcv.org",
     siteName: "maxcv",
     type: "website",

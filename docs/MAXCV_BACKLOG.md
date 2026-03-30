@@ -1,7 +1,7 @@
-# MaxCV — Backlog v1.0
+# MaxCV — Backlog v1.1
 
 > Tracking de todo lo completado y pendiente del proyecto.
-> Versión: 1.0 | Última actualización: 2026-03-29
+> Versión: 1.1 | Última actualización: 2026-03-30
 
 ---
 
@@ -9,8 +9,8 @@
 
 | Estado | Cantidad |
 |--------|----------|
-| ✅ Completado | 11 |
-| ○ Pendiente | 22 |
+| ✅ Completado | 17 |
+| ○ Pendiente | 16 |
 | ⚠ Bloqueado | 2 |
 
 ---
@@ -30,16 +30,19 @@
 - [x] **Project Bible v1.2** (Técnico) — Documento vivo con definiciones técnicas, producto y negocio
 - [x] **Competitors v1.0** (Negocio) — 19 competidores mapeados — todos inglés-only, registro obligatorio, de pago
 - [x] **Vercel Analytics básico** (Técnico) — Analytics integrado en layout.tsx
+- [x] **v2.0 — Unified page, dual CTA** (Producto) — Página única con Score + Improve en `/`, redirect `/score` → `/`
+- [x] **v2.0 — Progress bar** (Producto) — Barra de progreso con etapas bilingüe durante análisis
+- [x] **v2.0 — Word-compatible output** (Producto) — ALL CAPS headers, • bullets, UTF-8 BOM .txt download
+- [x] **v2.0 — Copy refresh** (Producto) — Hero, CTAs y copy optimizado para conversión emocional
+- [x] **v2.0 — CSS animations** (Producto) — card-enter stagger, score count-up, soft-pulse CTA, scroll-reveal
+- [x] **v2.0 — Rate limiting aligned** (Técnico) — 5 req/hora/IP en ambos endpoints (score + improve)
 
 ### ○ Pendientes
 
 - [ ] **Configurar emails de seguridad** (Seguridad) — Crear seguridad@maxcv.org y security@maxcv.org para la Security page
-- [ ] **Header — link a Security** (Producto) — Agregar Security/Seguridad a la navegación del Header (hoy solo está en Footer)
 - [ ] **HTTP security headers** (Seguridad) — CSP, X-Frame-Options, HSTS, X-Content-Type-Options en next.config
 - [ ] **Input sanitización** (Seguridad) — Validar y sanitizar input del usuario antes de enviarlo a Claude API
-- [ ] **Rate limiting API** (Técnico) — Throttling por IP en /api/improve y /api/score para evitar abuso de créditos Anthropic
 - [ ] **robots.txt + sitemap.xml** (Técnico) — Permitir indexación, generar sitemap con todas las rutas
-- [ ] **Meta tags en español** (Técnico) — Title, description, og:image, twitter:card — target LATAM/español
 - [ ] **Schema markup** (Técnico) — SoftwareApplication + WebApplication para SEO y visibilidad en LLMs
 - [ ] **Favicon + apple-touch-icon** (Producto) — Icono de marca para browser tabs y home screen
 - [ ] **URL canónica dev↔prod** (Técnico) — Definir relación entre dev.maxcv.org y maxcv.org, hreflang tags
@@ -87,4 +90,4 @@
 
 ---
 
-*Last updated: 2026-03-29 | Version 1.0*
+*Last updated: 2026-03-30 | Version 1.1*

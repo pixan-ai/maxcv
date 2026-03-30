@@ -10,6 +10,7 @@ interface CVInputProps {
   onSubmit: () => void; loading: boolean;
   error: string | null; setError: (e: string | null) => void;
   isEs: boolean; submitLabel: string; loadingLabel: string;
+  hideSubmit?: boolean;
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -19,7 +20,7 @@ const T = {
   es: { tabText: "Pegar texto", tabFile: "Subir PDF", tabSheets: "Google Sheets", labelCv: "Tu curr\u00edculum", placeholderCv: "Pega el texto de tu curr\u00edculum aqu\u00ed...", chars: "caracteres", labelRole: "Puesto objetivo", optional: "opcional", placeholderRole: "ej. Product Manager, Ingeniero de Software...", uploadTitle: "Arrastra tu PDF aqu\u00ed", uploadMeta: "Solo PDF \u00b7 m\u00e1x 5MB \u00b7 \u00bfWord? Gu\u00e1rdalo como PDF", parsing: "Leyendo tu archivo...", parseError: "No se pudo leer el archivo. Intenta pegando tu CV.", uploadSuccess: "Archivo cargado", changeFile: "Cambiar", clearText: "Limpiar", sheetsLabel: "Enlace de Google Sheets", sheetsPlaceholder: "https://docs.google.com/spreadsheets/d/...", sheetsHint: "Debe estar compartido como \"Cualquier persona con el enlace\"", sheetsButton: "Importar", sheetsLoading: "Importando...", sheetsError: "No se pudo acceder al Google Sheet.", fileTooLarge: "Archivo muy grande. M\u00e1ximo 5MB.", fileWrongType: "Solo se aceptan archivos PDF.", privacy: "Tu CV se procesa en tiempo real y nunca se almacena." },
 };
 
-export default function CVInput({ cvText, setCvText, targetRole, setTargetRole, onSubmit, loading, error, setError, isEs, submitLabel, loadingLabel }: CVInputProps) {
+export default function CVInput({ cvText, setCvText, targetRole, setTargetRole, onSubmit, loading, error, setError, isEs, submitLabel, loadingLabel, hideSubmit }: CVInputProps) {
   const t = isEs ? T.es : T.en;
   const [inputMode, setInputMode] = useState<InputMode>("file");
   const [uploading, setUploading] = useState(false);
@@ -160,15 +161,19 @@ export default function CVInput({ cvText, setCvText, targetRole, setTargetRole, 
 
       {error && <div className="bg-warning-ghost border border-warning/20 text-ink-700 text-sm px-4 py-3 rounded-xl">{error}</div>}
 
-      <button type="button" onClick={onSubmit} disabled={!isReady}
-        className={`w-full font-medium py-3.5 px-6 rounded-xl transition-colors text-sm ${isReady ? "bg-accent text-white hover:bg-accent-dim cursor-pointer" : "bg-ink-100 text-ink-300 cursor-not-allowed"}`}>
-        {loading ? <Spinner label={loadingLabel} /> : submitLabel}
-      </button>
+      {!hideSubmit && (
+        <>
+          <button type="button" onClick={onSubmit} disabled={!isReady}
+            className={`w-full font-medium py-3.5 px-6 rounded-xl transition-colors text-sm ${isReady ? "bg-accent text-white hover:bg-accent-dim cursor-pointer" : "bg-ink-100 text-ink-300 cursor-not-allowed"}`}>
+            {loading ? <Spinner label={loadingLabel} /> : submitLabel}
+          </button>
 
-      <p className="text-center text-xs text-ink-300 flex items-center justify-center gap-1.5">
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
-        {t.privacy}
-      </p>
+          <p className="text-center text-xs text-ink-300 flex items-center justify-center gap-1.5">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+            {t.privacy}
+          </p>
+        </>
+      )}
     </div>
   );
 }

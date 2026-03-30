@@ -6,24 +6,18 @@ const anthropic = new Anthropic();
 // Simple in-memory rate limiting (resets on deploy/restart)
 const ipRequests = new Map<string, { count: number; resetAt: number }>();
 
-const DAILY_LIMIT = 3;
+const HOURLY_LIMIT = 5;
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
   const record = ipRequests.get(ip);
 
   if (!record || now > record.resetAt) {
-    ipRequests.set(ip, {
-      count: 1,
-      resetAt: now + 24 * 60 * 60 * 1000,
-    });
+    ipRequests.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 });
     return false;
   }
 
-  if (record.count >= DAILY_LIMIT) {
-    return true;
-  }
-
+  if (record.count >= HOURLY_LIMIT) return true;
   record.count++;
   return false;
 }
@@ -49,7 +43,11 @@ Rules:
 - Keep the same information — do not invent experience or skills
 - If a target role is provided, tailor the language and keywords accordingly
 - Maintain a professional tone
-- Use clear section headers and consistent formatting
+- Preserve the EXACT section structure of the original resume
+- Use ALL CAPS for section headers (e.g., PROFESSIONAL EXPERIENCE, EDUCATION, SKILLS)
+- Use • for bullet points
+- Separate sections with blank lines
+- The output must be copy-paste compatible with Microsoft Word
 
 You MUST respond in valid JSON with exactly this structure:
 {

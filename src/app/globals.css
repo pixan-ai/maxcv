@@ -29,9 +29,26 @@
 .hero-reveal-3 { animation: hero-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.36s both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-reveal, .hero-reveal-1, .hero-reveal-2, .hero-reveal-3 {
+  .hero-reveal, .hero-reveal-1, .hero-reveal-2, .hero-reveal-3,
+  .card-enter, .soft-pulse {
     animation: none; opacity: 1; filter: none; transform: none;
   }
+}
+
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(16px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.card-enter {
+  animation: card-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes soft-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(50% 0.13 230 / 0.3); }
+  50% { box-shadow: 0 0 0 8px oklch(50% 0.13 230 / 0); }
+}
+.soft-pulse {
+  animation: soft-pulse 2s ease-in-out infinite;
 }
 
 @supports (animation-timeline: view()) {
