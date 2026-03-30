@@ -57,7 +57,6 @@ const UI = {
     btnImproveSub: "Improved resume ready to send",
     rateLimit: "5 analyses per hour · no daily usage limit",
     privacy: "Your resume is analyzed in real time and discarded instantly. No sign-up, no storage.",
-    // Score results
     scoreMeta: "current score",
     topActionsTitle: "Start here",
     topActionsSub: "The 3 changes with the most impact",
@@ -67,12 +66,10 @@ const UI = {
     strengthsSub: "These areas are solid",
     ctaPostScore: "Want me to rewrite it for you?",
     ctaPostImprove: "Want to see your improved resume's score?",
-    // Improve results
     resultTitle: "Your improved resume",
     copy: "Copy", copied: "Copied!",
     downloadWord: "Download for Word",
     tipsTitle: "Actionable tips",
-    // Errors
     errorGeneric: "Something went wrong. Please try again.",
     errorLimit: "Limit reached (5/hour). Try again later.",
     errorConnection: "Connection error. Check your internet.",
@@ -89,7 +86,6 @@ const UI = {
     btnImproveSub: "CV mejorado listo para enviar",
     rateLimit: "5 análisis por hora · sin límite de uso diario",
     privacy: "Tu CV se analiza en tiempo real y se descarta al instante. Sin registro, sin almacenamiento.",
-    // Score results
     scoreMeta: "puntuación actual",
     topActionsTitle: "Empieza aquí",
     topActionsSub: "Los 3 cambios con más impacto",
@@ -99,12 +95,10 @@ const UI = {
     strengthsSub: "Estas áreas están bien",
     ctaPostScore: "¿Quieres que lo reescriba por ti?",
     ctaPostImprove: "¿Quieres ver el score de tu CV mejorado?",
-    // Improve results
     resultTitle: "Tu currículum mejorado",
     copy: "Copiar", copied: "¡Copiado!",
     downloadWord: "Descargar para Word",
     tipsTitle: "Consejos accionables",
-    // Errors
     errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
     errorLimit: "Límite alcanzado (5/hora). Intenta más tarde.",
     errorConnection: "Error de conexión. Revisa tu internet.",
@@ -149,10 +143,26 @@ function downloadWordTxt(text: string, filename: string) {
   const blob = new Blob([bom + text], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
+  a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
+}
+
+/** Renders resume text with proper hanging indent on bullet lines */
+function ResumeText({ text }: { text: string }) {
+  return (
+    <div className="text-sm leading-relaxed text-ink-900 p-5 sm:p-6 font-[family-name:var(--font-geist)]">
+      {text.split("\n").map((line, i) => {
+        const trimmed = line.trimStart();
+        if (trimmed.startsWith("•") || trimmed.startsWith("·") || trimmed.startsWith("‣")) {
+          return <p key={i} className="m-0" style={{ paddingLeft: "1.5em", textIndent: "-1.5em" }}>{trimmed}</p>;
+        }
+        if (line.trim() === "") return <div key={i} className="h-3" />;
+        const isHeader = line === line.toUpperCase() && line.trim().length > 2 && /^[A-ZÁÉÍÓÚÑÜ\s&/\-:]+$/.test(line.trim());
+        if (isHeader) return <p key={i} className="m-0 font-medium text-ink-900 mt-4 mb-1">{line}</p>;
+        return <p key={i} className="m-0">{line}</p>;
+      })}
+    </div>
+  );
 }
 
 // --- Score count-up hook ---
@@ -167,7 +177,7 @@ function useCountUp(target: number, duration = 1200) {
     function tick(now: number) {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
       setValue(Math.round(eased * target));
       if (progress < 1) rafRef.current = requestAnimationFrame(tick);
     }
@@ -285,10 +295,8 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Rate limit note */}
+            {/* Rate limit + privacy */}
             <p className="text-center text-xs text-ink-300 mt-3">{t.rateLimit}</p>
-
-            {/* Privacy line */}
             <p className="text-center text-xs text-ink-300 mt-2 flex items-center justify-center gap-1.5">
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
               {t.privacy}
@@ -297,11 +305,9 @@ export default function Home() {
         )}
 
         {/* Progress bar during loading */}
-        {loading && (
-          <ProgressBar isActive={loading} isComplete={progressComplete} isEs={lang === "es"} />
-        )}
+        {loading && <ProgressBar isActive={loading} isComplete={progressComplete} isEs={lang === "es"} />}
 
-        {/* Error during loading */}
+        {/* Error */}
         {error && !hasResult && !loading && (
           <div className="bg-warning-ghost border border-warning/20 text-ink-700 text-sm px-4 py-3 rounded-xl mt-4">{error}</div>
         )}
@@ -309,7 +315,6 @@ export default function Home() {
         {/* ============ SCORE RESULTS ============ */}
         {scoreResult && (
           <div ref={resultRef} className="space-y-10">
-            {/* Score summary card */}
             <div className="bg-white border border-ink-100 rounded-xl overflow-hidden card-enter">
               <div className="flex items-center gap-4 px-5 py-4 border-b border-ink-100 bg-ink-050">
                 <div className="w-12 h-12 rounded-xl bg-accent-ghost flex items-center justify-center">
@@ -323,7 +328,6 @@ export default function Home() {
               <p className="text-sm text-ink-500 leading-relaxed px-5 py-4">{scoreResult.summary}</p>
             </div>
 
-            {/* Top 3 actions */}
             {scoreResult.top_3_actions?.length > 0 && (
               <section>
                 <h2 className="text-base font-medium text-ink-900 mb-1">{t.topActionsTitle}</h2>
@@ -340,7 +344,6 @@ export default function Home() {
               </section>
             )}
 
-            {/* Improvements */}
             {improvements.length > 0 && (
               <section className="reveal">
                 <h2 className="text-base font-medium text-ink-900 mb-1">{t.improvementsTitle}</h2>
@@ -363,7 +366,6 @@ export default function Home() {
               </section>
             )}
 
-            {/* Strengths */}
             {strengths.length > 0 && (
               <section className="reveal">
                 <h2 className="text-base font-medium text-ink-900 mb-1">{t.strengthsTitle}</h2>
@@ -380,7 +382,6 @@ export default function Home() {
               </section>
             )}
 
-            {/* CTA: post-score → improve */}
             <div className="flex flex-col items-center gap-3 pt-4">
               <p className="text-sm text-ink-500">{t.ctaPostScore}</p>
               <button onClick={handleImprove}
@@ -408,7 +409,7 @@ export default function Home() {
                     className="text-xs text-ink-400 hover:text-ink-700 font-medium transition cursor-pointer">{t.downloadWord}</button>
                 </div>
               </div>
-              <pre className="whitespace-pre-wrap text-sm leading-relaxed text-ink-900 p-5 sm:p-6">{improveResult.improved}</pre>
+              <ResumeText text={improveResult.improved} />
             </div>
 
             {improveResult.tips.length > 0 && (
@@ -425,7 +426,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* CTA: post-improve → score */}
             <div className="flex flex-col items-center gap-3 pt-4">
               <p className="text-sm text-ink-500">{t.ctaPostImprove}</p>
               <button onClick={() => { setCvText(improveResult.improved); setImproveResult(null); handleScore(); }}
