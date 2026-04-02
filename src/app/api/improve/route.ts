@@ -1,66 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { getClientIp, isRateLimited } from "@/lib/rateLimit";
+import { stripMarkdown } from "@/lib/apiUtils";
+import { IMPROVE_PROMPT } from "@/lib/prompts";
 
 const anthropic = new Anthropic();
-
-// Simple in-memory rate limiting (resets on deploy/restart)
-const ipRequests = new Map<string, { count: number; resetAt: number }>();
-
-const HOURLY_LIMIT = 5;
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const record = ipRequests.get(ip);
-
-  if (!record || now > record.resetAt) {
-    ipRequests.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 });
-    return false;
-  }
-
-  if (record.count >= HOURLY_LIMIT) return true;
-  record.count++;
-  return false;
-}
-
-function getClientIp(req: NextRequest): string {
-  const forwarded = req.headers.get("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
-  const real = req.headers.get("x-real-ip");
-  if (real) return real;
-  return "unknown";
-}
-
-const SYSTEM_PROMPT = `You are an expert resume writer and career coach. Your job is to improve resumes to be more impactful, professional, and ATS-friendly.
-
-Rules:
-- Detect the language of the resume and respond in THE SAME LANGUAGE
-- If the resume is in Spanish, improve it in Spanish. If in English, respond in English. Same for any other language.
-- Rewrite the resume to be clearer, more concise, and results-oriented
-- Use strong action verbs and quantify achievements where possible
-- Improve formatting and structure for ATS compatibility
-- Keep the same information — do not invent experience or skills
-- If a target role is provided, tailor the language and keywords accordingly
-- Maintain a professional tone
-- Preserve the EXACT section structure of the original resume
-- Use ALL CAPS for section headers (e.g., PROFESSIONAL EXPERIENCE, EDUCATION, SKILLS)
-- Indent bullet points with 4 spaces before the bullet character, like:
-    • Bullet point text here
-    • Another bullet point here
-- Use • (bullet character) for all bullet points, never - or *
-- Separate sections with blank lines
-- The output must be copy-paste compatible with Microsoft Word
-
-You MUST respond in valid JSON with exactly this structure:
-{
-  "improved": "The full improved resume text with clear sections separated by newlines",
-  "tips": ["Tip 1", "Tip 2", "Tip 3"],
-  "language": "detected language code (en, es, fr, zh, etc.)"
-}
-
-Provide 3-5 actionable tips specific to this resume, in the same language as the resume.
-Respond ONLY with the JSON object, no markdown fences or extra text.`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -94,16 +38,12 @@ export async function POST(req: NextRequest) {
       model: "claude-opus-4-6",
       max_tokens: 4096,
       messages: [{ role: "user", content: userMessage }],
-      system: SYSTEM_PROMPT,
+      system: IMPROVE_PROMPT,
     });
 
     const text =
       message.content[0].type === "text" ? message.content[0].text : "";
-
-    // Strip markdown fences if present
-    const cleaned = text
-      .replace(/^```(?:json)?\s*\n?/, "")
-      .replace(/\n?```\s*$/, "");
+    const cleaned = stripMarkdown(text);
     const parsed = JSON.parse(cleaned);
 
     return NextResponse.json({

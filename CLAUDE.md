@@ -35,12 +35,17 @@ MaxCV (maxcv.org) is a free AI-powered resume/CV analyzer and improver. Users up
   - **Flow B (Improve):** CV input → "Rewrite it for me" → progress bar → improved CV + tips → CTA to score
 - `/src/app/page.tsx` — Main unified page with both flows
 - `/src/app/score/page.tsx` — Redirects to `/`
-- `/src/app/layout.tsx` — Root layout with Geist fonts, meta tags, Vercel Analytics
+- `/src/app/layout.tsx` — Root layout with Geist fonts, meta tags, favicon, Vercel Analytics
 - `/src/app/globals.css` — Tailwind theme config (ink-* palette, accent, OKLCH)
 - `/src/app/security/page.tsx` — Security & privacy page
 - `/src/app/api/improve/route.ts` — API route: Claude Opus 4.6 rewrites the CV
 - `/src/app/api/score/route.ts` — API route: Claude Sonnet 4 scores the CV (6 dimensions)
 - `/src/app/api/parse/route.ts` — API route: PDF/Sheets parsing
+- `/src/lib/rateLimit.ts` — Shared rate limiting + IP extraction (used by score + improve)
+- `/src/lib/apiUtils.ts` — Shared API utilities (stripMarkdown)
+- `/src/lib/prompts.ts` — Prompt loader (reads .txt files at build time)
+- `/src/lib/prompts/score.txt` — Claude system prompt for scoring
+- `/src/lib/prompts/improve.txt` — Claude system prompt for improvement
 - `/src/components/Header.tsx` — Logo + language toggle + version badge
 - `/src/components/Footer.tsx` — Branding + nav links
 - `/src/components/CVInput.tsx` — Shared input: paste text, upload PDF, or Google Sheets
@@ -68,8 +73,10 @@ MaxCV (maxcv.org) is a free AI-powered resume/CV analyzer and improver. Users up
 ## Rate Limiting & Security
 
 - 5 requests per IP per hour (both score and improve APIs)
+- Rate limiting logic shared via `src/lib/rateLimit.ts`
 - Input capped at 8000 characters (improve) / 15000 characters (score)
 - Target role input capped at 200 characters
+- HTTP security headers: HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy (configured in `next.config.ts`)
 - No user accounts, no cookies, no tracking beyond Vercel Analytics
 
 ## Word-Compatible Output

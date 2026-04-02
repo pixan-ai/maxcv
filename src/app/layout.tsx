@@ -9,6 +9,10 @@ const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 export const metadata: Metadata = {
   title: "maxcv — AI Resume Analyzer & Improver",
   description: "Analyze and improve your resume with AI. Professional score + instant rewrite. Free, no sign-up.",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
   openGraph: {
     title: "maxcv — AI Resume Analyzer & Improver",
     description: "Analyze and improve your resume with AI. Professional score + instant rewrite. Free, no sign-up.",

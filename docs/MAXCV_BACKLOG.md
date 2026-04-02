@@ -1,7 +1,7 @@
-# MaxCV — Backlog v1.2
+# MaxCV — Backlog v1.3
 
 > Tracking de todo lo completado y pendiente del proyecto.
-> Versión: 1.2 | Última actualización: 2026-04-01
+> Versión: 1.3 | Última actualización: 2026-04-01
 
 ---
 
@@ -9,8 +9,7 @@
 
 | Estado | Cantidad |
 |--------|----------|
-| ✅ Completado | 17 |
-| 🔥 Prioridad inmediata | 5 |
+| ✅ Completado | 22 |
 | ○ Fase 1 — Pre-launch | 12 |
 | ○ Fase 2 — Launch | 4 |
 | ○ Fase 3 — Growth | 5 |
@@ -37,18 +36,11 @@
 - [x] **v2.0 — Copy refresh** (Producto) — Hero, CTAs y copy optimizado para conversión emocional
 - [x] **v2.0 — CSS animations** (Producto) — card-enter stagger, score count-up, soft-pulse CTA, scroll-reveal
 - [x] **v2.0 — Rate limiting aligned** (Técnico) — 5 req/hora/IP en ambos endpoints (score + improve)
-
----
-
-## 🔥 Prioridad inmediata
-
-> Riesgo cero o bajo. Impacto inmediato. Ejecutar primero.
-
-- [ ] **Eliminar código muerto** (Técnico) — Remover mammoth, motion, pdf-parse, @types/pdf-parse de dependencies. Eliminar AtsExplainer.tsx (componente huérfano, 121 líneas sin usar). Reducción ~165KB de bundle.
-- [ ] **Prompts a archivos .txt** (Técnico) — Mover system prompts hardcodeados (156 + 45 líneas) de route.ts a `src/lib/prompts/score.txt` y `improve.txt`. Los routes quedan solo con lógica. Riesgo: cero.
-- [ ] **apiHandler wrapper compartido** (Técnico) — Extraer rate limiting, IP extraction, error handling y markdown stripping duplicados en los 3 routes a `src/lib/apiHandler.ts`. Cada route pasa de ~120 líneas a ~30.
-- [ ] **Favicon + apple-touch-icon** (Producto) — Hoy muestra el default de Next.js en cada pestaña del browser. Icono básico de marca.
-- [ ] **HTTP security headers** (Seguridad) — CSP, X-Frame-Options, HSTS, X-Content-Type-Options en `next.config.ts`. ~30 min de trabajo.
+- [x] **v4.1 — Eliminar código muerto** (Técnico) — Removidos mammoth, motion, pdf-parse, @types/pdf-parse. Eliminado AtsExplainer.tsx (121 líneas huérfanas). Reducción ~165KB de bundle.
+- [x] **v4.1 — Prompts a archivos .txt** (Técnico) — System prompts extraídos a `src/lib/prompts/score.txt` y `improve.txt`. Routes solo con lógica.
+- [x] **v4.1 — Shared utilities** (Técnico) — Rate limiting, IP extraction y stripMarkdown extraídos a `src/lib/rateLimit.ts` y `src/lib/apiUtils.ts`. Cero duplicación en routes.
+- [x] **v4.1 — Favicon SVG** (Producto) — Favicon tipográfico "M" en `public/favicon.svg`, wired en layout.tsx metadata.
+- [x] **v4.1 — HTTP security headers** (Seguridad) — HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy en `next.config.ts`.
 
 ---
 
@@ -119,4 +111,4 @@
 
 ---
 
-*Last updated: 2026-04-01 | Version 1.2*
+*Last updated: 2026-04-01 | Version 1.3*
