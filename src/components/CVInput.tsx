@@ -82,9 +82,7 @@ export default function CVInput({
   const isProcessing = phase === "uploading" || phase === "analyzing";
   const isDone = phase === "done";
 
-  // Progress: uploading = 40%, analyzing = 80% (real phases, no fake sub-steps)
   const progress = phase === "uploading" ? 40 : phase === "analyzing" ? 80 : phase === "done" ? 100 : 0;
-
   const statusText = phase === "uploading" ? t.uploading : phase === "analyzing" ? t.analyzing : "";
 
   const validateFile = useCallback(
@@ -194,7 +192,6 @@ export default function CVInput({
       {/* File upload tab */}
       {inputMode === "file" && (
         <div className="space-y-2.5">
-          {/* Input shell */}
           <div
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
@@ -210,34 +207,21 @@ export default function CVInput({
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
             />
 
-            {/* Box */}
+            {/* Box — same border/radius as all other inputs in the form */}
             <div
-              className="flex items-center px-4 h-12 transition-all"
-              style={{
-                borderRadius: 6,
-                background: "white",
-                border: isProcessing
-                  ? "none"
-                  : `1px solid ${
-                      dragOver
-                        ? "oklch(0.55 0.2 260 / 0.6)"
-                        : isDone
-                        ? "oklch(0.7 0.12 155)"
-                        : "var(--ink-200)"
-                    }`,
-                cursor: isProcessing || isDone ? "default" : "pointer",
-              }}
+              className={`flex items-center px-4 h-12 w-full rounded-xl border bg-white transition-all ${
+                isProcessing
+                  ? "border-transparent"
+                  : dragOver
+                  ? "border-accent/60"
+                  : isDone
+                  ? "border-positive/60"
+                  : "border-ink-200 hover:border-ink-300 cursor-pointer"
+              }`}
             >
               {isDone ? (
-                /* Success state */
                 <>
-                  <span
-                    className="flex-1 text-sm truncate"
-                    style={{
-                      fontFamily: "var(--font-geist-mono, monospace)",
-                      color: "var(--ink-800)",
-                    }}
-                  >
+                  <span className="flex-1 text-sm truncate text-ink-800" style={{ fontFamily: "var(--font-geist-mono, monospace)" }}>
                     {fileName}
                   </span>
                   <div
@@ -250,25 +234,11 @@ export default function CVInput({
                   </div>
                 </>
               ) : isProcessing ? (
-                /* Processing state */
-                <span
-                  className="text-sm"
-                  style={{
-                    fontFamily: "var(--font-geist-mono, monospace)",
-                    color: "var(--ink-400)",
-                  }}
-                >
+                <span className="text-sm text-ink-400" style={{ fontFamily: "var(--font-geist-mono, monospace)" }}>
                   {statusText}
                 </span>
               ) : (
-                /* Idle state */
-                <span
-                  className="text-sm"
-                  style={{
-                    fontFamily: "var(--font-geist-mono, monospace)",
-                    color: "var(--ink-300)",
-                  }}
-                >
+                <span className="text-sm text-ink-300" style={{ fontFamily: "var(--font-geist-mono, monospace)" }}>
                   {t.uploadIdle}
                 </span>
               )}
@@ -277,9 +247,8 @@ export default function CVInput({
             {/* Animated border while processing */}
             {isProcessing && (
               <div
-                className="pointer-events-none absolute inset-0"
+                className="pointer-events-none absolute inset-0 rounded-xl"
                 style={{
-                  borderRadius: 7,
                   border: "1.5px solid oklch(0.55 0.2 260)",
                   animation: "cv-border-pulse 1.8s ease-in-out infinite",
                 }}
@@ -288,10 +257,7 @@ export default function CVInput({
 
             {/* Progress bar — bottom edge */}
             {isProcessing && (
-              <div
-                className="absolute bottom-0 left-0 right-0 overflow-hidden"
-                style={{ height: 2, borderRadius: "0 0 6px 6px" }}
-              >
+              <div className="absolute bottom-0 left-0 right-0 overflow-hidden" style={{ height: 2, borderRadius: "0 0 12px 12px" }}>
                 <div
                   style={{
                     height: "100%",
@@ -304,54 +270,29 @@ export default function CVInput({
             )}
           </div>
 
-          {/* Hint / meta */}
+          {/* Hint / success */}
           {isDone ? (
-            /* Success banner */
             <div
-              className="flex items-center gap-2.5 px-3.5 py-2 rounded"
-              style={{
-                background: "oklch(0.97 0.02 155)",
-                border: "0.5px solid oklch(0.88 0.06 155)",
-              }}
+              className="flex items-center gap-2.5 px-3.5 py-2 rounded-lg"
+              style={{ background: "oklch(0.97 0.02 155)", border: "0.5px solid oklch(0.88 0.06 155)" }}
             >
-              <div
-                className="flex-shrink-0 rounded-full"
-                style={{ width: 5, height: 5, background: "oklch(0.55 0.15 155)" }}
-              />
-              <span
-                className="text-[13px] flex-1 truncate"
-                style={{
-                  fontFamily: "var(--font-geist-mono, monospace)",
-                  color: "oklch(0.38 0.1 155)",
-                }}
-              >
+              <div className="flex-shrink-0 rounded-full" style={{ width: 5, height: 5, background: "oklch(0.55 0.15 155)" }} />
+              <span className="text-[13px] flex-1 truncate" style={{ fontFamily: "var(--font-geist-mono, monospace)", color: "oklch(0.38 0.1 155)" }}>
                 {t.uploadSuccess}
               </span>
-              <button
-                type="button"
-                onClick={resetFile}
-                className="text-xs transition cursor-pointer"
-                style={{ color: "oklch(0.5 0.08 155)" }}
-              >
+              <button type="button" onClick={resetFile} className="text-xs transition cursor-pointer" style={{ color: "oklch(0.5 0.08 155)" }}>
                 {t.changeFile}
               </button>
             </div>
           ) : (
-            /* Hint row */
             <div className="flex items-start gap-2">
               <div
                 className="flex-shrink-0 flex items-center justify-center rounded-full mt-0.5"
                 style={{ width: 15, height: 15, border: "1px solid var(--ink-200)" }}
               >
-                <div
-                  className="rounded-full"
-                  style={{ width: 4, height: 4, background: "var(--ink-300)" }}
-                />
+                <div className="rounded-full" style={{ width: 4, height: 4, background: "var(--ink-300)" }} />
               </div>
-              <p
-                className="text-[13px]"
-                style={{ color: "var(--ink-400)", lineHeight: 1.5 }}
-              >
+              <p className="text-[13px]" style={{ color: "var(--ink-400)", lineHeight: 1.5 }}>
                 {isProcessing ? t.hintTime : t.uploadMeta}
               </p>
             </div>
@@ -395,9 +336,7 @@ export default function CVInput({
       {inputMode === "sheets" && (
         <div className="space-y-3">
           <div>
-            <label htmlFor="sheets-url" className="text-sm font-medium text-ink-700 mb-2 block">
-              {t.sheetsLabel}
-            </label>
+            <label htmlFor="sheets-url" className="text-sm font-medium text-ink-700 mb-2 block">{t.sheetsLabel}</label>
             <input
               id="sheets-url"
               type="url"
