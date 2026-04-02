@@ -1,7 +1,7 @@
-# MaxCV — Backlog v1.1
+# MaxCV — Backlog v1.2
 
 > Tracking de todo lo completado y pendiente del proyecto.
-> Versión: 1.1 | Última actualización: 2026-03-30
+> Versión: 1.2 | Última actualización: 2026-04-01
 
 ---
 
@@ -10,14 +10,15 @@
 | Estado | Cantidad |
 |--------|----------|
 | ✅ Completado | 17 |
-| ○ Pendiente | 16 |
+| 🔥 Prioridad inmediata | 5 |
+| ○ Fase 1 — Pre-launch | 12 |
+| ○ Fase 2 — Launch | 4 |
+| ○ Fase 3 — Growth | 5 |
 | ⚠ Bloqueado | 2 |
 
 ---
 
-## Fase 1 — Pre-launch
-
-### ✅ Completados
+## ✅ Completados
 
 - [x] **Design system overhaul** (Producto) — Migración a Tailwind v4 `@theme`, ink-* palette, Geist/Geist Mono, OKLCH accent
 - [x] **CVInput compartido** (Producto) — Drag-and-drop, PDF-only, validación, success state, i18n ES/EN
@@ -37,17 +38,45 @@
 - [x] **v2.0 — CSS animations** (Producto) — card-enter stagger, score count-up, soft-pulse CTA, scroll-reveal
 - [x] **v2.0 — Rate limiting aligned** (Técnico) — 5 req/hora/IP en ambos endpoints (score + improve)
 
+---
+
+## 🔥 Prioridad inmediata
+
+> Riesgo cero o bajo. Impacto inmediato. Ejecutar primero.
+
+- [ ] **Eliminar código muerto** (Técnico) — Remover mammoth, motion, pdf-parse, @types/pdf-parse de dependencies. Eliminar AtsExplainer.tsx (componente huérfano, 121 líneas sin usar). Reducción ~165KB de bundle.
+- [ ] **Prompts a archivos .txt** (Técnico) — Mover system prompts hardcodeados (156 + 45 líneas) de route.ts a `src/lib/prompts/score.txt` y `improve.txt`. Los routes quedan solo con lógica. Riesgo: cero.
+- [ ] **apiHandler wrapper compartido** (Técnico) — Extraer rate limiting, IP extraction, error handling y markdown stripping duplicados en los 3 routes a `src/lib/apiHandler.ts`. Cada route pasa de ~120 líneas a ~30.
+- [ ] **Favicon + apple-touch-icon** (Producto) — Hoy muestra el default de Next.js en cada pestaña del browser. Icono básico de marca.
+- [ ] **HTTP security headers** (Seguridad) — CSP, X-Frame-Options, HSTS, X-Content-Type-Options en `next.config.ts`. ~30 min de trabajo.
+
+---
+
+## Fase 1 — Pre-launch
+
 ### ○ Pendientes
 
-- [ ] **Configurar emails de seguridad** (Seguridad) — Crear seguridad@maxcv.org y security@maxcv.org para la Security page
-- [ ] **HTTP security headers** (Seguridad) — CSP, X-Frame-Options, HSTS, X-Content-Type-Options en next.config
-- [ ] **Input sanitización** (Seguridad) — Validar y sanitizar input del usuario antes de enviarlo a Claude API
+**Calidad de código (reingeniería progresiva)**
+
+- [ ] **Extraer ScoreResults + ImproveResults** (Técnico) — Sacar resultados de page.tsx (450 líneas) a componentes dedicados. page.tsx queda como orquestador puro (~180 líneas). Riesgo: medio.
+- [ ] **useCVAnalysis custom hook** (Técnico) — Consolidar los 8+ useState relacionados en page.tsx a un solo hook `src/hooks/useCVAnalysis.ts`. Incluye extraer `useCountUp` a su propio archivo.
+- [ ] **i18n centralizado** (Técnico) — Consolidar todos los bloques `{ en: {...}, es: {...} }` dispersos en componentes a `src/lib/i18n.ts` + hook `useI18n()`. Riesgo: alto — ejecutar al final de la reingeniería.
+
+**Producto y SEO**
+
 - [ ] **robots.txt + sitemap.xml** (Técnico) — Permitir indexación, generar sitemap con todas las rutas
 - [ ] **Schema markup** (Técnico) — SoftwareApplication + WebApplication para SEO y visibilidad en LLMs
-- [ ] **Favicon + apple-touch-icon** (Producto) — Icono de marca para browser tabs y home screen
 - [ ] **URL canónica dev↔prod** (Técnico) — Definir relación entre dev.maxcv.org y maxcv.org, hreflang tags
+
+**Legal y seguridad**
+
+- [ ] **Configurar emails de seguridad** (Seguridad) — Crear seguridad@maxcv.org y security@maxcv.org para la Security page
+- [ ] **Input sanitización** (Seguridad) — Validar y sanitizar input del usuario antes de enviarlo a Claude API
 - [ ] **Aviso de privacidad LFPDPPP** (Legal) — Aviso formal conforme a ley mexicana 2025 (Secretaría de Anticorrupción)
 - [ ] **Términos de uso** (Legal) — Página legal con términos del servicio, bilingüe
+
+**Negocio**
+
 - [ ] **Monetización — integrar donaciones** (Negocio) — Stripe o Ko-fi integrado post-valor. Montos: $50/$100/$200 MXN o $5/$10/$25 USD
 
 ---
@@ -58,7 +87,7 @@
 
 - [ ] **Evento analytics custom** (Técnico) — Tracking: CV upload, score completado, improve completado, donación click
 - [ ] **Copy y messaging LATAM** (Producto) — Refinar texto del sitio para audiencia desempleados LATAM, español-first
-- [ ] **Accesibilidad WCAG AA** (Producto) — Contraste de colores, navegación teclado, labels en inputs, estados de error
+- [ ] **Accesibilidad WCAG AA** (Producto) — Contraste de colores, navegación teclado, labels en inputs, estados de error. Cero ARIA labels actualmente.
 - [ ] **Core Web Vitals audit** (Técnico) — LCP <2.5s, CLS mínimo, lazy loading below-the-fold, font-display swap
 
 ---
@@ -90,4 +119,4 @@
 
 ---
 
-*Last updated: 2026-03-30 | Version 1.1*
+*Last updated: 2026-04-01 | Version 1.2*
