@@ -1,9 +1,10 @@
 # MaxCV v5.0 — Rebuild Spec
 
-> Blueprint para reconstruir MaxCV desde cero.
+> Blueprint para construir MaxCV v5 DESDE CERO como aplicación nueva.
+> NO es una migración — es un proyecto nuevo que reemplaza al anterior.
 > Este documento es el input completo para Claude Code.
 > Léelo completo antes de tocar una sola línea de código.
-> Versión: 1.1 | Fecha: 2026-04-02
+> Versión: 1.2 | Fecha: 2026-04-02
 
 ---
 
@@ -16,6 +17,17 @@ Cero frameworks innecesarios, cero dependencias innecesarias.
 
 ---
 
+## IMPORTANTE: Esto es un proyecto NUEVO desde cero
+
+NO modificar el código existente. Construir todo desde cero.
+El código legacy (v4.1) no debe influir en las decisiones de v5.
+El único input es este spec + el style guide (`docs/MAXCV_STYLE_GUIDE.md`).
+
+Estrategia de deploy: crear branch `v5` desde master, construir ahí,
+probar en Vercel preview URL, y mergear a master cuando funcione.
+
+---
+
 ## Qué cambia vs v4.1
 
 | Antes (v4.1) | Después (v5.0) |
@@ -23,15 +35,29 @@ Cero frameworks innecesarios, cero dependencias innecesarias.
 | 2 flujos separados (Score + Improve) | 1 flujo unificado |
 | 2 API endpoints | 1 endpoint (`/api/analyze`) |
 | 2 prompts (score.txt + improve.txt) | 1 mega-prompt (analyze.txt) |
-| 2 botones de acción | 1 botón: "Analizar mi CV" |
+| 2 botones de acción | 1 botón: "Analizar mi CV y recomendar mejoras" |
 | page.tsx de 450+ líneas | page.tsx ~60 líneas + Analyzer.tsx ~250 líneas |
 | 6 componentes | 4 componentes |
 | ~30+ archivos de código | ~12 archivos de código |
-| Sonnet para score, Opus para improve | Opus 4.6 para todo |
+| Sonnet para score, Opus para improve | Modelo configurable via env var |
 | Sin prompt caching | Con prompt caching |
-| Sin SEO (no robots.txt, no sitemap) | robots.txt + sitemap.xml + JSON-LD schema |
+| Sin SEO (no robots.txt, no sitemap) | robots.txt + sitemap.xml + JSON-LD + llms.txt |
 | Sin licencia | MIT |
 | Score categories (Excellent/Good/etc) | Solo número + summary empático |
+| CV input max 15,000 chars (~3-4 págs) | CV input max 35,000 chars (~7 págs) |
+| 5 análisis/hora por IP | 7 análisis/hora por IP |
+| Modelo hardcoded en código | Modelo via `CLAUDE_MODEL` env var |
+
+---
+
+## Environment Variables
+
+```
+ANTHROPIC_API_KEY=sk-ant-...        # API key de Anthropic (ya existe)
+CLAUDE_MODEL=claude-opus-4-6        # Modelo a usar (nuevo, configurable)
+```
+
+Cuando salga un nuevo modelo, solo se cambia la env var en Vercel. Cero cambios de código.
 
 ---
 
@@ -51,14 +77,15 @@ maxcv/
 │   │   ├── Header.tsx                 ← simplificado
 │   │   └── Footer.tsx                 ← simplificado
 │   └── lib/
-│       ├── rateLimit.ts               ← mantener existente
+│       ├── rateLimit.ts               ← mantener existente (cambiar HOURLY_LIMIT a 7)
 │       ├── apiUtils.ts                ← mantener existente
 │       └── prompts/
 │           └── analyze.txt            ← UN mega-prompt unificado
 ├── public/
 │   ├── favicon.svg                    ← mantener existente
 │   ├── robots.txt                     ← NUEVO
-│   └── sitemap.xml                    ← NUEVO
+│   ├── sitemap.xml                    ← NUEVO
+│   └── llms.txt                       ← NUEVO: descripción para LLMs
 ├── next.config.ts                     ← mantener security headers
 ├── package.json
 ├── tsconfig.json
@@ -92,7 +119,7 @@ src/lib/prompts/improve.txt ← reemplazado por analyze.txt
 
 ## 1. El Mega-Prompt Unificado (analyze.txt)
 
-Este es el corazón del producto. Una sola llamada a Claude Opus 4.6.
+Este es el corazón del producto. Una sola llamada al modelo configurado.
 El prompt va en inglés (Claude funciona mejor así). El output se adapta
 automáticamente al idioma del CV del usuario.
 
@@ -252,24 +279,27 @@ UN endpoint. Recibe texto del CV. Prompt caching habilitado.
 
 ### Lógica:
 ```
-1. Extraer IP → rate limit check (5/hora)
+1. Extraer IP → rate limit check (7/hora)
 2. Recibir JSON: { cvText: string, targetRole?: string }
-3. Validar: cvText >= 50 chars, trim a 15,000 chars
-4. Llamar Claude Opus 4.6 con:
+3. Validar: cvText >= 50 chars, trim a 35,000 chars (soporta CVs de ~7 páginas)
+4. Leer modelo de process.env.CLAUDE_MODEL (fallback: "claude-opus-4-6")
+5. Llamar Claude con:
    - system: analyze.txt CON cache_control: { type: "ephemeral" }
-   - model: "claude-opus-4-6"
-   - max_tokens: 12000 (el output unificado es más largo)
+   - model: process.env.CLAUDE_MODEL || "claude-opus-4-6"
+   - max_tokens: 16000 (más headroom para CVs largos)
    - temperature: 0
-5. Parsear JSON response
-6. Validar campos requeridos (score, analysis, improved_cv)
-7. Devolver JSON al frontend
+6. Parsear JSON response
+7. Validar campos requeridos (score, analysis, improved_cv)
+8. Devolver JSON al frontend
 ```
 
 ### Prompt caching:
 ```typescript
+const model = process.env.CLAUDE_MODEL || "claude-opus-4-6";
+
 const message = await anthropic.messages.create({
-  model: "claude-opus-4-6",
-  max_tokens: 12000,
+  model,
+  max_tokens: 16000,
   temperature: 0,
   system: [{
     type: "text",
@@ -379,7 +409,7 @@ type AnalysisResult = {
    - Solo acepta PDF (via file input con accept=".pdf")
    - O paste de texto en textarea
    - Target role opcional (text input)
-3. **Un botón CTA** — "Analizar mi CV" / "Analyze my resume"
+3. **Un botón CTA** — "Analizar mi CV y recomendar mejoras" / "Analyze my resume and suggest improvements"
    - `bg-accent text-white` cuando ready
    - `bg-ink-100 text-ink-300` cuando disabled
    - Soft pulse animation cuando ready
@@ -476,9 +506,8 @@ const UI = {
     heroTitle: "Tu próximo trabajo empieza con un gran CV.",
     heroAccent: "Análisis profesional con IA. Gratis.",
     heroSub: "Descubre qué ven los reclutadores en tu CV y mejóralo al instante. Sin registro, sin trucos.",
-    btnAnalyze: "Analizar mi CV",
-    btnAnalyzeSub: "Score + mejoras + CV reescrito",
-    rateLimit: "5 análisis por hora · sin límite de uso diario",
+    btnAnalyze: "Analizar mi CV y recomendar mejoras",
+    rateLimit: "7 análisis por hora · sin límite de uso diario",
     privacy: "Tu CV se analiza en tiempo real y se descarta al instante. Sin registro, sin almacenamiento.",
     scoreMeta: "puntuación actual",
     topActionsTitle: "Empieza aquí",
@@ -496,7 +525,7 @@ const UI = {
     donationBtn: "Invitar un café",
     tryAgain: "Empezar de nuevo",
     errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
-    errorLimit: "Límite alcanzado (5/hora). Intenta más tarde.",
+    errorLimit: "Límite alcanzado (7/hora). Intenta más tarde.",
     errorConnection: "Error de conexión. Revisa tu internet.",
     errorLength: "Pega al menos 50 caracteres.",
   },
@@ -504,9 +533,8 @@ const UI = {
     heroTitle: "Your next job starts with a great resume.",
     heroAccent: "Professional AI analysis. Free.",
     heroSub: "See what recruiters see in your resume and improve it instantly. No sign-up, no tricks.",
-    btnAnalyze: "Analyze my resume",
-    btnAnalyzeSub: "Score + improvements + rewritten resume",
-    rateLimit: "5 analyses per hour · no daily limit",
+    btnAnalyze: "Analyze my resume and suggest improvements",
+    rateLimit: "7 analyses per hour · no daily limit",
     privacy: "Your resume is analyzed in real time and discarded instantly. No sign-up, no storage.",
     scoreMeta: "current score",
     topActionsTitle: "Start here",
@@ -524,7 +552,7 @@ const UI = {
     donationBtn: "Buy us a coffee",
     tryAgain: "Start over",
     errorGeneric: "Something went wrong. Please try again.",
-    errorLimit: "Limit reached (5/hour). Try again later.",
+    errorLimit: "Limit reached (7/hour). Try again later.",
     errorConnection: "Connection error. Check your internet.",
     errorLength: "Please paste at least 50 characters.",
   },
@@ -548,7 +576,7 @@ const DIM_NAMES: Record<string, { en: string; es: string }> = {
 
 ---
 
-## 7. SEO — Nuevos archivos
+## 7. SEO + LLM Discoverability — Nuevos archivos
 
 ### public/robots.txt
 ```
@@ -573,6 +601,34 @@ Sitemap: https://maxcv.org/sitemap.xml
     <priority>0.5</priority>
   </url>
 </urlset>
+```
+
+### public/llms.txt (para descubrimiento por LLMs)
+```
+# maxcv
+
+## What it is
+Free AI-powered resume analyzer and improver. No sign-up required.
+
+## What it does
+Users upload a PDF resume and receive: a score across 6 dimensions,
+specific improvement recommendations with before/after examples,
+and a complete rewritten resume ready to use.
+
+## Key differentiators
+- Free forever (donation-supported)
+- No registration, no data storage
+- Spanish-first (built for LATAM job seekers)
+- Bilingual (Spanish + English)
+- Powered by Claude (Anthropic) with Constitutional AI principles
+- Open source (MIT license)
+- Ethical: no discrimination, no fear tactics, evidence-based only
+
+## URL
+https://maxcv.org
+
+## Source code
+https://github.com/pixan-ai/maxcv
 ```
 
 ### JSON-LD Schema (en layout.tsx)
@@ -649,7 +705,7 @@ Version bump: `"version": "5.0.0"`
 
 ## 10. next.config.ts
 
-Mantener EXACTO. Los security headers son correctos:
+Mantener security headers existentes:
 - X-DNS-Prefetch-Control
 - X-Frame-Options: SAMEORIGIN
 - X-Content-Type-Options: nosniff
@@ -672,7 +728,14 @@ async redirects() {
 
 ---
 
-## 11. Visual Rules (del Style Guide — respetar siempre)
+## 11. Rate Limiting
+
+Cambiar `HOURLY_LIMIT` de 5 a 7 en `src/lib/rateLimit.ts`.
+Mantener la misma implementación (in-memory Map con reset por hora).
+
+---
+
+## 12. Visual Rules (del Style Guide — respetar siempre)
 
 - Background: siempre white (`bg-ink-000`)
 - Max width: `max-w-2xl` (672px)
@@ -688,53 +751,59 @@ async redirects() {
 
 ---
 
-## 12. Execution Order para Claude Code
+## 13. Execution Order para Claude Code
 
 1. Leer este spec COMPLETO primero
 2. Leer `docs/MAXCV_STYLE_GUIDE.md` para referencia visual
-3. Crear `src/lib/prompts/analyze.txt` (copiar el mega-prompt de la sección 1)
-4. Crear `src/app/api/analyze/route.ts`
-5. Crear `src/components/Analyzer.tsx`
-6. Crear `src/components/Header.tsx` (simplificado)
-7. Crear `src/components/Footer.tsx` (simplificado)
-8. Actualizar `src/app/page.tsx`
-9. Actualizar `src/app/layout.tsx` (agregar JSON-LD, actualizar metadata)
-10. Mantener `src/app/globals.css` sin cambios
-11. Mantener `src/lib/rateLimit.ts` sin cambios
-12. Mantener `src/lib/apiUtils.ts` sin cambios
-13. Mantener `src/app/security/page.tsx` sin cambios
-14. Mantener `next.config.ts` (agregar redirect /score → /)
-15. Crear `public/robots.txt`
-16. Crear `public/sitemap.xml`
-17. Crear `LICENSE`
-18. Actualizar `package.json` version a 5.0.0
-19. Eliminar archivos listados en "Archivos a ELIMINAR"
-20. Eliminar `src/lib/prompts.ts` (el barrel export)
-21. Verificar build con `npm run build`
-22. Verificar que TypeScript no tenga errores
-23. Commit: "v5.0: unified analysis flow, single prompt, prompt caching, SEO, MIT license"
+3. Crear branch `v5` desde master
+4. Crear `src/lib/prompts/analyze.txt` (copiar el mega-prompt de la sección 1)
+5. Crear `src/app/api/analyze/route.ts` (con env var para modelo)
+6. Crear `src/components/Analyzer.tsx` (DESDE CERO, no copiar del existente)
+7. Crear `src/components/Header.tsx` (DESDE CERO, simplificado)
+8. Crear `src/components/Footer.tsx` (DESDE CERO, simplificado)
+9. Crear `src/app/page.tsx` (DESDE CERO)
+10. Crear `src/app/layout.tsx` (DESDE CERO, con JSON-LD)
+11. Crear `src/app/globals.css` (copiar tokens OKLCH + animaciones del actual)
+12. Actualizar `src/lib/rateLimit.ts` (cambiar HOURLY_LIMIT a 7)
+13. Mantener `src/lib/apiUtils.ts` sin cambios
+14. Mantener `src/app/security/page.tsx` sin cambios
+15. Crear `next.config.ts` (security headers + redirect /score → /)
+16. Crear `public/robots.txt`
+17. Crear `public/sitemap.xml`
+18. Crear `public/llms.txt`
+19. Crear `LICENSE`
+20. Actualizar `package.json` version a 5.0.0
+21. Agregar `CLAUDE_MODEL` a .env.example (si existe) o documentar en README
+22. Eliminar archivos listados en "Archivos a ELIMINAR"
+23. Eliminar `src/lib/prompts.ts` (el barrel export)
+24. Verificar build con `npm run build`
+25. Verificar que TypeScript no tenga errores
+26. Commit: "v5.0: complete rebuild — unified flow, constitutional prompt, prompt caching, SEO, MIT"
 
 ---
 
-## 13. Post-Rebuild Checklist
+## 14. Post-Rebuild Checklist
 
-- [ ] Build exitoso en Vercel
+- [ ] Build exitoso en Vercel preview URL
 - [ ] Flujo completo funciona: subir CV → ver score + análisis + CV mejorado
+- [ ] CVs de hasta 7 páginas se procesan correctamente
 - [ ] Language toggle funciona (ES/EN)
 - [ ] Copy to clipboard funciona
 - [ ] Download for Word funciona
-- [ ] Rate limiting funciona (5/hora)
+- [ ] Rate limiting funciona (7/hora)
 - [ ] /score redirige a /
 - [ ] /security funciona sin cambios
 - [ ] robots.txt accesible en /robots.txt
 - [ ] sitemap.xml accesible en /sitemap.xml
+- [ ] llms.txt accesible en /llms.txt
 - [ ] JSON-LD schema presente en el HTML
 - [ ] Prompt caching confirmado (revisar headers de respuesta de Anthropic)
+- [ ] CLAUDE_MODEL env var funciona (cambiar modelo sin tocar código)
 - [ ] No hay errores en consola
 - [ ] Lighthouse >= 90
 - [ ] El código da orgullo al leerlo
 
 ---
 
-*Last updated: 2026-04-02 | Version 1.1*
+*Last updated: 2026-04-02 | Version 1.2*
 *Este documento es input para Claude Code — no editar sin contexto completo.*
