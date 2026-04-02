@@ -4,7 +4,7 @@
 > NO es una migración — es un proyecto nuevo que reemplaza al anterior.
 > Este documento es el input completo para Claude Code.
 > Léelo completo antes de tocar una sola línea de código.
-> Versión: 1.2 | Fecha: 2026-04-02
+> Versión: 1.3 FINAL | Fecha: 2026-04-02
 
 ---
 
@@ -23,8 +23,9 @@ NO modificar el código existente. Construir todo desde cero.
 El código legacy (v4.1) no debe influir en las decisiones de v5.
 El único input es este spec + el style guide (`docs/MAXCV_STYLE_GUIDE.md`).
 
-Estrategia de deploy: crear branch `v5` desde master, construir ahí,
-probar en Vercel preview URL, y mergear a master cuando funcione.
+**Deploy: DIRECTO A MASTER → maxcv.org (producción).**
+No usar branch separado. Push directo a master.
+dev.maxcv.org queda como referencia temporal del código anterior.
 
 ---
 
@@ -47,6 +48,9 @@ probar en Vercel preview URL, y mergear a master cuando funcione.
 | CV input max 15,000 chars (~3-4 págs) | CV input max 35,000 chars (~7 págs) |
 | 5 análisis/hora por IP | 7 análisis/hora por IP |
 | Modelo hardcoded en código | Modelo via `CLAUDE_MODEL` env var |
+| Sin input sanitización | Sanitización básica anti-injection |
+| Sin Error Boundary | Error Boundary para crash recovery |
+| Sin ARIA labels | ARIA básico en elementos interactivos |
 
 ---
 
@@ -67,10 +71,11 @@ Cuando salga un nuevo modelo, solo se cambia la env var en Vercel. Cero cambios 
 maxcv/
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx                 ← fonts, metadata, OG tags, JSON-LD, analytics
+│   │   ├── layout.tsx                 ← fonts, metadata, OG tags, JSON-LD, analytics, Error Boundary
 │   │   ├── page.tsx                   ← Server Component: hero estático + <Analyzer />
+│   │   ├── error.tsx                  ← NUEVO: Error Boundary (catch-all para crashes)
 │   │   ├── api/
-│   │   │   └── analyze/route.ts        ← UN endpoint unificado
+│   │   │   └── analyze/route.ts        ← UN endpoint unificado (con sanitización)
 │   │   └── security/page.tsx           ← mantener existente sin cambios
 │   ├── components/
 │   │   ├── Analyzer.tsx               ← "use client": upload + resultados + todo el flujo
@@ -78,7 +83,7 @@ maxcv/
 │   │   └── Footer.tsx                 ← simplificado
 │   └── lib/
 │       ├── rateLimit.ts               ← mantener existente (cambiar HOURLY_LIMIT a 7)
-│       ├── apiUtils.ts                ← mantener existente
+│       ├── apiUtils.ts                ← mantener existente + agregar sanitizeInput()
 │       └── prompts/
 │           └── analyze.txt            ← UN mega-prompt unificado
 ├── public/
@@ -91,7 +96,7 @@ maxcv/
 ├── tsconfig.json
 ├── postcss.config.mjs
 ├── LICENSE                            ← NUEVO: MIT
-├── README.md                          ← NUEVO: open source README
+├── README.md                          ← NUEVO: open source README de calidad
 └── docs/                              ← mantener toda la documentación
 ```
 
@@ -275,22 +280,34 @@ No extra text before or after the JSON.
 
 ## 2. API Endpoint — /api/analyze/route.ts
 
-UN endpoint. Recibe texto del CV. Prompt caching habilitado.
+UN endpoint. Recibe texto del CV. Prompt caching habilitado. Input sanitizado.
 
 ### Lógica:
 ```
 1. Extraer IP → rate limit check (7/hora)
 2. Recibir JSON: { cvText: string, targetRole?: string }
 3. Validar: cvText >= 50 chars, trim a 35,000 chars (soporta CVs de ~7 páginas)
-4. Leer modelo de process.env.CLAUDE_MODEL (fallback: "claude-opus-4-6")
-5. Llamar Claude con:
+4. SANITIZAR INPUT: quitar null bytes, control characters, y limitar a texto plano
+5. Leer modelo de process.env.CLAUDE_MODEL (fallback: "claude-opus-4-6")
+6. Llamar Claude con:
    - system: analyze.txt CON cache_control: { type: "ephemeral" }
    - model: process.env.CLAUDE_MODEL || "claude-opus-4-6"
    - max_tokens: 16000 (más headroom para CVs largos)
    - temperature: 0
-6. Parsear JSON response
-7. Validar campos requeridos (score, analysis, improved_cv)
-8. Devolver JSON al frontend
+7. Parsear JSON response
+8. Validar campos requeridos (score, analysis, improved_cv)
+9. Devolver JSON al frontend
+```
+
+### Input sanitización (agregar a apiUtils.ts):
+```typescript
+/** Sanitiza input del usuario antes de enviarlo a Claude */
+export function sanitizeInput(text: string): string {
+  return text
+    .replace(/\0/g, "")                    // null bytes
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "") // control chars (preserva \n \r \t)
+    .trim();
+}
 ```
 
 ### Prompt caching:
@@ -318,9 +335,49 @@ const message = await anthropic.messages.create({
 
 ---
 
-## 3. Frontend Architecture
+## 3. Error Boundary — src/app/error.tsx
 
-### layout.tsx (~45 líneas)
+Next.js App Router error boundary. Si cualquier componente crashea
+(JSON malformado de Claude, error de rendering, etc.), el usuario
+ve un mensaje amigable en vez de pantalla blanca.
+
+```tsx
+"use client";
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-ink-000 px-5">
+      <div className="text-center max-w-md">
+        <h2 className="text-lg font-medium text-ink-900 mb-2">
+          Algo salió mal
+        </h2>
+        <p className="text-sm text-ink-500 mb-6">
+          Hubo un error inesperado. Intenta de nuevo.
+        </p>
+        <button
+          onClick={reset}
+          className="bg-accent text-white px-6 py-2.5 rounded-lg text-sm font-medium
+                     hover:bg-accent-dim transition cursor-pointer"
+        >
+          Intentar de nuevo
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## 4. Frontend Architecture
+
+### layout.tsx (~50 líneas)
 
 Server Component. Responsabilidades:
 - Geist + Geist Mono via next/font
@@ -352,9 +409,6 @@ export default function Home() {
 }
 ```
 
-El hero, el copy, el input, y los resultados — todo vive dentro de `<Analyzer />`.
-page.tsx es puro layout. Cero lógica.
-
 ### Analyzer.tsx (~250 líneas)
 
 "use client". El componente core del producto. Todo el flujo interactivo.
@@ -368,9 +422,9 @@ const [error, setError] = useState<string | null>(null);
 const [lang, setLang] = useState<"en" | "es">("es");
 ```
 
-5 estados. Vs los 10+ actuales. Sin `activeFlow`, sin `scoreResult`/`improveResult` separados.
+5 estados. Sin `activeFlow`, sin `scoreResult`/`improveResult` separados.
 
-#### Tipo del resultado (sin `category`):
+#### Tipo del resultado:
 ```typescript
 type AnalysisResult = {
   detected_language: string;
@@ -404,101 +458,59 @@ type AnalysisResult = {
 
 #### Secciones del render (en orden de scroll):
 
-1. **Hero** — título + subtítulo + acento. Copy bilingüe. Mismo estilo actual.
-2. **Upload area** — drag-and-drop PDF + paste de texto. Simplificado del CVInput actual.
+1. **Hero** — título + subtítulo + acento. Copy bilingüe.
+2. **Upload area** — drag-and-drop PDF + paste de texto.
    - Solo acepta PDF (via file input con accept=".pdf")
    - O paste de texto en textarea
    - Target role opcional (text input)
-3. **Un botón CTA** — "Analizar mi CV y recomendar mejoras" / "Analyze my resume and suggest improvements"
+   - **ARIA**: `aria-label` en file input, `aria-describedby` en textarea
+3. **Un botón CTA** — "Analizar mi CV y recomendar mejoras"
    - `bg-accent text-white` cuando ready
    - `bg-ink-100 text-ink-300` cuando disabled
    - Soft pulse animation cuando ready
-4. **Privacy + rate limit line** — texto discreto debajo del botón
-5. **Progress indicator** — mientras loading. Puede ser un spinner simple o la ProgressBar actual simplificada.
+   - **ARIA**: `aria-disabled` cuando no está listo
+4. **Privacy + rate limit line** — texto discreto
+5. **Progress indicator** — mientras loading
 6. **Resultados** (cuando `result` existe):
-   - **Score card** — discreto, metadata feel. Score number en ink-500, Geist Mono, 13px.
-   - **Top 3 actions** — cards con numbered badges en accent
-   - **Improvements** — ordenados por impacto, con before/after inline
-   - **Strengths** — cards verdes (positive-ghost)
-   - **CV mejorado** — card con el texto completo + botones Copy y Download
-   - **Changes list** — qué cambió específicamente
-   - **Donation CTA** — simple, post-valor
-   - **Empezar de nuevo** — link discreto
+   - Score card — discreto, metadata feel
+   - Top 3 actions — cards con numbered badges
+   - Improvements — ordenados por impacto, con before/after
+   - Strengths — cards verdes
+   - CV mejorado — texto completo + Copy + Download
+   - Changes list — qué cambió
+   - Donation CTA — post-valor
+   - Empezar de nuevo
+   - **ARIA**: `role="alert"` en mensajes de error, `aria-live="polite"` en resultados
 
 #### Interacciones:
-- Upload PDF → extraer texto (no necesario — enviamos el texto que el usuario pegó o que Claude lee del PDF)
-- NOTA IMPORTANTE: El flujo actual envía `cvText` como texto plano. Para PDFs, el CVInput actual extrae texto del PDF antes de enviarlo. En v5, hay dos opciones:
-  - Opción A: Mantener el mismo flujo (extraer texto del PDF en frontend, enviar como texto) — MÁS SIMPLE
-  - Opción B: Enviar el PDF como base64 y usar la lectura nativa de PDFs de Claude — MÁS PRECISO
-  - **Elegir Opción A para el rebuild inicial.** Opción B se puede agregar después.
+- Upload PDF → extraer texto en frontend, enviar como texto plano (Opción A)
 - Copy to clipboard → `navigator.clipboard.writeText()`
-- Download for Word → UTF-8 BOM .txt blob download (mantener función actual)
-- Language toggle → en Header, afecta todos los strings de UI
-- Empezar de nuevo → resetear todos los estados
+- Download for Word → UTF-8 BOM .txt blob download
+- Language toggle → en Header
+- Empezar de nuevo → resetear estados
 
 ### Header.tsx (~30 líneas)
 
-Simplificado del actual. Mantener:
-- Logo SVG + "maxcv" text
-- Language toggle (ES/EN)
+- Logo SVG + "maxcv" lowercase, todo ink-900, font-medium
+- Language toggle (ES/EN) con `aria-label="Cambiar idioma"`
 - Version badge (v5.0)
-
-Cambios:
-- Logo text: `maxcv` lowercase, `font-medium`, sin color accent en letras (per style guide: "maxcv lowercase")
-- NOTA: El header actual tiene `max<span className="text-accent">cv</span>` — el style guide dice NO hacer esto. v5 corrige: todo ink-900.
 
 ### Footer.tsx (~25 líneas)
 
-Simplificado. Links:
-- Home (/)
-- Security (/security)
-- GitHub (link al repo)
+- Links: Home, Security, GitHub
 - Tagline: "Gratis siempre. Sin datos almacenados."
 
-Eliminar link a /score (ya no existe).
+---
+
+## 5. Design System (globals.css)
+
+Mantener EXACTO el sistema de tokens OKLCH y animaciones del actual.
 
 ---
 
-## 4. Design System (globals.css)
+## 6. UI Strings (bilingüe)
 
-Mantener EXACTO el sistema actual de tokens OKLCH. Funciona bien.
-
-```css
-@import "tailwindcss";
-
-@theme {
-  --color-accent: oklch(50% 0.13 230);
-  --color-accent-dim: oklch(42% 0.10 230);
-  --color-accent-ghost: oklch(97% 0.015 230);
-  --color-ink-900: oklch(15% 0.005 260);
-  --color-ink-700: oklch(30% 0.005 260);
-  --color-ink-500: oklch(52% 0.005 260);
-  --color-ink-400: oklch(62% 0.005 260);
-  --color-ink-300: oklch(78% 0.005 260);
-  --color-ink-200: oklch(88% 0.005 260);
-  --color-ink-100: oklch(94% 0.003 260);
-  --color-ink-050: oklch(97% 0.002 260);
-  --color-ink-000: oklch(99.5% 0.001 260);
-  --color-positive: oklch(55% 0.15 155);
-  --color-positive-ghost: oklch(97% 0.02 155);
-  --color-warning: oklch(65% 0.15 80);
-  --color-warning-ghost: oklch(97% 0.03 80);
-}
-```
-
-Mantener animaciones:
-- `hero-reveal` (staggered hero entrance)
-- `card-enter` (result cards entrance)
-- `soft-pulse` (CTA button pulse)
-- `reveal` (scroll-driven reveal con fallback)
-- `prefers-reduced-motion` respect
-
----
-
-## 5. UI Strings (bilingüe)
-
-Todos los strings de UI van dentro de Analyzer.tsx como objeto constante.
-NO crear archivo i18n.ts separado para v5 — son ~30 strings, no justifica un archivo.
+Dentro de Analyzer.tsx como objeto constante. ~30 strings.
 
 ```typescript
 const UI = {
@@ -561,7 +573,7 @@ const UI = {
 
 ---
 
-## 6. Dimension Names (bilingüe)
+## 7. Dimension Names (bilingüe)
 
 ```typescript
 const DIM_NAMES: Record<string, { en: string; es: string }> = {
@@ -576,7 +588,7 @@ const DIM_NAMES: Record<string, { en: string; es: string }> = {
 
 ---
 
-## 7. SEO + LLM Discoverability — Nuevos archivos
+## 8. SEO + LLM Discoverability
 
 ### public/robots.txt
 ```
@@ -603,7 +615,7 @@ Sitemap: https://maxcv.org/sitemap.xml
 </urlset>
 ```
 
-### public/llms.txt (para descubrimiento por LLMs)
+### public/llms.txt
 ```
 # maxcv
 
@@ -657,7 +669,7 @@ https://github.com/pixan-ai/maxcv
 
 ---
 
-## 8. LICENSE (MIT)
+## 9. LICENSE (MIT)
 
 ```
 MIT License
@@ -685,53 +697,26 @@ SOFTWARE.
 
 ---
 
-## 9. package.json
+## 10. README.md
 
-Dependencias que se MANTIENEN:
-- `next` (^16.x)
-- `react` + `react-dom` (^19.x)
-- `@anthropic-ai/sdk`
-- `@vercel/analytics`
-- `geist`
-- `tailwindcss` + `@tailwindcss/postcss` + `postcss`
-- `typescript` + `@types/node` + `@types/react`
-- `eslint` + `eslint-config-next`
-
-Dependencias ELIMINADAS: ninguna nueva, ninguna eliminada. El stack no cambia.
-
-Version bump: `"version": "5.0.0"`
+Claude Code debe generar un README de calidad open source que incluya:
+- Qué es MaxCV (1 párrafo)
+- Screenshot o descripción visual del flujo
+- Cómo correrlo localmente (npm install, env vars, npm run dev)
+- Stack técnico (Next.js, Tailwind, Claude API)
+- Principios éticos (link a /security y a docs/MAXCV_PRINCIPLES_PAGE.md)
+- Licencia MIT
+- Cómo contribuir (básico)
 
 ---
 
-## 10. next.config.ts
+## 11. package.json, next.config.ts, Rate Limiting
 
-Mantener security headers existentes:
-- X-DNS-Prefetch-Control
-- X-Frame-Options: SAMEORIGIN
-- X-Content-Type-Options: nosniff
-- Referrer-Policy: strict-origin-when-cross-origin
-- Permissions-Policy: camera=(), microphone=(), geolocation()
-- HSTS con preload
-
-Agregar redirect de /score a /:
-```typescript
-async redirects() {
-  return [
-    {
-      source: '/score',
-      destination: '/',
-      permanent: true,
-    },
-  ];
-},
-```
-
----
-
-## 11. Rate Limiting
-
-Cambiar `HOURLY_LIMIT` de 5 a 7 en `src/lib/rateLimit.ts`.
-Mantener la misma implementación (in-memory Map con reset por hora).
+- Version bump: `"version": "5.0.0"`
+- Dependencias: mismas, sin cambios
+- Security headers: mantener existentes
+- Agregar redirect /score → /
+- HOURLY_LIMIT: cambiar de 5 a 7
 
 ---
 
@@ -746,8 +731,8 @@ Mantener la misma implementación (in-memory Map con reset por hora).
 - Borders: 1px `border-ink-100`
 - Logo: `maxcv` lowercase, font-medium, sin accent en letras
 - Score number: discreto, metadata feel (13px, ink-500, Geist Mono)
-- Hero: improvements, NO el número de score
-- Tone: nunca "bad", "poor", "failing" — siempre "can be improved", "can be strengthened"
+- Hero de resultados: improvements, NO el número de score
+- Tone: nunca "bad", "poor", "failing" — siempre "can be improved"
 
 ---
 
@@ -755,55 +740,73 @@ Mantener la misma implementación (in-memory Map con reset por hora).
 
 1. Leer este spec COMPLETO primero
 2. Leer `docs/MAXCV_STYLE_GUIDE.md` para referencia visual
-3. Crear branch `v5` desde master
-4. Crear `src/lib/prompts/analyze.txt` (copiar el mega-prompt de la sección 1)
-5. Crear `src/app/api/analyze/route.ts` (con env var para modelo)
-6. Crear `src/components/Analyzer.tsx` (DESDE CERO, no copiar del existente)
-7. Crear `src/components/Header.tsx` (DESDE CERO, simplificado)
-8. Crear `src/components/Footer.tsx` (DESDE CERO, simplificado)
-9. Crear `src/app/page.tsx` (DESDE CERO)
-10. Crear `src/app/layout.tsx` (DESDE CERO, con JSON-LD)
-11. Crear `src/app/globals.css` (copiar tokens OKLCH + animaciones del actual)
-12. Actualizar `src/lib/rateLimit.ts` (cambiar HOURLY_LIMIT a 7)
-13. Mantener `src/lib/apiUtils.ts` sin cambios
+3. Crear `src/lib/prompts/analyze.txt` (el mega-prompt de la sección 1)
+4. Crear `src/app/api/analyze/route.ts` (con env var + sanitización)
+5. Crear `src/components/Analyzer.tsx` (DESDE CERO, con ARIA básico)
+6. Crear `src/components/Header.tsx` (DESDE CERO)
+7. Crear `src/components/Footer.tsx` (DESDE CERO)
+8. Crear `src/app/page.tsx` (DESDE CERO)
+9. Crear `src/app/layout.tsx` (DESDE CERO, con JSON-LD)
+10. Crear `src/app/error.tsx` (Error Boundary)
+11. Crear `src/app/globals.css` (tokens OKLCH + animaciones)
+12. Actualizar `src/lib/rateLimit.ts` (HOURLY_LIMIT = 7)
+13. Actualizar `src/lib/apiUtils.ts` (agregar sanitizeInput)
 14. Mantener `src/app/security/page.tsx` sin cambios
-15. Crear `next.config.ts` (security headers + redirect /score → /)
+15. Crear `next.config.ts` (security headers + redirect)
 16. Crear `public/robots.txt`
 17. Crear `public/sitemap.xml`
 18. Crear `public/llms.txt`
 19. Crear `LICENSE`
-20. Actualizar `package.json` version a 5.0.0
-21. Agregar `CLAUDE_MODEL` a .env.example (si existe) o documentar en README
-22. Eliminar archivos listados en "Archivos a ELIMINAR"
-23. Eliminar `src/lib/prompts.ts` (el barrel export)
-24. Verificar build con `npm run build`
-25. Verificar que TypeScript no tenga errores
+20. Crear `README.md` (open source quality)
+21. Actualizar `package.json` (version 5.0.0)
+22. Eliminar archivos obsoletos (ver "Archivos a ELIMINAR")
+23. Eliminar `src/lib/prompts.ts`
+24. Verificar build: `npm run build`
+25. Verificar TypeScript sin errores
 26. Commit: "v5.0: complete rebuild — unified flow, constitutional prompt, prompt caching, SEO, MIT"
+27. Push directo a master
 
 ---
 
 ## 14. Post-Rebuild Checklist
 
-- [ ] Build exitoso en Vercel preview URL
-- [ ] Flujo completo funciona: subir CV → ver score + análisis + CV mejorado
-- [ ] CVs de hasta 7 páginas se procesan correctamente
-- [ ] Language toggle funciona (ES/EN)
+- [ ] Build exitoso, deploy a maxcv.org
+- [ ] Flujo completo: subir CV → score + análisis + CV mejorado
+- [ ] CVs de hasta 7 páginas se procesan
+- [ ] Language toggle ES/EN funciona
 - [ ] Copy to clipboard funciona
 - [ ] Download for Word funciona
 - [ ] Rate limiting funciona (7/hora)
 - [ ] /score redirige a /
 - [ ] /security funciona sin cambios
-- [ ] robots.txt accesible en /robots.txt
-- [ ] sitemap.xml accesible en /sitemap.xml
-- [ ] llms.txt accesible en /llms.txt
-- [ ] JSON-LD schema presente en el HTML
-- [ ] Prompt caching confirmado (revisar headers de respuesta de Anthropic)
-- [ ] CLAUDE_MODEL env var funciona (cambiar modelo sin tocar código)
+- [ ] Error boundary funciona (simular crash)
+- [ ] robots.txt, sitemap.xml, llms.txt accesibles
+- [ ] JSON-LD schema en el HTML
+- [ ] Prompt caching activo
+- [ ] CLAUDE_MODEL env var funciona
+- [ ] ARIA labels presentes en elementos interactivos
 - [ ] No hay errores en consola
 - [ ] Lighthouse >= 90
 - [ ] El código da orgullo al leerlo
 
 ---
 
-*Last updated: 2026-04-02 | Version 1.2*
+## 15. Pendientes post-v5 (NO hacer ahora)
+
+Estas tareas quedan para después del rebuild exitoso:
+
+- [ ] **Revisar TODOS los documentos de definición** — Project Bible, Style Guide, Principles, Competitors, Improvement Plan, Backlog necesitan actualizarse para reflejar v5 (flujo unificado, nueva arquitectura, constitución en prompt)
+- [ ] **Aviso de privacidad LFPDPPP** — Legal, requerido para México
+- [ ] **Términos de uso** — Legal, bilingüe
+- [ ] **Emails de seguridad** — seguridad@maxcv.org y security@maxcv.org
+- [ ] **Monetización — integrar donaciones** — Stripe o Ko-fi post-valor
+- [ ] **Analytics custom events** — tracking de uploads, análisis completados, donación clicks
+- [ ] **Accesibilidad WCAG AA completa** — contraste, navegación teclado, focus states
+- [ ] **Core Web Vitals audit** — LCP, CLS, font-display
+- [ ] **Input sanitización avanzada** — prompt injection defense más robusto
+- [ ] **Testing** — Vitest para utils, Playwright para e2e (cuando haya más flujos)
+
+---
+
+*Last updated: 2026-04-02 | Version 1.3 FINAL*
 *Este documento es input para Claude Code — no editar sin contexto completo.*
