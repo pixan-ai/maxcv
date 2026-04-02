@@ -19,46 +19,50 @@ const T = {
   en: {
     tabText: "Paste text", tabFile: "Upload PDF", tabSheets: "Google Sheets",
     labelCv: "Your resume", placeholderCv: "Paste your resume text here...", chars: "chars",
-    labelRole: "Target role", optional: "optional", placeholderRole: "e.g. Product Manager, Software Engineer...",
+    labelRole: "Target role", optional: "optional",
+    placeholderRole: "e.g. Product Manager, Software Engineer...",
     uploadIdle: "Drop your PDF here or click to browse",
     uploadMeta: "PDF only · max 5MB",
-    stageReading: "reading document", stageExperience: "extracting experience", stageSkills: "analyzing skills",
+    uploading: "Uploading file...",
+    analyzing: "Analyzing with AI...",
     parseError: "Could not read the file. Try pasting your resume instead.",
-    uploadSuccess: "File loaded", changeFile: "Change", clearText: "Clear",
-    sheetsLabel: "Google Sheets link", sheetsPlaceholder: "https://docs.google.com/spreadsheets/d/...",
-    sheetsHint: "The sheet must be shared as \"Anyone with the link\"",
-    sheetsButton: "Import", sheetsLoading: "Importing...", sheetsError: "Could not access Google Sheet.",
-    fileTooLarge: "File is too large. Maximum 5MB.", fileWrongType: "Only PDF files accepted.",
+    uploadSuccess: "File loaded", changeFile: "Change",
+    clearText: "Clear",
+    sheetsLabel: "Google Sheets link",
+    sheetsPlaceholder: "https://docs.google.com/spreadsheets/d/...",
+    sheetsHint: 'The sheet must be shared as "Anyone with the link"',
+    sheetsButton: "Import", sheetsLoading: "Importing...",
+    sheetsError: "Could not access Google Sheet.",
+    fileTooLarge: "File is too large. Maximum 5MB.",
+    fileWrongType: "Only PDF files accepted.",
     privacy: "Your CV is processed in real-time and never stored.",
     hintTime: "This may take up to 60 seconds. Keep this page open.",
   },
   es: {
     tabText: "Pegar texto", tabFile: "Subir PDF", tabSheets: "Google Sheets",
     labelCv: "Tu currículum", placeholderCv: "Pega el texto de tu currículum aquí...", chars: "caracteres",
-    labelRole: "Puesto objetivo", optional: "opcional", placeholderRole: "ej. Product Manager, Ingeniero de Software...",
+    labelRole: "Puesto objetivo", optional: "opcional",
+    placeholderRole: "ej. Product Manager, Ingeniero de Software...",
     uploadIdle: "Arrastra tu PDF aquí o haz clic para buscar",
     uploadMeta: "Solo PDF · máx 5MB",
-    stageReading: "leyendo documento", stageExperience: "extrayendo experiencia", stageSkills: "analizando habilidades",
+    uploading: "Subiendo archivo...",
+    analyzing: "Analizando con IA...",
     parseError: "No se pudo leer el archivo. Intenta pegando tu CV.",
-    uploadSuccess: "Archivo cargado", changeFile: "Cambiar", clearText: "Limpiar",
-    sheetsLabel: "Enlace de Google Sheets", sheetsPlaceholder: "https://docs.google.com/spreadsheets/d/...",
-    sheetsHint: "Debe estar compartido como \"Cualquier persona con el enlace\"",
-    sheetsButton: "Importar", sheetsLoading: "Importando...", sheetsError: "No se pudo acceder al Google Sheet.",
-    fileTooLarge: "Archivo muy grande. Máximo 5MB.", fileWrongType: "Solo se aceptan archivos PDF.",
+    uploadSuccess: "Archivo cargado", changeFile: "Cambiar",
+    clearText: "Limpiar",
+    sheetsLabel: "Enlace de Google Sheets",
+    sheetsPlaceholder: "https://docs.google.com/spreadsheets/d/...",
+    sheetsHint: 'Debe estar compartido como "Cualquier persona con el enlace"',
+    sheetsButton: "Importar", sheetsLoading: "Importando...",
+    sheetsError: "No se pudo acceder al Google Sheet.",
+    fileTooLarge: "Archivo muy grande. Máximo 5MB.",
+    fileWrongType: "Solo se aceptan archivos PDF.",
     privacy: "Tu CV se procesa en tiempo real y nunca se almacena.",
     hintTime: "Este proceso puede tardar hasta 60 segundos. No cierres la página.",
   },
 };
 
-// Simulated upload progress stages
-const UPLOAD_STAGES = [
-  { key: "reading",     progress: 20 },
-  { key: "experience", progress: 55 },
-  { key: "skills",     progress: 85 },
-  { key: "done",       progress: 100 },
-] as const;
-
-type UploadStage = typeof UPLOAD_STAGES[number]["key"];
+type UploadPhase = "idle" | "uploading" | "analyzing" | "done";
 
 export default function CVInput({
   cvText, setCvText, targetRole, setTargetRole,
@@ -67,25 +71,21 @@ export default function CVInput({
 }: CVInputProps) {
   const t = isEs ? T.es : T.en;
   const [inputMode, setInputMode] = useState<InputMode>("file");
-  const [uploadStage, setUploadStage] = useState<UploadStage | null>(null);
+  const [phase, setPhase] = useState<UploadPhase>("idle");
   const [fileName, setFileName] = useState("");
-  const [fileLoaded, setFileLoaded] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [sheetsUrl, setSheetsUrl] = useState("");
   const [sheetsLoading, setSheetsLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const isReady = !loading && cvText.trim().length >= 50;
 
-  const currentProgress = uploadStage
-    ? (UPLOAD_STAGES.find((s) => s.key === uploadStage)?.progress ?? 0)
-    : 0;
+  const isProcessing = phase === "uploading" || phase === "analyzing";
+  const isDone = phase === "done";
 
-  const stageLabel = (stage: UploadStage | null) => {
-    if (!stage || stage === "done") return "";
-    if (stage === "reading") return t.stageReading + "...";
-    if (stage === "experience") return t.stageExperience + "...";
-    return t.stageSkills + "...";
-  };
+  // Progress: uploading = 40%, analyzing = 80% (real phases, no fake sub-steps)
+  const progress = phase === "uploading" ? 40 : phase === "analyzing" ? 80 : phase === "done" ? 100 : 0;
+
+  const statusText = phase === "uploading" ? t.uploading : phase === "analyzing" ? t.analyzing : "";
 
   const validateFile = useCallback(
     (file: File): string | null => {
@@ -103,35 +103,26 @@ export default function CVInput({
 
       setError(null);
       setFileName(file.name);
-      setFileLoaded(false);
-      setUploadStage("reading");
-
-      // Animate through stages while waiting for response
-      const stageTimer1 = setTimeout(() => setUploadStage("experience"), 1800);
-      const stageTimer2 = setTimeout(() => setUploadStage("skills"), 4000);
+      setPhase("uploading");
 
       try {
         const form = new FormData();
         form.append("file", file);
+        setPhase("analyzing");
         const res = await fetch("/api/parse", { method: "POST", body: form });
         const data = await res.json();
-        clearTimeout(stageTimer1);
-        clearTimeout(stageTimer2);
         if (!res.ok) {
           setError(data.error || t.parseError);
           setFileName("");
-          setUploadStage(null);
+          setPhase("idle");
           return;
         }
-        setUploadStage("done");
         setCvText(data.text);
-        setFileLoaded(true);
+        setPhase("done");
       } catch {
-        clearTimeout(stageTimer1);
-        clearTimeout(stageTimer2);
         setError(t.parseError);
         setFileName("");
-        setUploadStage(null);
+        setPhase("idle");
       }
     },
     [validateFile, setError, setCvText, t]
@@ -169,13 +160,10 @@ export default function CVInput({
 
   const resetFile = () => {
     setFileName("");
-    setFileLoaded(false);
-    setUploadStage(null);
+    setPhase("idle");
     setCvText("");
     if (fileRef.current) fileRef.current.value = "";
   };
-
-  const uploading = uploadStage !== null && uploadStage !== "done";
 
   const tabs: { mode: InputMode; label: string }[] = [
     { mode: "file", label: t.tabFile },
@@ -205,22 +193,14 @@ export default function CVInput({
 
       {/* File upload tab */}
       {inputMode === "file" && (
-        <div className="space-y-3">
-          {/* Section label */}
-          <p
-            className="text-[11px] font-medium tracking-widest uppercase"
-            style={{ fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink-700)" }}
-          >
-            {t.tabFile}
-          </p>
-
+        <div className="space-y-2.5">
           {/* Input shell */}
           <div
-            className="relative"
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
-            onClick={() => !uploading && !fileLoaded && fileRef.current?.click()}
+            onClick={() => !isProcessing && !isDone && fileRef.current?.click()}
+            className="relative"
           >
             <input
               ref={fileRef}
@@ -230,61 +210,58 @@ export default function CVInput({
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
             />
 
-            {/* Main input box */}
+            {/* Box */}
             <div
-              className={`flex items-center px-4 transition-all ${
-                fileLoaded ? "h-12" : "h-12 cursor-pointer"
-              }`}
+              className="flex items-center px-4 h-12 transition-all"
               style={{
-                border: uploading ? "none" : `1px solid ${
-                  dragOver
-                    ? "oklch(0.55 0.2 260 / 0.6)"
-                    : fileLoaded
-                    ? "oklch(0.55 0.15 155)"
-                    : "var(--ink-200)"
-                }`,
-                borderRadius: "6px",
+                borderRadius: 6,
                 background: "white",
-                outline: uploading ? "none" : undefined,
-                boxSizing: "border-box",
+                border: isProcessing
+                  ? "none"
+                  : `1px solid ${
+                      dragOver
+                        ? "oklch(0.55 0.2 260 / 0.6)"
+                        : isDone
+                        ? "oklch(0.7 0.12 155)"
+                        : "var(--ink-200)"
+                    }`,
+                cursor: isProcessing || isDone ? "default" : "pointer",
               }}
             >
-              {fileLoaded ? (
+              {isDone ? (
+                /* Success state */
                 <>
                   <span
                     className="flex-1 text-sm truncate"
                     style={{
                       fontFamily: "var(--font-geist-mono, monospace)",
-                      color: "var(--ink-900)",
+                      color: "var(--ink-800)",
                     }}
                   >
                     {fileName}
                   </span>
-                  {/* Check circle */}
                   <div
-                    className="ml-3 flex items-center justify-center rounded-full flex-shrink-0"
-                    style={{
-                      width: 18,
-                      height: 18,
-                      background: "oklch(0.55 0.15 155)",
-                    }}
+                    className="ml-3 flex-shrink-0 flex items-center justify-center rounded-full"
+                    style={{ width: 18, height: 18, background: "oklch(0.55 0.15 155)" }}
                   >
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                       <path d="M2 5L4.5 7.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                 </>
-              ) : uploading ? (
+              ) : isProcessing ? (
+                /* Processing state */
                 <span
                   className="text-sm"
                   style={{
                     fontFamily: "var(--font-geist-mono, monospace)",
-                    color: "var(--ink-500)",
+                    color: "var(--ink-400)",
                   }}
                 >
-                  {stageLabel(uploadStage)}
+                  {statusText}
                 </span>
               ) : (
+                /* Idle state */
                 <span
                   className="text-sm"
                   style={{
@@ -297,12 +274,12 @@ export default function CVInput({
               )}
             </div>
 
-            {/* Animated border ring while uploading */}
-            {uploading && (
+            {/* Animated border while processing */}
+            {isProcessing && (
               <div
                 className="pointer-events-none absolute inset-0"
                 style={{
-                  borderRadius: "7px",
+                  borderRadius: 7,
                   border: "1.5px solid oklch(0.55 0.2 260)",
                   animation: "cv-border-pulse 1.8s ease-in-out infinite",
                 }}
@@ -310,7 +287,7 @@ export default function CVInput({
             )}
 
             {/* Progress bar — bottom edge */}
-            {uploading && (
+            {isProcessing && (
               <div
                 className="absolute bottom-0 left-0 right-0 overflow-hidden"
                 style={{ height: 2, borderRadius: "0 0 6px 6px" }}
@@ -318,106 +295,64 @@ export default function CVInput({
                 <div
                   style={{
                     height: "100%",
-                    width: `${currentProgress}%`,
+                    width: `${progress}%`,
                     background: "oklch(0.55 0.2 260)",
-                    transition: "width 0.6s ease",
+                    transition: "width 0.8s ease",
                   }}
                 />
               </div>
             )}
           </div>
 
-          {/* Stage pills */}
-          {uploading && (
-            <div className="flex gap-1.5 flex-wrap">
-              {([
-                { key: "reading",     label: t.stageReading },
-                { key: "experience", label: t.stageExperience },
-                { key: "skills",     label: t.stageSkills },
-              ] as const).map(({ key, label }) => {
-                const stageOrder = ["reading", "experience", "skills"] as const;
-                const currentIdx = stageOrder.indexOf(uploadStage as typeof stageOrder[number]);
-                const pillIdx = stageOrder.indexOf(key);
-                const isDone = pillIdx < currentIdx;
-                const isCurrent = pillIdx === currentIdx;
-                return (
-                  <span
-                    key={key}
-                    className="text-[11px] px-2 py-0.5 rounded"
-                    style={{
-                      fontFamily: "var(--font-geist-mono, monospace)",
-                      letterSpacing: "0.04em",
-                      textDecoration: isDone ? "line-through" : "none",
-                      background: isCurrent
-                        ? "oklch(0.55 0.2 260 / 0.08)"
-                        : isDone
-                        ? "transparent"
-                        : "var(--ink-050)",
-                      color: isCurrent
-                        ? "oklch(0.45 0.2 260)"
-                        : isDone
-                        ? "var(--ink-400)"
-                        : "var(--ink-300)",
-                    }}
-                  >
-                    {label}
-                  </span>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Success banner */}
-          {fileLoaded && (
+          {/* Hint / meta */}
+          {isDone ? (
+            /* Success banner */
             <div
-              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded"
+              className="flex items-center gap-2.5 px-3.5 py-2 rounded"
               style={{
                 background: "oklch(0.97 0.02 155)",
-                border: "0.5px solid oklch(0.85 0.06 155)",
+                border: "0.5px solid oklch(0.88 0.06 155)",
               }}
             >
               <div
                 className="flex-shrink-0 rounded-full"
-                style={{ width: 6, height: 6, background: "oklch(0.55 0.15 155)" }}
+                style={{ width: 5, height: 5, background: "oklch(0.55 0.15 155)" }}
               />
               <span
-                className="text-[13px]"
+                className="text-[13px] flex-1 truncate"
                 style={{
                   fontFamily: "var(--font-geist-mono, monospace)",
-                  color: "oklch(0.35 0.1 155)",
+                  color: "oklch(0.38 0.1 155)",
                 }}
               >
-                {t.uploadSuccess} — {fileName}
+                {t.uploadSuccess}
               </span>
               <button
                 type="button"
                 onClick={resetFile}
-                className="ml-auto text-xs transition cursor-pointer"
+                className="text-xs transition cursor-pointer"
                 style={{ color: "oklch(0.5 0.08 155)" }}
               >
                 {t.changeFile}
               </button>
             </div>
-          )}
-
-          {/* Hint */}
-          {!fileLoaded && (
+          ) : (
+            /* Hint row */
             <div className="flex items-start gap-2">
               <div
                 className="flex-shrink-0 flex items-center justify-center rounded-full mt-0.5"
-                style={{
-                  width: 16,
-                  height: 16,
-                  border: "1px solid var(--ink-200)",
-                }}
+                style={{ width: 15, height: 15, border: "1px solid var(--ink-200)" }}
               >
                 <div
                   className="rounded-full"
-                  style={{ width: 5, height: 5, background: "var(--ink-300)" }}
+                  style={{ width: 4, height: 4, background: "var(--ink-300)" }}
                 />
               </div>
-              <p className="text-[13px]" style={{ color: "var(--ink-400)", lineHeight: 1.5 }}>
-                {uploading ? t.hintTime : t.uploadMeta}
+              <p
+                className="text-[13px]"
+                style={{ color: "var(--ink-400)", lineHeight: 1.5 }}
+              >
+                {isProcessing ? t.hintTime : t.uploadMeta}
               </p>
             </div>
           )}
@@ -432,7 +367,7 @@ export default function CVInput({
             {cvText.length > 0 && (
               <button
                 type="button"
-                onClick={() => { setCvText(""); setFileName(""); setFileLoaded(false); }}
+                onClick={() => { setCvText(""); setFileName(""); setPhase("idle"); }}
                 className="text-xs text-ink-400 hover:text-ink-700 transition cursor-pointer"
               >
                 {t.clearText}
@@ -460,7 +395,9 @@ export default function CVInput({
       {inputMode === "sheets" && (
         <div className="space-y-3">
           <div>
-            <label htmlFor="sheets-url" className="text-sm font-medium text-ink-700 mb-2 block">{t.sheetsLabel}</label>
+            <label htmlFor="sheets-url" className="text-sm font-medium text-ink-700 mb-2 block">
+              {t.sheetsLabel}
+            </label>
             <input
               id="sheets-url"
               type="url"
@@ -533,11 +470,10 @@ export default function CVInput({
         </>
       )}
 
-      {/* Keyframes for border pulse animation */}
       <style>{`
         @keyframes cv-border-pulse {
           0%, 100% { opacity: 1; border-color: oklch(0.55 0.2 260); }
-          50% { opacity: 0.5; border-color: oklch(0.7 0.15 260); }
+          50%       { opacity: 0.45; border-color: oklch(0.68 0.14 260); }
         }
       `}</style>
     </div>
