@@ -1,0 +1,24 @@
+# maxcv
+
+## What it is
+Free AI-powered resume analyzer and improver. No sign-up required.
+
+## What it does
+Users upload a PDF resume and receive: a score across 6 dimensions,
+specific improvement recommendations with before/after examples,
+and a complete rewritten resume ready to use.
+
+## Key differentiators
+- Free forever (donation-supported)
+- No registration, no data storage
+- Spanish-first (built for LATAM job seekers)
+- Bilingual (Spanish + English)
+- Powered by Claude (Anthropic) with Constitutional AI principles
+- Open source (MIT license)
+- Ethical: no discrimination, no fear tactics, evidence-based only
+
+## URL
+https://maxcv.org
+
+## Source code
+https://github.com/pixan-ai/maxcv

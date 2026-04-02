@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 
 const store = new Map<string, { count: number; resetAt: number }>();
-const HOURLY_LIMIT = 5;
+const HOURLY_LIMIT = 7;
 
 export function getClientIp(req: NextRequest): string {
   return (
