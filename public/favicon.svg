@@ -1,6 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#0f172a"/>
-  <text x="16" y="23" font-family="system-ui, -apple-system, sans-serif"
-        font-size="20" font-weight="700" fill="white"
-        text-anchor="middle">M</text>
+  <defs>
+    <clipPath id="c">
+      <rect width="32" height="32"/>
+    </clipPath>
+  </defs>
+  <rect width="32" height="32" fill="#4938c5"/>
+  <g clip-path="url(#c)">
+    <polygon points="6.72,32 16,15.96 25.28,32" fill="white"/>
+  </g>
 </svg>
