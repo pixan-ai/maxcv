@@ -45,14 +45,14 @@ const UI = {
     analyzing: "Analizando tu CV...",
     readingPdf: "Leyendo tu PDF...",
     scoreMeta: "puntuación actual",
-    topActionsTitle: "Empieza aquí",
-    topActionsSub: "Los 3 cambios con más impacto",
-    improvementsTitle: "Lo que puedes mejorar",
-    improvementsSub: "Ordenado por impacto — empieza por arriba",
-    strengthsTitle: "Lo que ya funciona",
-    strengthsSub: "Estas áreas están bien",
+    strengthsTitle: "Lo que ya funciona bien",
+    strengthsSub: "Estas áreas de tu CV están sólidas",
+    improvementsTitle: "Oportunidades de mejora",
+    improvementsSub: "Ordenado por impacto — cada punto incluye un ejemplo de antes y después",
     improvedTitle: "Tu CV mejorado",
-    changesTitle: "Qué cambió",
+    improvedSub: "Aplicamos las mejoras identificadas arriba. Revísalo y realiza las correcciones que consideres necesarias en tu documento.",
+    improvedNote: "Si quieres, vuélvelo a subir — puedes hacer 7 revisiones cada hora, ilimitadas por día.",
+    changesTitle: "Mejoras aplicadas",
     copy: "Copiar",
     copied: "¡Copiado!",
     downloadWord: "Descargar para Word",
@@ -80,14 +80,14 @@ const UI = {
     analyzing: "Analyzing your resume...",
     readingPdf: "Reading your PDF...",
     scoreMeta: "current score",
-    topActionsTitle: "Start here",
-    topActionsSub: "The 3 changes with the most impact",
-    improvementsTitle: "What you can improve",
-    improvementsSub: "Ordered by impact — start from the top",
-    strengthsTitle: "What already works",
-    strengthsSub: "These areas are solid",
+    strengthsTitle: "What already works well",
+    strengthsSub: "These areas of your resume are solid",
+    improvementsTitle: "Improvement opportunities",
+    improvementsSub: "Ordered by impact — each item includes a before and after example",
     improvedTitle: "Your improved resume",
-    changesTitle: "What changed",
+    improvedSub: "We applied the improvements identified above. Review it and make any corrections you see fit.",
+    improvedNote: "Want to refine further? Upload it again — 7 reviews per hour, unlimited per day.",
+    changesTitle: "Improvements applied",
     copy: "Copy",
     copied: "Copied!",
     downloadWord: "Download for Word",
@@ -112,6 +112,24 @@ const DIM_NAMES: Record<string, { en: string; es: string }> = {
   writing_clarity: { en: "Writing Clarity", es: "Claridad de Escritura" },
   completeness: { en: "Completeness", es: "Completitud" },
 };
+
+// ─── Resume text renderer with hanging indent ──────────────────────
+function ResumeText({ text }: { text: string }) {
+  return (
+    <div className="text-sm leading-relaxed text-ink-700 font-[family-name:var(--font-geist)]">
+      {text.split("\n").map((line, i) => {
+        const trimmed = line.trimStart();
+        if (trimmed.startsWith("•") || trimmed.startsWith("·") || trimmed.startsWith("‣")) {
+          return <p key={i} className="m-0" style={{ paddingLeft: "1.5em", textIndent: "-1.5em" }}>{trimmed}</p>;
+        }
+        if (line.trim() === "") return <div key={i} className="h-3" />;
+        const isHeader = line === line.toUpperCase() && line.trim().length > 2 && /^[A-ZÁÉÍÓÚÑÜ\s&/\-:]+$/.test(line.trim());
+        if (isHeader) return <p key={i} className="m-0 font-medium text-ink-900 mt-4 mb-1">{line}</p>;
+        return <p key={i} className="m-0">{line}</p>;
+      })}
+    </div>
+  );
+}
 
 // ─── Component ─────────────────────────────────────────────────────
 export function Analyzer({ lang, onLangDetected }: {
@@ -352,36 +370,44 @@ export function Analyzer({ lang, onLangDetected }: {
         </div>
       )}
 
-      {/* Results */}
+      {/* ═══════════ RESULTS ═══════════ */}
       {result && (
         <div ref={resultsRef} className="space-y-10" aria-live="polite">
-          {/* Score — discrete metadata */}
-          <div className="text-center card-enter">
-            <span className="font-[family-name:var(--font-mono)] text-[13px] text-ink-500 tracking-wide">
-              {result.score.total}/100 — {t.scoreMeta}
-            </span>
-            <p className="text-sm text-ink-600 mt-2 max-w-lg mx-auto leading-relaxed">
+
+          {/* 1. Score — discrete metadata + summary left-aligned */}
+          <div className="card-enter">
+            <div className="text-center mb-3">
+              <span className="font-[family-name:var(--font-mono)] text-[13px] text-ink-500 tracking-wide">
+                {result.score.total}/100 — {t.scoreMeta}
+              </span>
+            </div>
+            <p className="text-sm text-ink-600 leading-relaxed">
               {result.score.summary}
             </p>
           </div>
 
-          {/* Top 3 Actions */}
-          <section className="card-enter" style={{ animationDelay: "0.06s" }}>
-            <h2 className="text-lg font-medium text-ink-900 mb-1">{t.topActionsTitle}</h2>
-            <p className="text-xs text-ink-400 mb-4">{t.topActionsSub}</p>
-            <div className="space-y-2">
-              {result.analysis.top_actions.map((action, i) => (
-                <div key={i} className="flex gap-3 border border-ink-100 rounded-lg p-4">
-                  <span className="font-[family-name:var(--font-mono)] text-[13px] text-accent font-medium shrink-0">
-                    {i + 1}
-                  </span>
-                  <p className="text-sm text-ink-700">{action}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+          {/* 2. Strengths FIRST — empathy-first approach */}
+          {result.analysis.strengths.length > 0 && (
+            <section className="card-enter" style={{ animationDelay: "0.06s" }}>
+              <h2 className="text-lg font-medium text-ink-900 mb-1">{t.strengthsTitle}</h2>
+              <p className="text-xs text-ink-400 mb-4">{t.strengthsSub}</p>
+              <div className="space-y-2">
+                {result.analysis.strengths.map((str, i) => (
+                  <div key={i} className="border border-positive/20 bg-positive-ghost rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-ink-700">{dimName(str.dimension)}</span>
+                      <span className="font-[family-name:var(--font-mono)] text-[11px] text-positive tracking-wide">
+                        {str.dimension_score}/100
+                      </span>
+                    </div>
+                    <p className="text-sm text-ink-600">{str.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
-          {/* Improvements */}
+          {/* 3. Improvements — unified section (top actions + detailed improvements) */}
           {result.analysis.improvements.length > 0 && (
             <section className="card-enter" style={{ animationDelay: "0.12s" }}>
               <h2 className="text-lg font-medium text-ink-900 mb-1">{t.improvementsTitle}</h2>
@@ -419,36 +445,33 @@ export function Analyzer({ lang, onLangDetected }: {
             </section>
           )}
 
-          {/* Strengths */}
-          {result.analysis.strengths.length > 0 && (
-            <section className="card-enter" style={{ animationDelay: "0.18s" }}>
-              <h2 className="text-lg font-medium text-ink-900 mb-1">{t.strengthsTitle}</h2>
-              <p className="text-xs text-ink-400 mb-4">{t.strengthsSub}</p>
-              <div className="space-y-2">
-                {result.analysis.strengths.map((str, i) => (
-                  <div key={i} className="border border-positive/20 bg-positive-ghost rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-ink-700">{dimName(str.dimension)}</span>
-                      <span className="font-[family-name:var(--font-mono)] text-[11px] text-positive tracking-wide">
-                        {str.dimension_score}/100
-                      </span>
-                    </div>
-                    <p className="text-sm text-ink-600">{str.detail}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Improved CV */}
-          <section className="card-enter" style={{ animationDelay: "0.24s" }}>
+          {/* 4. Improved CV — with context about what was applied */}
+          <section className="card-enter" style={{ animationDelay: "0.18s" }}>
             <h2 className="text-lg font-medium text-ink-900 mb-1">{t.improvedTitle}</h2>
-            <div className="border border-ink-100 rounded-lg p-4 mb-3">
-              <pre className="text-sm text-ink-700 whitespace-pre-wrap font-[family-name:var(--font-geist)] leading-relaxed">
-                {result.improved_cv.text}
-              </pre>
+            <p className="text-sm text-ink-500 mb-4">{t.improvedSub}</p>
+
+            {/* Changes applied — shown BEFORE the CV text */}
+            {result.improved_cv.changes.length > 0 && (
+              <div className="mb-4 border border-accent/10 bg-accent-ghost rounded-lg p-4">
+                <h3 className="text-sm font-medium text-ink-700 mb-2">{t.changesTitle}</h3>
+                <ul className="space-y-1">
+                  {result.improved_cv.changes.map((change, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-ink-500">
+                      <span className="text-positive shrink-0">+</span>
+                      {change}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* CV text with hanging indent for bullets */}
+            <div className="border border-ink-100 rounded-lg p-4 sm:p-6 mb-3">
+              <ResumeText text={result.improved_cv.text} />
             </div>
-            <div className="flex gap-2">
+
+            {/* Action buttons */}
+            <div className="flex gap-2 mb-3">
               <button
                 onClick={copyToClipboard}
                 className="border border-ink-100 rounded-lg px-4 py-2 text-sm text-ink-600
@@ -464,26 +487,14 @@ export function Analyzer({ lang, onLangDetected }: {
                 {t.downloadWord}
               </button>
             </div>
-          </section>
 
-          {/* Changes */}
-          {result.improved_cv.changes.length > 0 && (
-            <section className="card-enter" style={{ animationDelay: "0.3s" }}>
-              <h2 className="text-sm font-medium text-ink-900 mb-2">{t.changesTitle}</h2>
-              <ul className="space-y-1">
-                {result.improved_cv.changes.map((change, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-ink-500">
-                    <span className="text-positive shrink-0">+</span>
-                    {change}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+            {/* Resubmit note */}
+            <p className="text-xs text-ink-400 leading-relaxed">{t.improvedNote}</p>
+          </section>
 
           {/* Donation CTA */}
           <div className="text-center border border-ink-100 rounded-lg p-6 card-enter"
-               style={{ animationDelay: "0.36s" }}>
+               style={{ animationDelay: "0.24s" }}>
             <p className="text-sm text-ink-500 mb-3">{t.donationText}</p>
             <div className="flex justify-center gap-3">
               {process.env.NEXT_PUBLIC_STRIPE_DONATION_LINK && (
