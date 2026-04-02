@@ -27,9 +27,9 @@ export default function Header({ lang, onToggleLang }: {
   return (
     <header className="w-full border-b border-ink-100 bg-ink-000">
       <div className="max-w-3xl mx-auto px-5 py-3.5 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <LogoIcon className="w-5 h-5" />
-          <span className="font-[family-name:var(--font-mono)] text-base tracking-tight text-ink-900">
+        <Link href="/" className="flex items-center gap-2.5">
+          <LogoIcon className="w-6 h-6" />
+          <span className="font-[family-name:var(--font-geist)] text-xl font-medium leading-none text-ink-900">
             max<span className="text-accent">cv</span>
           </span>
         </Link>
