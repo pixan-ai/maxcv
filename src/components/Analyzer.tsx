@@ -43,6 +43,7 @@ const UI = {
     rateLimit: "7 análisis por hora · sin límite de uso diario",
     privacy: "Tu CV se analiza en tiempo real y se descarta al instante. Sin registro, sin almacenamiento.",
     analyzing: "Analizando tu CV...",
+    readingPdf: "Leyendo tu PDF...",
     scoreMeta: "puntuación actual",
     topActionsTitle: "Empieza aquí",
     topActionsSub: "Los 3 cambios con más impacto",
@@ -77,6 +78,7 @@ const UI = {
     rateLimit: "7 analyses per hour · no daily limit",
     privacy: "Your resume is analyzed in real time and discarded instantly. No sign-up, no storage.",
     analyzing: "Analyzing your resume...",
+    readingPdf: "Reading your PDF...",
     scoreMeta: "current score",
     topActionsTitle: "Start here",
     topActionsSub: "The 3 changes with the most impact",
@@ -111,25 +113,6 @@ const DIM_NAMES: Record<string, { en: string; es: string }> = {
   completeness: { en: "Completeness", es: "Completitud" },
 };
 
-// ─── PDF text extraction (browser) ─────────────────────────────────
-async function extractPdfText(file: File): Promise<string> {
-  const pdfjsLib = await import("pdfjs-dist");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.min.mjs",
-    import.meta.url,
-  ).toString();
-
-  const buffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-  const pages: string[] = [];
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    pages.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
-  }
-  return pages.join("\n\n");
-}
-
 // ─── Component ─────────────────────────────────────────────────────
 export function Analyzer({ lang, onLangDetected }: {
   lang: "en" | "es";
@@ -138,6 +121,7 @@ export function Analyzer({ lang, onLangDetected }: {
   const [cvText, setCvText] = useState("");
   const [targetRole, setTargetRole] = useState("");
   const [loading, setLoading] = useState(false);
+  const [parsing, setParsing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -146,22 +130,31 @@ export function Analyzer({ lang, onLangDetected }: {
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const t = UI[lang];
-  const ready = cvText.trim().length >= 50 && !loading;
+  const ready = cvText.trim().length >= 50 && !loading && !parsing;
 
-  // ── PDF handling ──
+  // ── PDF handling via backend ──
   const handleFile = useCallback(async (file: File) => {
     if (file.type !== "application/pdf") return;
+    setParsing(true);
+    setError(null);
     try {
-      const text = await extractPdfText(file);
-      if (text.trim().length < 10) {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/parse", { method: "POST", body: formData });
+      if (!res.ok) {
         setError(t.errorPdf);
         return;
       }
-      setCvText(text);
-      setError(null);
-    } catch (err) {
-      console.error("PDF extraction error:", err);
+      const data = await res.json();
+      if (data.text && data.text.trim().length > 10) {
+        setCvText(data.text);
+      } else {
+        setError(t.errorPdf);
+      }
+    } catch {
       setError(t.errorPdf);
+    } finally {
+      setParsing(false);
     }
   }, [t.errorPdf]);
 
@@ -199,12 +192,10 @@ export function Analyzer({ lang, onLangDetected }: {
       const data: AnalysisResult = await res.json();
       setResult(data);
 
-      // Auto-detect language from response
       if (data.detected_language === "en" || data.detected_language === "es") {
         onLangDetected(data.detected_language);
       }
 
-      // Scroll to results
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch {
       setError(t.errorConnection);
@@ -281,16 +272,20 @@ export function Analyzer({ lang, onLangDetected }: {
               aria-describedby="cv-hint"
               className="w-full min-h-[200px] p-4 text-sm text-ink-700 bg-transparent
                          placeholder:text-ink-300 resize-y focus:outline-none"
-              disabled={loading}
+              disabled={loading || parsing}
             />
             <div className="absolute bottom-3 right-3 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="text-xs text-ink-400 hover:text-accent transition cursor-pointer"
-              >
-                {t.uploadPdf}
-              </button>
+              {parsing ? (
+                <span className="text-xs text-accent">{t.readingPdf}</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="text-xs text-ink-400 hover:text-accent transition cursor-pointer"
+                >
+                  {t.uploadPdf}
+                </button>
+              )}
               <input
                 ref={fileRef}
                 type="file"
@@ -316,7 +311,7 @@ export function Analyzer({ lang, onLangDetected }: {
             className="w-full border border-ink-100 rounded-lg px-4 py-2.5 text-sm
                        text-ink-700 placeholder:text-ink-300 focus:outline-none
                        focus:border-accent transition"
-            disabled={loading}
+            disabled={loading || parsing}
           />
 
           {/* CTA button */}
