@@ -62,6 +62,7 @@ const UI = {
     errorLimit: "Límite alcanzado (7/hora). Intenta más tarde.",
     errorConnection: "Error de conexión. Revisa tu internet.",
     errorLength: "Pega al menos 50 caracteres.",
+    errorPdf: "No se pudo leer el PDF. Intenta pegando el texto directamente.",
     before: "Antes",
     after: "Después",
   },
@@ -95,6 +96,7 @@ const UI = {
     errorLimit: "Limit reached (7/hour). Try again later.",
     errorConnection: "Connection error. Check your internet.",
     errorLength: "Please paste at least 50 characters.",
+    errorPdf: "Could not read the PDF. Try pasting the text directly.",
     before: "Before",
     after: "After",
   },
@@ -111,11 +113,14 @@ const DIM_NAMES: Record<string, { en: string; es: string }> = {
 
 // ─── PDF text extraction (browser) ─────────────────────────────────
 async function extractPdfText(file: File): Promise<string> {
-  const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist");
-  GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.mjs`;
+  const pdfjsLib = await import("pdfjs-dist");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url,
+  ).toString();
 
   const buffer = await file.arrayBuffer();
-  const pdf = await getDocument({ data: buffer }).promise;
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
   const pages: string[] = [];
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
@@ -148,12 +153,17 @@ export function Analyzer({ lang, onLangDetected }: {
     if (file.type !== "application/pdf") return;
     try {
       const text = await extractPdfText(file);
+      if (text.trim().length < 10) {
+        setError(t.errorPdf);
+        return;
+      }
       setCvText(text);
       setError(null);
-    } catch {
-      setError(t.errorGeneric);
+    } catch (err) {
+      console.error("PDF extraction error:", err);
+      setError(t.errorPdf);
     }
-  }, [t.errorGeneric]);
+  }, [t.errorPdf]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
