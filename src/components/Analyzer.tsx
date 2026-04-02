@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────────
 type Improvement = {
@@ -38,7 +38,10 @@ const UI = {
     heroSub: "Descubre qué ven los reclutadores en tu CV y mejóralo al instante. Sin registro, sin trucos.",
     placeholder: "Pega el texto de tu CV aquí...",
     targetRole: "Puesto al que aspiras (opcional)",
-    uploadPdf: "o arrastra un PDF aquí",
+    dropZoneTitle: "Arrastra tu PDF aquí",
+    dropZoneOr: "o",
+    dropZoneBrowse: "selecciona un archivo",
+    dropZoneHint: "PDF · máximo 10MB",
     btnAnalyze: "Analizar mi CV y recomendar mejoras",
     rateLimit: "7 análisis por hora · sin límite de uso diario",
     privacy: "Tu CV se analiza en tiempo real y se descarta al instante. Sin registro, sin almacenamiento.",
@@ -49,9 +52,9 @@ const UI = {
     strengthsSub: "Estas áreas de tu CV están sólidas",
     improvementsTitle: "Oportunidades de mejora",
     improvementsSub: "Ordenado por impacto — cada punto incluye un ejemplo de antes y después",
-    improvedTitle: "Tu CV mejorado",
-    improvedSub: "Aplicamos las mejoras identificadas arriba. Revísalo y realiza las correcciones que consideres necesarias en tu documento.",
-    improvedNote: "Si quieres, vuélvelo a subir — puedes hacer 7 revisiones cada hora, ilimitadas por día.",
+    improvedTitle: "Tu CV con mejoras",
+    improvedSub: "Aquí está el texto de tu CV modificado para que lo revises.",
+    improvedNote: "Revísalo y realiza las correcciones que consideres necesarias en tu documento. Si quieres, vuélvelo a subir — puedes hacer 7 revisiones cada hora, ilimitadas por día.",
     changesTitle: "Mejoras aplicadas",
     copy: "Copiar",
     copied: "¡Copiado!",
@@ -73,7 +76,10 @@ const UI = {
     heroSub: "See what recruiters see in your resume and improve it instantly. No sign-up, no tricks.",
     placeholder: "Paste your resume text here...",
     targetRole: "Target role (optional)",
-    uploadPdf: "or drag a PDF here",
+    dropZoneTitle: "Drop your PDF here",
+    dropZoneOr: "or",
+    dropZoneBrowse: "browse files",
+    dropZoneHint: "PDF · max 10MB",
     btnAnalyze: "Analyze my resume and suggest improvements",
     rateLimit: "7 analyses per hour · no daily limit",
     privacy: "Your resume is analyzed in real time and discarded instantly. No sign-up, no storage.",
@@ -84,9 +90,9 @@ const UI = {
     strengthsSub: "These areas of your resume are solid",
     improvementsTitle: "Improvement opportunities",
     improvementsSub: "Ordered by impact — each item includes a before and after example",
-    improvedTitle: "Your improved resume",
-    improvedSub: "We applied the improvements identified above. Review it and make any corrections you see fit.",
-    improvedNote: "Want to refine further? Upload it again — 7 reviews per hour, unlimited per day.",
+    improvedTitle: "Your CV with improvements",
+    improvedSub: "Here is your modified CV text for you to review.",
+    improvedNote: "Review it and make any corrections you see fit. Want to refine further? Upload it again — 7 reviews per hour, unlimited per day.",
     changesTitle: "Improvements applied",
     copy: "Copy",
     copied: "Copied!",
@@ -113,18 +119,48 @@ const DIM_NAMES: Record<string, { en: string; es: string }> = {
   completeness: { en: "Completeness", es: "Completitud" },
 };
 
+// ─── Progress bar for reading/analyzing ────────────────────────────
+function ProgressBar({ label, durationMs = 15000 }: { label: string; durationMs?: number }) {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const start = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - start;
+      // Asymptotic: approaches 90% over durationMs, never quite reaches 100
+      const pct = Math.min(90, (elapsed / durationMs) * 90);
+      setProgress(pct);
+    }, 100);
+    return () => clearInterval(interval);
+  }, [durationMs]);
+
+  return (
+    <div className="w-full max-w-sm mx-auto text-center py-8">
+      <div className="h-1 bg-ink-100 rounded-full overflow-hidden mb-3">
+        <div
+          className="h-full bg-accent rounded-full transition-all duration-300 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <p className="text-sm text-ink-400">{label}</p>
+    </div>
+  );
+}
+
 // ─── Resume text renderer with hanging indent ──────────────────────
 function ResumeText({ text }: { text: string }) {
   return (
     <div className="text-sm leading-relaxed text-ink-700 font-[family-name:var(--font-geist)]">
       {text.split("\n").map((line, i) => {
         const trimmed = line.trimStart();
-        if (trimmed.startsWith("•") || trimmed.startsWith("·") || trimmed.startsWith("‣")) {
-          return <p key={i} className="m-0" style={{ paddingLeft: "1.5em", textIndent: "-1.5em" }}>{trimmed}</p>;
+        const isBullet = trimmed.startsWith("•") || trimmed.startsWith("·") || trimmed.startsWith("‣") || trimmed.startsWith("- ");
+        if (isBullet) {
+          return (
+            <p key={i} className="m-0 pl-5 -indent-5">{trimmed}</p>
+          );
         }
         if (line.trim() === "") return <div key={i} className="h-3" />;
         const isHeader = line === line.toUpperCase() && line.trim().length > 2 && /^[A-ZÁÉÍÓÚÑÜ\s&/\-:]+$/.test(line.trim());
-        if (isHeader) return <p key={i} className="m-0 font-medium text-ink-900 mt-4 mb-1">{line}</p>;
+        if (isHeader) return <p key={i} className="m-0 font-medium text-ink-900 mt-5 mb-1">{line}</p>;
         return <p key={i} className="m-0">{line}</p>;
       })}
     </div>
@@ -270,40 +306,50 @@ export function Analyzer({ lang, onLangDetected }: {
         </p>
       </section>
 
+      {/* ── Loading/parsing overlay (ABOVE input, not below) ── */}
+      {(loading || parsing) && (
+        <div aria-live="polite">
+          <ProgressBar
+            label={parsing ? t.readingPdf : t.analyzing}
+            durationMs={parsing ? 8000 : 30000}
+          />
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div role="alert" className="text-center py-3">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+
       {/* Input area */}
-      {!result && (
+      {!result && !loading && (
         <section className="space-y-4">
-          {/* Textarea + drop zone */}
-          <div
-            className={`relative border rounded-lg transition ${
-              dragOver ? "border-accent bg-accent-ghost" : "border-ink-100"
-            }`}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-          >
-            <textarea
-              value={cvText}
-              onChange={(e) => setCvText(e.target.value)}
-              placeholder={t.placeholder}
-              aria-label={t.placeholder}
-              aria-describedby="cv-hint"
-              className="w-full min-h-[200px] p-4 text-sm text-ink-700 bg-transparent
-                         placeholder:text-ink-300 resize-y focus:outline-none"
-              disabled={loading || parsing}
-            />
-            <div className="absolute bottom-3 right-3 flex items-center gap-2">
-              {parsing ? (
-                <span className="text-xs text-accent">{t.readingPdf}</span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="text-xs text-ink-400 hover:text-accent transition cursor-pointer"
-                >
-                  {t.uploadPdf}
-                </button>
-              )}
+          {/* Upload zone — professional drop area */}
+          {!cvText && !parsing && (
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition cursor-pointer ${
+                dragOver
+                  ? "border-accent bg-accent-ghost"
+                  : "border-ink-200 hover:border-ink-300 hover:bg-ink-050"
+              }`}
+              onClick={() => fileRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+            >
+              <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-ink-050 flex items-center justify-center">
+                <svg className="w-5 h-5 text-ink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-ink-700">{t.dropZoneTitle}</p>
+              <p className="text-xs text-ink-400 mt-1">
+                {t.dropZoneOr}{" "}
+                <span className="text-accent">{t.dropZoneBrowse}</span>
+              </p>
+              <p className="text-xs text-ink-300 mt-2">{t.dropZoneHint}</p>
               <input
                 ref={fileRef}
                 type="file"
@@ -316,7 +362,39 @@ export function Analyzer({ lang, onLangDetected }: {
                 }}
               />
             </div>
-          </div>
+          )}
+
+          {/* Textarea — shows after PDF is loaded or if user starts typing */}
+          {(cvText || parsing) && (
+            <div
+              className="relative border border-ink-100 rounded-lg"
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+            >
+              <textarea
+                value={cvText}
+                onChange={(e) => setCvText(e.target.value)}
+                placeholder={t.placeholder}
+                aria-label={t.placeholder}
+                aria-describedby="cv-hint"
+                className="w-full min-h-[200px] p-4 text-sm text-ink-700 bg-transparent
+                           placeholder:text-ink-300 resize-y focus:outline-none"
+                disabled={parsing}
+              />
+            </div>
+          )}
+
+          {/* "Or paste text" link when showing drop zone */}
+          {!cvText && !parsing && (
+            <button
+              type="button"
+              onClick={() => setCvText(" ")}
+              className="w-full text-center text-xs text-ink-400 hover:text-ink-600 transition cursor-pointer"
+            >
+              {lang === "es" ? "o pega el texto de tu CV directamente" : "or paste your resume text directly"}
+            </button>
+          )}
 
           {/* Target role */}
           <input
@@ -329,7 +407,7 @@ export function Analyzer({ lang, onLangDetected }: {
             className="w-full border border-ink-100 rounded-lg px-4 py-2.5 text-sm
                        text-ink-700 placeholder:text-ink-300 focus:outline-none
                        focus:border-accent transition"
-            disabled={loading || parsing}
+            disabled={parsing}
           />
 
           {/* CTA button */}
@@ -343,7 +421,7 @@ export function Analyzer({ lang, onLangDetected }: {
                 : "bg-ink-100 text-ink-300 cursor-not-allowed"
             }`}
           >
-            {loading ? t.analyzing : t.btnAnalyze}
+            {t.btnAnalyze}
           </button>
 
           {/* Privacy + rate limit */}
@@ -352,22 +430,6 @@ export function Analyzer({ lang, onLangDetected }: {
             <p className="text-xs text-ink-300">{t.rateLimit}</p>
           </div>
         </section>
-      )}
-
-      {/* Loading indicator */}
-      {loading && (
-        <div className="text-center py-12" aria-live="polite">
-          <div className="inline-block w-6 h-6 border-2 border-accent border-t-transparent
-                          rounded-full animate-spin mb-3" />
-          <p className="text-sm text-ink-400">{t.analyzing}</p>
-        </div>
-      )}
-
-      {/* Error */}
-      {error && (
-        <div role="alert" className="text-center py-4">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
       )}
 
       {/* ═══════════ RESULTS ═══════════ */}
@@ -386,7 +448,7 @@ export function Analyzer({ lang, onLangDetected }: {
             </p>
           </div>
 
-          {/* 2. Strengths FIRST — empathy-first approach */}
+          {/* 2. Strengths FIRST — empathy-first */}
           {result.analysis.strengths.length > 0 && (
             <section className="card-enter" style={{ animationDelay: "0.06s" }}>
               <h2 className="text-lg font-medium text-ink-900 mb-1">{t.strengthsTitle}</h2>
@@ -407,7 +469,7 @@ export function Analyzer({ lang, onLangDetected }: {
             </section>
           )}
 
-          {/* 3. Improvements — unified section (top actions + detailed improvements) */}
+          {/* 3. Improvements */}
           {result.analysis.improvements.length > 0 && (
             <section className="card-enter" style={{ animationDelay: "0.12s" }}>
               <h2 className="text-lg font-medium text-ink-900 mb-1">{t.improvementsTitle}</h2>
@@ -445,12 +507,12 @@ export function Analyzer({ lang, onLangDetected }: {
             </section>
           )}
 
-          {/* 4. Improved CV — with context about what was applied */}
+          {/* 4. Improved CV */}
           <section className="card-enter" style={{ animationDelay: "0.18s" }}>
             <h2 className="text-lg font-medium text-ink-900 mb-1">{t.improvedTitle}</h2>
             <p className="text-sm text-ink-500 mb-4">{t.improvedSub}</p>
 
-            {/* Changes applied — shown BEFORE the CV text */}
+            {/* Changes applied */}
             {result.improved_cv.changes.length > 0 && (
               <div className="mb-4 border border-accent/10 bg-accent-ghost rounded-lg p-4">
                 <h3 className="text-sm font-medium text-ink-700 mb-2">{t.changesTitle}</h3>
@@ -465,7 +527,7 @@ export function Analyzer({ lang, onLangDetected }: {
               </div>
             )}
 
-            {/* CV text with hanging indent for bullets */}
+            {/* CV text */}
             <div className="border border-ink-100 rounded-lg p-4 sm:p-6 mb-3">
               <ResumeText text={result.improved_cv.text} />
             </div>
