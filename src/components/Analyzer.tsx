@@ -44,6 +44,7 @@ const UI = {
     rateLimit: "Puedes analizar y mejorar tu CV hasta 7 veces cada hora",
     privacy: "Tu CV se analiza en línea por IA de frontera y se elimina de inmediato",
     analyzing: "Analizando tu CV...",
+    uploadingPdf: "Subiendo tu PDF...",
     readingPdf: "Leyendo tu PDF...",
     scoreMeta: "puntuación actual",
     originalCvTitle: "Texto original de tu CV",
@@ -83,6 +84,7 @@ const UI = {
     rateLimit: "You can analyze and improve your resume up to 7 times per hour",
     privacy: "Your resume is analyzed online by frontier AI and deleted immediately",
     analyzing: "Analyzing your resume...",
+    uploadingPdf: "Uploading your PDF...",
     readingPdf: "Reading your PDF...",
     scoreMeta: "current score",
     originalCvTitle: "Your original resume text",
@@ -150,8 +152,8 @@ function ProgressBar({ label, durationMs = 15000 }: { label: string; durationMs?
 // ─── Step badge ────────────────────────────────────────────────────
 function StepBadge({ n }: { n: number }) {
   return (
-    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent text-white text-[11px]
-                     font-medium flex items-center justify-center mt-0.5">
+    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-accent text-white text-xs
+                     font-medium flex items-center justify-center">
       {n}
     </span>
   );
@@ -170,19 +172,19 @@ function Collapsible({ title, isOpen, onToggle, children, className: wrapperClas
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium text-ink-700
+        className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-ink-700
                    hover:bg-ink-050 transition cursor-pointer"
         aria-expanded={isOpen}
       >
-        <span className="text-ink-400 text-xs transition-transform duration-200"
+        <span className="text-ink-400 text-sm transition-transform duration-200 leading-none"
               style={{ transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
-          ▸
+          ▶
         </span>
         {title}
       </button>
       <div
         className="overflow-hidden transition-all duration-300 ease-in-out"
-        style={{ maxHeight: isOpen ? "2000px" : "0" }}
+        style={{ maxHeight: isOpen ? "5000px" : "0" }}
       >
         <div className="px-4 pb-4">
           {children}
@@ -321,7 +323,7 @@ export function Analyzer({ lang, onLangDetected }: {
         <p className="text-sm sm:text-base text-accent font-medium hero-reveal-2">
           {t.heroAccent}
         </p>
-        <div className="text-sm text-ink-400 max-w-md mx-auto leading-relaxed hero-reveal-3 text-center">
+        <div className="text-sm text-ink-400 max-w-lg mx-auto leading-relaxed hero-reveal-3 text-center">
           {t.heroSub.split("\n").map((line, i) => (
             <span key={i} className="block">{line}</span>
           ))}
@@ -332,7 +334,7 @@ export function Analyzer({ lang, onLangDetected }: {
       {(loading || parsing) && (
         <div aria-live="polite">
           <ProgressBar
-            label={parsing ? t.readingPdf : t.analyzing}
+            label={parsing ? t.uploadingPdf : t.analyzing}
             durationMs={parsing ? 8000 : 30000}
           />
         </div>
@@ -349,8 +351,10 @@ export function Analyzer({ lang, onLangDetected }: {
       {!result && !loading && !parsing && (
         <section className="space-y-5">
           {/* Step 1: CV Input */}
-          <div className="flex gap-3">
-            <StepBadge n={1} />
+          <div className="flex gap-3 items-start">
+            <div className="pt-3">
+              <StepBadge n={1} />
+            </div>
             <div className="flex-1">
               <div className="relative border border-ink-100 rounded-lg focus-within:border-accent transition">
                 {/* Attach PDF pill — top-right */}
@@ -394,7 +398,7 @@ export function Analyzer({ lang, onLangDetected }: {
           </div>
 
           {/* Step 2: Target Role */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
             <StepBadge n={2} />
             <div className="flex-1">
               <input
@@ -412,7 +416,7 @@ export function Analyzer({ lang, onLangDetected }: {
           </div>
 
           {/* Step 3: CTA Button */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
             <StepBadge n={3} />
             <div className="flex-1">
               <button
@@ -456,7 +460,7 @@ export function Analyzer({ lang, onLangDetected }: {
 
           {/* Step 1: Original CV text — collapsed */}
           <div className="card-enter">
-            <div className="flex gap-3 items-start">
+            <div className="flex gap-3 items-center">
               <StepBadge n={1} />
               <div className="flex-1">
                 <Collapsible
@@ -465,7 +469,7 @@ export function Analyzer({ lang, onLangDetected }: {
                   onToggle={() => toggleSection("original")}
                 >
                   <div className="text-sm text-ink-500 whitespace-pre-wrap max-h-60 overflow-y-auto">
-                    {cvText.slice(0, 500)}{cvText.length > 500 ? "..." : ""}
+                    {cvText}
                   </div>
                 </Collapsible>
               </div>
@@ -474,7 +478,7 @@ export function Analyzer({ lang, onLangDetected }: {
 
           {/* Step 2: Target role — collapsed */}
           <div className="card-enter" style={{ animationDelay: "0.04s" }}>
-            <div className="flex gap-3 items-start">
+            <div className="flex gap-3 items-center">
               <StepBadge n={2} />
               <div className="flex-1">
                 <Collapsible
@@ -492,7 +496,7 @@ export function Analyzer({ lang, onLangDetected }: {
 
           {/* Step 3: Analysis — expanded by default */}
           <div className="card-enter" style={{ animationDelay: "0.08s" }}>
-            <div className="flex gap-3 items-start">
+            <div className="flex gap-3 items-center">
               <StepBadge n={3} />
               <div className="flex-1">
                 <Collapsible
@@ -522,18 +526,18 @@ export function Analyzer({ lang, onLangDetected }: {
                         <button
                           type="button"
                           onClick={() => toggleSection("strengths")}
-                          className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium text-ink-700
+                          className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-ink-700
                                      hover:bg-positive-ghost/80 transition cursor-pointer"
                           aria-expanded={openSections.has("strengths")}
                         >
-                          <span className="text-ink-400 text-xs transition-transform duration-200"
+                          <span className="text-ink-400 text-sm transition-transform duration-200 leading-none"
                                 style={{ transform: openSections.has("strengths") ? "rotate(90deg)" : "rotate(0deg)" }}>
-                            ▸
+                            ▶
                           </span>
                           {t.strengthsTitle}
                         </button>
                         <div className="overflow-hidden transition-all duration-300 ease-in-out"
-                             style={{ maxHeight: openSections.has("strengths") ? "2000px" : "0" }}>
+                             style={{ maxHeight: openSections.has("strengths") ? "5000px" : "0" }}>
                           <div className="px-4 pb-4 space-y-2">
                             {result.analysis.strengths.map((str, i) => (
                               <div key={i} className="border border-positive/20 rounded-lg p-3 bg-ink-000">
@@ -598,7 +602,7 @@ export function Analyzer({ lang, onLangDetected }: {
 
           {/* Step 4: Improved resume — expanded */}
           <div className="card-enter" style={{ animationDelay: "0.12s" }}>
-            <div className="flex gap-3 items-start">
+            <div className="flex gap-3 items-center">
               <StepBadge n={4} />
               <div className="flex-1">
                 <Collapsible

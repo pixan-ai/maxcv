@@ -5,8 +5,13 @@ function ResumeText({ text }: { text: string }) {
         const trimmed = line.trimStart();
         const isBullet = trimmed.startsWith("•") || trimmed.startsWith("·") || trimmed.startsWith("‣") || trimmed.startsWith("- ");
         if (isBullet) {
+          const bulletChar = trimmed.match(/^(•|·|‣|- )/)?.[0] ?? "•";
+          const content = trimmed.slice(bulletChar.length).trimStart();
           return (
-            <p key={i} className="m-0" style={{ paddingLeft: "1.2em", textIndent: "-1.2em" }}>{trimmed}</p>
+            <p key={i} className="m-0 ml-4">
+              <span className="inline-block w-4 -ml-4 text-ink-400">{bulletChar.trim()}</span>
+              {content}
+            </p>
           );
         }
         if (line.trim() === "") return <div key={i} className="h-3" />;
