@@ -7,12 +7,12 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "\u25BC maxcv - AI Resume Improver",
+  title: "maxcv - AI Resume Improver",
   description:
     "Analyze and improve your resume with AI. Score across 6 dimensions + complete rewrite. Free, no sign-up.",
   icons: {
-    icon: "/favicon.svg",
-    apple: "/favicon.svg",
+    icon: "/icon.svg",
+    apple: "/icon.svg",
   },
   openGraph: {
     title: "maxcv - AI Resume Improver",
