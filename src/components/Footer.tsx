@@ -12,6 +12,8 @@ export function Footer({ lang }: { lang: Lang }) {
           <Link href="/#donate" className="hover:text-ink-700 transition">{t.donate}</Link>
           <Link href="/" className="hover:text-ink-700 transition">Home</Link>
           <Link href="/security" className="hover:text-ink-700 transition">{t.security}</Link>
+          <Link href="/privacy" className="hover:text-ink-700 transition">{t.privacy}</Link>
+          <Link href="/terms" className="hover:text-ink-700 transition">{t.terms}</Link>
           <a href="https://github.com/pixan-ai/maxcv" target="_blank" rel="noopener noreferrer" className="hover:text-ink-700 transition">GitHub</a>
           <Link href="/#about" className="hover:text-ink-700 transition">{t.about}</Link>
         </div>

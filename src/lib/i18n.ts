@@ -116,12 +116,16 @@ export const HEADER_UI = {
 export const FOOTER_UI = {
   es: {
     security: "Seguridad",
+    privacy: "Privacidad",
+    terms: "Términos",
     howItWorks: "¿Cómo funciona?",
     donate: "Donar",
     about: "¿Quiénes somos?",
   },
   en: {
     security: "Security",
+    privacy: "Privacy",
+    terms: "Terms",
     howItWorks: "How it works",
     donate: "Donate",
     about: "About us",
@@ -196,5 +200,303 @@ export const SECURITY_UI: Record<Lang, SecurityStrings> = {
     contactBody: "If you have questions about how we handle your data, reach out.",
     contactEmail: "security@maxcv.org",
     updated: "Last updated: March 2026",
+  },
+};
+
+// ─── Privacy Notice (LFPDPPP 2025) ─────────────────────────────────
+type PrivacyDataItem = {
+  icon: string;
+  title: string;
+  body: string;
+};
+
+type ArcoRight = {
+  letter: string;
+  name: string;
+  desc: string;
+};
+
+type PrivacyStrings = {
+  heroTitle: string;
+  heroAccent: string;
+  heroSub: string;
+  responsableTitle: string;
+  responsableBody: string;
+  dataTitle: string;
+  dataItems: PrivacyDataItem[];
+  purposeTitle: string;
+  purposeItems: string[];
+  purposeNote: string;
+  neverTitle: string;
+  neverItems: string[];
+  arcoTitle: string;
+  arcoBody: string;
+  arcoRights: ArcoRight[];
+  arcoHow: string;
+  thirdPartyTitle: string;
+  thirdPartyBody: string;
+  securityTitle: string;
+  securityBody: string;
+  changesTitle: string;
+  changesBody: string;
+  authorityTitle: string;
+  authorityBody: string;
+  contactTitle: string;
+  contactBody: string;
+  contactEmail: string;
+  updated: string;
+};
+
+export const PRIVACY_UI: Record<Lang, PrivacyStrings> = {
+  es: {
+    heroTitle: "Aviso de",
+    heroAccent: "Privacidad",
+    heroSub: "Conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP 2025).",
+    responsableTitle: "1. Responsable del tratamiento",
+    responsableBody: "MaxCV (operado por Pixan AI) es responsable del tratamiento de los datos personales que recabamos. Domicilio para oír y recibir notificaciones: Ciudad de México, México. Correo de contacto: privacidad@maxcv.org.",
+    dataTitle: "2. Datos personales que tratamos",
+    dataItems: [
+      { icon: "📄", title: "Contenido de tu CV", body: "El texto o archivo PDF que subes para análisis. Este contenido se procesa en tiempo real y se descarta inmediatamente al finalizar el análisis. No se almacena en ningún servidor, base de datos ni respaldo." },
+      { icon: "🌐", title: "Datos técnicos mínimos", body: "Dirección IP (solo para control de tasa de uso, no se almacena de forma persistente). No recopilamos nombre, correo electrónico, teléfono ni ningún dato de identificación personal." },
+      { icon: "📊", title: "Analítica anónima", body: "Vercel Analytics recopila métricas agregadas de uso del sitio (páginas vistas, país de origen, tipo de dispositivo). Estos datos son anónimos y no permiten identificarte individualmente." },
+    ],
+    purposeTitle: "3. Finalidades del tratamiento",
+    purposeItems: [
+      "Analizar y evaluar tu CV mediante inteligencia artificial para generar un puntaje y recomendaciones de mejora (finalidad necesaria).",
+      "Generar una versión mejorada de tu CV optimizada para sistemas de reclutamiento ATS (finalidad necesaria).",
+      "Aplicar control de tasa de uso para prevenir abuso del servicio (finalidad necesaria).",
+      "Recopilar métricas anónimas y agregadas para mejorar el servicio (finalidad voluntaria).",
+    ],
+    purposeNote: "Todas las finalidades necesarias están directamente vinculadas a la prestación del servicio. No tratamos tus datos para finalidades secundarias como marketing, publicidad ni perfilamiento.",
+    neverTitle: "4. Lo que nunca hacemos con tus datos",
+    neverItems: [
+      "Almacenar tu CV o su contenido después del análisis",
+      "Crear perfiles, cuentas de usuario o bases de datos con información personal",
+      "Vender, compartir, licenciar o monetizar tus datos de ninguna forma",
+      "Usar tu CV para entrenar modelos de inteligencia artificial",
+      "Inferir género, edad, etnia, orientación sexual, religión o nacionalidad",
+      "Enviar comunicaciones comerciales o contactarte después de tu visita",
+      "Usar cookies de tracking, retargeting o analytics invasivos",
+    ],
+    arcoTitle: "5. Derechos ARCO",
+    arcoBody: "Como titular de tus datos personales, la LFPDPPP te otorga los siguientes derechos:",
+    arcoRights: [
+      { letter: "A", name: "Acceso", desc: "Conocer qué datos personales tenemos sobre ti y cómo los tratamos." },
+      { letter: "R", name: "Rectificación", desc: "Solicitar la corrección de tus datos personales si son inexactos o incompletos." },
+      { letter: "C", name: "Cancelación", desc: "Solicitar la eliminación de tus datos personales de nuestros registros." },
+      { letter: "O", name: "Oposición", desc: "Oponerte al tratamiento de tus datos personales para finalidades específicas." },
+    ],
+    arcoHow: "Dado que MaxCV no almacena datos personales de forma persistente, en la práctica no existen datos sobre los cuales ejercer estos derechos después de que tu sesión finaliza. Sin embargo, puedes ejercer tus derechos ARCO o revocar tu consentimiento en cualquier momento enviando un correo a privacidad@maxcv.org.",
+    thirdPartyTitle: "6. Terceros y transferencias",
+    thirdPartyBody: "El contenido de tu CV se envía a la API de Anthropic (Claude) exclusivamente para su análisis. Anthropic no utiliza los datos enviados a su API para entrenar modelos. No realizamos ninguna otra transferencia de datos personales a terceros nacionales o internacionales. MaxCV corre en la infraestructura de Vercel (respaldada por AWS), que procesa las solicitudes web sin almacenar el contenido de los CVs.",
+    securityTitle: "7. Medidas de seguridad",
+    securityBody: "Implementamos cifrado TLS/SSL en todas las comunicaciones. Los HTTP security headers incluyen HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy y Permissions-Policy. No mantenemos bases de datos con información personal. El código fuente es abierto y auditable en GitHub. Para más detalles técnicos, consulta nuestra página de Seguridad.",
+    changesTitle: "8. Cambios al aviso de privacidad",
+    changesBody: "Nos reservamos el derecho de modificar este aviso de privacidad. Cualquier cambio será publicado en esta página con la fecha de actualización correspondiente. Te recomendamos revisarlo periódicamente.",
+    authorityTitle: "9. Autoridad competente",
+    authorityBody: "Si consideras que tu derecho a la protección de datos personales ha sido vulnerado, puedes acudir a la Secretaría de Anticorrupción y Buen Gobierno, autoridad competente conforme a la LFPDPPP vigente desde el 21 de marzo de 2025.",
+    contactTitle: "¿Dudas sobre privacidad?",
+    contactBody: "Para ejercer tus derechos ARCO, revocar tu consentimiento, o cualquier consulta relacionada con el tratamiento de tus datos personales.",
+    contactEmail: "privacidad@maxcv.org",
+    updated: "Última actualización: Abril 2026",
+  },
+  en: {
+    heroTitle: "Privacy",
+    heroAccent: "Notice",
+    heroSub: "In compliance with Mexico's Federal Law on Protection of Personal Data Held by Private Parties (LFPDPPP 2025).",
+    responsableTitle: "1. Data controller",
+    responsableBody: "MaxCV (operated by Pixan AI) is the data controller responsible for the personal data we collect. Address for notifications: Mexico City, Mexico. Contact email: privacidad@maxcv.org.",
+    dataTitle: "2. Personal data we process",
+    dataItems: [
+      { icon: "📄", title: "Your resume content", body: "The text or PDF file you upload for analysis. This content is processed in real time and discarded immediately after analysis. It is not stored on any server, database, or backup." },
+      { icon: "🌐", title: "Minimal technical data", body: "IP address (only for rate limiting, not stored persistently). We do not collect your name, email, phone number, or any personal identification data." },
+      { icon: "📊", title: "Anonymous analytics", body: "Vercel Analytics collects aggregate site usage metrics (page views, country of origin, device type). This data is anonymous and cannot identify you individually." },
+    ],
+    purposeTitle: "3. Purposes of data processing",
+    purposeItems: [
+      "Analyze and evaluate your resume using AI to generate a score and improvement recommendations (necessary purpose).",
+      "Generate an improved version of your resume optimized for ATS recruitment systems (necessary purpose).",
+      "Apply rate limiting to prevent service abuse (necessary purpose).",
+      "Collect anonymous, aggregate metrics to improve the service (voluntary purpose).",
+    ],
+    purposeNote: "All necessary purposes are directly linked to service delivery. We do not process your data for secondary purposes such as marketing, advertising, or profiling.",
+    neverTitle: "4. What we never do with your data",
+    neverItems: [
+      "Store your resume or its contents after analysis",
+      "Create profiles, user accounts, or databases with personal information",
+      "Sell, share, license, or monetize your data in any way",
+      "Use your resume to train AI models",
+      "Infer gender, age, ethnicity, sexual orientation, religion, or nationality",
+      "Send marketing communications or contact you after your visit",
+      "Use tracking cookies, retargeting, or invasive analytics",
+    ],
+    arcoTitle: "5. ARCO Rights",
+    arcoBody: "As a data subject, Mexico's LFPDPPP grants you the following rights:",
+    arcoRights: [
+      { letter: "A", name: "Access", desc: "Know what personal data we hold about you and how we process it." },
+      { letter: "R", name: "Rectification", desc: "Request correction of your personal data if inaccurate or incomplete." },
+      { letter: "C", name: "Cancellation", desc: "Request deletion of your personal data from our records." },
+      { letter: "O", name: "Opposition", desc: "Object to the processing of your personal data for specific purposes." },
+    ],
+    arcoHow: "Since MaxCV does not persistently store personal data, in practice there is no data to exercise these rights on after your session ends. However, you may exercise your ARCO rights or revoke your consent at any time by emailing privacidad@maxcv.org.",
+    thirdPartyTitle: "6. Third parties and transfers",
+    thirdPartyBody: "Your resume content is sent to Anthropic's API (Claude) exclusively for analysis. Anthropic does not use data sent to its API to train models. We do not make any other transfers of personal data to domestic or international third parties. MaxCV runs on Vercel's infrastructure (backed by AWS), which processes web requests without storing resume content.",
+    securityTitle: "7. Security measures",
+    securityBody: "We implement TLS/SSL encryption on all communications. HTTP security headers include HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy. We maintain no databases with personal information. Source code is open and auditable on GitHub. For more technical details, see our Security page.",
+    changesTitle: "8. Changes to this privacy notice",
+    changesBody: "We reserve the right to modify this privacy notice. Any changes will be published on this page with the corresponding update date. We recommend reviewing it periodically.",
+    authorityTitle: "9. Competent authority",
+    authorityBody: "If you believe your right to personal data protection has been violated, you may contact Mexico's Secretaría de Anticorrupción y Buen Gobierno, the competent authority under the LFPDPPP effective since March 21, 2025.",
+    contactTitle: "Privacy questions?",
+    contactBody: "To exercise your ARCO rights, revoke your consent, or for any inquiry related to the processing of your personal data.",
+    contactEmail: "privacidad@maxcv.org",
+    updated: "Last updated: April 2026",
+  },
+};
+
+// ─── Terms of Use ──────────────────────────────────────────────────
+type TermsSection = {
+  title: string;
+  body?: string;
+  items?: string[];
+};
+
+type TermsStrings = {
+  heroTitle: string;
+  heroAccent: string;
+  heroSub: string;
+  sections: TermsSection[];
+  contactTitle: string;
+  contactBody: string;
+  contactEmail: string;
+  updated: string;
+};
+
+export const TERMS_UI: Record<Lang, TermsStrings> = {
+  es: {
+    heroTitle: "Términos de",
+    heroAccent: "Uso",
+    heroSub: "Al usar MaxCV aceptas los siguientes términos y condiciones.",
+    sections: [
+      {
+        title: "1. Descripción del servicio",
+        body: "MaxCV es una herramienta gratuita de análisis y mejora de currículums (CVs) que utiliza inteligencia artificial. El servicio evalúa tu CV en 6 dimensiones y genera recomendaciones de mejora. MaxCV es operado por Pixan AI desde Ciudad de México, México.",
+      },
+      {
+        title: "2. Uso aceptable",
+        items: [
+          "El servicio es exclusivamente para analizar y mejorar currículums legítimos.",
+          "No debes enviar contenido ilegal, ofensivo, discriminatorio o que viole derechos de terceros.",
+          "No debes intentar sobrecargar, hackear, realizar ingeniería inversa o interferir con el funcionamiento del servicio.",
+          "No debes usar el servicio para generar contenido fraudulento o engañoso en un CV.",
+          "El uso está sujeto a un límite de 7 análisis por hora por dirección IP.",
+        ],
+      },
+      {
+        title: "3. Naturaleza del análisis",
+        body: "MaxCV utiliza inteligencia artificial (Claude, de Anthropic) para analizar tu CV. Los resultados son recomendaciones automatizadas, no asesoría profesional. La IA puede cometer errores. Tú eres responsable de verificar y validar cualquier cambio antes de usar tu CV en procesos de selección. MaxCV no garantiza que seguir las recomendaciones resulte en obtener un empleo.",
+      },
+      {
+        title: "4. Propiedad intelectual",
+        body: "El contenido de tu CV te pertenece. MaxCV no reclama ningún derecho sobre tu CV original ni sobre la versión mejorada que genera. El código fuente de MaxCV es software de código abierto. La marca MaxCV, su diseño y logotipos son propiedad de Pixan AI.",
+      },
+      {
+        title: "5. Donaciones",
+        body: "MaxCV opera bajo un modelo de donación voluntaria. Las donaciones no son obligatorias para usar el servicio. Las donaciones realizadas no son reembolsables. No se ofrecen servicios adicionales ni garantías a cambio de donaciones.",
+      },
+      {
+        title: "6. Privacidad y datos personales",
+        body: "El tratamiento de tus datos personales se rige por nuestro Aviso de Privacidad, disponible en /privacy. MaxCV no almacena tu CV ni crea perfiles de usuario. Para más detalles sobre nuestras prácticas de seguridad, consulta /security.",
+      },
+      {
+        title: "7. Limitación de responsabilidad",
+        items: [
+          "MaxCV se proporciona \"tal cual\" (as is), sin garantías de ningún tipo, expresas o implícitas.",
+          "No garantizamos la disponibilidad ininterrumpida del servicio.",
+          "No somos responsables por decisiones tomadas con base en las recomendaciones de la IA.",
+          "No somos responsables por daños directos, indirectos, incidentales o consecuentes derivados del uso del servicio.",
+          "La responsabilidad total de MaxCV en cualquier caso no excederá el monto de donaciones realizadas por el usuario en los últimos 12 meses.",
+        ],
+      },
+      {
+        title: "8. Disponibilidad",
+        body: "MaxCV se esfuerza por mantener el servicio disponible, pero no garantiza su funcionamiento ininterrumpido. Nos reservamos el derecho de suspender o descontinuar el servicio temporal o permanentemente, con o sin aviso previo.",
+      },
+      {
+        title: "9. Modificaciones",
+        body: "Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios serán publicados en esta página con la fecha de actualización. El uso continuado del servicio después de una modificación constituye la aceptación de los nuevos términos.",
+      },
+      {
+        title: "10. Legislación aplicable",
+        body: "Estos términos se rigen por las leyes de los Estados Unidos Mexicanos. Para cualquier controversia, las partes se someten a la jurisdicción de los tribunales competentes de la Ciudad de México.",
+      },
+    ],
+    contactTitle: "¿Preguntas sobre estos términos?",
+    contactBody: "Si tienes dudas sobre nuestros términos de uso, contáctanos.",
+    contactEmail: "contacto@maxcv.org",
+    updated: "Última actualización: Abril 2026",
+  },
+  en: {
+    heroTitle: "Terms of",
+    heroAccent: "Use",
+    heroSub: "By using MaxCV you agree to the following terms and conditions.",
+    sections: [
+      {
+        title: "1. Service description",
+        body: "MaxCV is a free AI-powered resume analysis and improvement tool. The service evaluates your resume across 6 dimensions and generates improvement recommendations. MaxCV is operated by Pixan AI from Mexico City, Mexico.",
+      },
+      {
+        title: "2. Acceptable use",
+        items: [
+          "The service is exclusively for analyzing and improving legitimate resumes.",
+          "You must not submit illegal, offensive, discriminatory content or content that violates third-party rights.",
+          "You must not attempt to overload, hack, reverse-engineer, or interfere with the service.",
+          "You must not use the service to generate fraudulent or misleading resume content.",
+          "Usage is subject to a limit of 7 analyses per hour per IP address.",
+        ],
+      },
+      {
+        title: "3. Nature of analysis",
+        body: "MaxCV uses artificial intelligence (Claude, by Anthropic) to analyze your resume. Results are automated recommendations, not professional advice. AI can make mistakes. You are responsible for verifying and validating any changes before using your resume in job applications. MaxCV does not guarantee that following recommendations will result in employment.",
+      },
+      {
+        title: "4. Intellectual property",
+        body: "Your resume content belongs to you. MaxCV claims no rights over your original resume or the improved version it generates. MaxCV's source code is open-source software. The MaxCV brand, design, and logos are property of Pixan AI.",
+      },
+      {
+        title: "5. Donations",
+        body: "MaxCV operates under a voluntary donation model. Donations are not required to use the service. Donations are non-refundable. No additional services or guarantees are offered in exchange for donations.",
+      },
+      {
+        title: "6. Privacy and personal data",
+        body: "The processing of your personal data is governed by our Privacy Notice, available at /privacy. MaxCV does not store your resume or create user profiles. For more details on our security practices, see /security.",
+      },
+      {
+        title: "7. Limitation of liability",
+        items: [
+          "MaxCV is provided \"as is\", without warranties of any kind, express or implied.",
+          "We do not guarantee uninterrupted service availability.",
+          "We are not responsible for decisions made based on AI recommendations.",
+          "We are not liable for direct, indirect, incidental, or consequential damages arising from use of the service.",
+          "MaxCV's total liability shall not exceed the amount of donations made by the user in the preceding 12 months.",
+        ],
+      },
+      {
+        title: "8. Availability",
+        body: "MaxCV strives to maintain service availability but does not guarantee uninterrupted operation. We reserve the right to suspend or discontinue the service temporarily or permanently, with or without notice.",
+      },
+      {
+        title: "9. Modifications",
+        body: "We reserve the right to modify these terms at any time. Changes will be published on this page with the update date. Continued use of the service after a modification constitutes acceptance of the new terms.",
+      },
+      {
+        title: "10. Governing law",
+        body: "These terms are governed by the laws of Mexico. For any dispute, the parties submit to the jurisdiction of the competent courts of Mexico City.",
+      },
+    ],
+    contactTitle: "Questions about these terms?",
+    contactBody: "If you have questions about our terms of use, contact us.",
+    contactEmail: "contacto@maxcv.org",
+    updated: "Last updated: April 2026",
   },
 };
