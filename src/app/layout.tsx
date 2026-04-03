@@ -7,26 +7,39 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "maxcv - AI Resume Improver",
+  metadataBase: new URL("https://maxcv.org"),
+  title: "maxcv — Analiza y mejora tu CV con IA gratis",
   description:
-    "Analyze and improve your resume with AI. Score across 6 dimensions + complete rewrite. Free, no sign-up.",
+    "Análisis profesional de CV con inteligencia artificial. Puntaje en 6 dimensiones + reescritura completa optimizada para ATS. Gratis, sin registro, 100% anónimo.",
+  alternates: {
+    canonical: "https://maxcv.org",
+    languages: {
+      "es": "https://maxcv.org",
+      "en": "https://maxcv.org",
+    },
+  },
   icons: {
     icon: "/icon.svg",
     apple: "/icon.svg",
   },
   openGraph: {
-    title: "maxcv - AI Resume Improver",
+    title: "maxcv — Analiza y mejora tu CV con IA gratis",
     description:
-      "Analyze and improve your resume with AI. Score across 6 dimensions + complete rewrite. Free, no sign-up.",
+      "Puntaje en 6 dimensiones + reescritura completa optimizada para ATS. Sin registro, sin costo, 100% anónimo.",
     url: "https://maxcv.org",
     siteName: "maxcv",
     type: "website",
+    locale: "es_MX",
   },
   twitter: {
     card: "summary",
-    title: "maxcv - AI Resume Improver",
+    title: "maxcv — Analiza y mejora tu CV con IA gratis",
     description:
-      "Free AI-powered resume analyzer. Score + rewrite. No sign-up.",
+      "Análisis de CV con IA. Puntaje + reescritura ATS. Gratis, sin registro.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -43,19 +56,56 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "SoftwareApplication",
+              "@type": "WebApplication",
               name: "maxcv",
-              description:
-                "AI-powered resume analyzer and improver. Free, no sign-up.",
               url: "https://maxcv.org",
+              description:
+                "Herramienta gratuita de análisis y mejora de CV con inteligencia artificial. Puntaje en 6 dimensiones y reescritura completa optimizada para ATS.",
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web",
+              browserRequirements: "Requires JavaScript",
               offers: {
                 "@type": "Offer",
                 price: "0",
                 priceCurrency: "USD",
+                description: "Gratuito con donaciones voluntarias",
+              },
+              creator: {
+                "@type": "Organization",
+                name: "Pixan AI",
+                url: "https://github.com/pixan-ai",
               },
               inLanguage: ["es", "en"],
+              featureList: [
+                "CV scoring across 6 dimensions",
+                "AI-powered resume rewriting",
+                "ATS optimization",
+                "No registration required",
+                "100% anonymous analysis",
+                "Bilingual (Spanish/English)",
+                "Open source",
+              ],
+              isAccessibleForFree: true,
+              license: "https://opensource.org/licenses/MIT",
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "Pixan AI",
+              url: "https://maxcv.org",
+              logo: "https://maxcv.org/icon.svg",
+              sameAs: ["https://github.com/pixan-ai/maxcv"],
+              contactPoint: {
+                "@type": "ContactPoint",
+                email: "security@maxcv.org",
+                contactType: "customer support",
+                availableLanguage: ["Spanish", "English"],
+              },
             }),
           }}
         />

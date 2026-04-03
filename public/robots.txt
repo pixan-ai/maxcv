@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /api/
 
+Host: https://maxcv.org
 Sitemap: https://maxcv.org/sitemap.xml
