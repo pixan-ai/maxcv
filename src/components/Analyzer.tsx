@@ -6,6 +6,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StepBadge } from "@/components/ui/StepBadge";
 import { Collapsible } from "@/components/ui/Collapsible";
 import { ANALYZER_UI, DIM_NAMES } from "@/lib/i18n";
+import { analytics } from "@/lib/analytics";
 import type { Lang } from "@/lib/i18n";
 import type { AnalysisResult } from "@/types/analysis";
 
@@ -21,6 +22,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+  const [inputMethod, setInputMethod] = useState<"paste" | "pdf">("paste");
   const fileRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -38,40 +40,60 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
   const handleFile = useCallback(async (file: File) => {
     if (file.type !== "application/pdf") return;
     setParsing(true); setError(null);
+    analytics.pdfUploaded(file.size);
     try {
       const formData = new FormData(); formData.append("file", file);
       const res = await fetch("/api/parse", { method: "POST", body: formData });
-      if (!res.ok) { setError(t.errorPdf); return; }
+      if (!res.ok) { setError(t.errorPdf); analytics.pdfError(); return; }
       const data = await res.json();
-      if (data.text && data.text.trim().length > 10) { setCvText(data.text); } else { setError(t.errorPdf); }
-    } catch { setError(t.errorPdf); } finally { setParsing(false); }
+      if (data.text && data.text.trim().length > 10) {
+        setCvText(data.text);
+        setInputMethod("pdf");
+        analytics.pdfParsed(data.text.length);
+      } else { setError(t.errorPdf); analytics.pdfError(); }
+    } catch { setError(t.errorPdf); analytics.pdfError(); } finally { setParsing(false); }
   }, [t.errorPdf]);
+
+  const handleTextChange = (text: string) => {
+    const wasPaste = text.length - cvText.length > 20;
+    setCvText(text);
+    if (wasPaste && text.trim().length >= 50) {
+      setInputMethod("paste");
+      analytics.cvPasted(text.length);
+    }
+  };
 
   const analyze = async () => {
     if (!ready) return;
     setLoading(true); setError(null); setResult(null); setOpenSections(new Set());
+    analytics.analysisStarted(inputMethod, targetRole.trim().length > 0);
     try {
       const res = await fetch("/api/analyze", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cvText, targetRole: targetRole || undefined }),
       });
-      if (res.status === 429) { setError(t.errorLimit); return; }
-      if (!res.ok) { setError(t.errorGeneric); return; }
+      if (res.status === 429) { setError(t.errorLimit); analytics.analysisError("rate_limit"); return; }
+      if (!res.ok) { setError(t.errorGeneric); analytics.analysisError("api_error"); return; }
       const data: AnalysisResult = await res.json();
       setResult(data);
       setOpenSections(new Set(DEFAULT_OPEN));
+      analytics.analysisCompleted(data.score.total, data.detected_language || "unknown");
       if (data.detected_language === "en" || data.detected_language === "es") { onLangDetected(data.detected_language); }
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    } catch { setError(t.errorConnection); } finally { setLoading(false); }
+    } catch { setError(t.errorConnection); analytics.analysisError("connection"); } finally { setLoading(false); }
   };
 
   const copyToClipboard = async () => {
     if (!result) return;
     await navigator.clipboard.writeText(result.improved_cv.text);
     setCopied(true); setTimeout(() => setCopied(false), 2000);
+    analytics.cvCopied();
   };
 
-  const reset = () => { setCvText(""); setTargetRole(""); setResult(null); setError(null); setCopied(false); setOpenSections(new Set()); };
+  const reset = () => {
+    setCvText(""); setTargetRole(""); setResult(null); setError(null); setCopied(false); setOpenSections(new Set());
+    analytics.resetClicked();
+  };
 
   return (
     <div className="space-y-6">
@@ -109,7 +131,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
                   <input ref={fileRef} type="file" accept=".pdf" aria-label="Upload PDF" className="hidden"
                     onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFile(file); }} />
                 </div>
-                <textarea value={cvText} onChange={(e) => setCvText(e.target.value)}
+                <textarea value={cvText} onChange={(e) => handleTextChange(e.target.value)}
                   placeholder={t.placeholder} aria-label={t.placeholder} aria-describedby="cv-hint"
                   className="w-full min-h-[120px] p-4 pt-12 text-sm text-ink-700 bg-transparent placeholder:text-ink-300 resize-y focus:outline-none rounded-lg" />
               </div>
@@ -290,10 +312,12 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
             <div className="flex justify-center gap-3">
               {process.env.NEXT_PUBLIC_STRIPE_DONATION_LINK && (
                 <a href={process.env.NEXT_PUBLIC_STRIPE_DONATION_LINK} target="_blank" rel="noopener noreferrer"
+                  onClick={() => analytics.donationClicked("stripe")}
                   className="bg-accent text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-accent-dim transition">{t.donationBtn}</a>
               )}
               {process.env.NEXT_PUBLIC_PAYPAL_DONATION_LINK && (
                 <a href={process.env.NEXT_PUBLIC_PAYPAL_DONATION_LINK} target="_blank" rel="noopener noreferrer"
+                  onClick={() => analytics.donationClicked("paypal")}
                   className="border border-ink-100 px-5 py-2 rounded-lg text-sm text-ink-600 hover:border-ink-200 transition">PayPal</a>
               )}
             </div>
