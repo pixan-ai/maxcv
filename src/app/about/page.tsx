@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import type { Lang } from "@/lib/i18n";
@@ -59,9 +60,19 @@ export default function AboutPage() {
           ))}
         </div>
 
-        {/* Signature */}
-        <div className="mb-8">
-          <p className="text-sm text-ink-500">— {t.signature} · {t.location}</p>
+        {/* Signature with photo */}
+        <div className="mb-8 flex items-center gap-4">
+          <Image
+            src="/alfredo.webp"
+            alt="Alfredo Arenas"
+            width={48}
+            height={48}
+            className="rounded-full grayscale opacity-80"
+          />
+          <div>
+            <p className="text-sm text-ink-700 font-medium">— {t.signature}</p>
+            <p className="text-xs text-ink-400">{t.location}</p>
+          </div>
         </div>
       </main>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { DONATE_UI } from "@/lib/i18n";
@@ -64,6 +65,16 @@ export default function DonatePage() {
               </svg>
               {t.ctaBtn}
             </a>
+            <div className="mt-6">
+              <Image
+                src="/bmc-qr.png"
+                alt="Buy Me a Coffee QR"
+                width={160}
+                height={160}
+                className="mx-auto opacity-90"
+              />
+              <p className="text-[11px] text-ink-300 mt-2">{lang === "es" ? "Escanea para donar" : "Scan to donate"}</p>
+            </div>
             <p className="text-xs text-ink-300 mt-4">{t.ctaNote}</p>
           </div>
         </section>
