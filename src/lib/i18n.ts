@@ -176,8 +176,8 @@ export const SECURITY_UI: Record<Lang, SecurityStrings> = {
     openLink: "Ver código en GitHub →",
     contactTitle: "¿Preguntas de seguridad?",
     contactBody: "Si tienes dudas sobre cómo manejamos tus datos, escríbenos.",
-    contactEmail: "seguridad@maxcv.org",
-    updated: "Última actualización: Marzo 2026",
+    contactEmail: "security@maxcv.org",
+    updated: "Última actualización: Abril 2026",
   },
   en: {
     heroTitle: "Security",
@@ -199,7 +199,7 @@ export const SECURITY_UI: Record<Lang, SecurityStrings> = {
     contactTitle: "Security questions?",
     contactBody: "If you have questions about how we handle your data, reach out.",
     contactEmail: "security@maxcv.org",
-    updated: "Last updated: March 2026",
+    updated: "Last updated: April 2026",
   },
 };
 
