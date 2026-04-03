@@ -2,12 +2,18 @@ import Link from "next/link";
 
 const LINKS = {
   es: {
-    tagline: "Gratis siempre. Sin datos almacenados.",
+    tagline: "Análisis con Claude Opus 4.6 · Anthropic",
     security: "Seguridad",
+    howItWorks: "¿Cómo funciona?",
+    donate: "Donar",
+    about: "¿Quiénes somos?",
   },
   en: {
-    tagline: "Free forever. No data stored.",
+    tagline: "Analysis powered by Claude Opus 4.6 · Anthropic",
     security: "Security",
+    howItWorks: "How it works",
+    donate: "Donate",
+    about: "About us",
   },
 };
 
@@ -17,7 +23,13 @@ export function Footer({ lang }: { lang: "en" | "es" }) {
   return (
     <footer className="w-full border-t border-ink-100 bg-ink-000">
       <div className="max-w-2xl mx-auto px-5 py-6 flex flex-col items-center gap-3">
-        <div className="flex items-center gap-4 text-xs text-ink-400">
+        <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-xs text-ink-400">
+          <Link href="/#how" className="hover:text-ink-700 transition">
+            {t.howItWorks}
+          </Link>
+          <Link href="/#donate" className="hover:text-ink-700 transition">
+            {t.donate}
+          </Link>
           <Link href="/" className="hover:text-ink-700 transition">
             Home
           </Link>
@@ -32,8 +44,11 @@ export function Footer({ lang }: { lang: "en" | "es" }) {
           >
             GitHub
           </a>
+          <Link href="/#about" className="hover:text-ink-700 transition">
+            {t.about}
+          </Link>
         </div>
-        <p className="text-xs text-ink-300">{t.tagline}</p>
+        <p className="text-[11px] text-ink-300">{t.tagline}</p>
       </div>
     </footer>
   );

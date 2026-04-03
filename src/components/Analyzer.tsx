@@ -36,10 +36,12 @@ const UI = {
   es: {
     heroTitle: "Tu próximo trabajo empieza con un gran CV.",
     heroAccent: "Análisis profesional con IA 100% anónimo",
-    heroSub: "Descubre cómo ven tu CV los expertos y sistemas de reclutamiento (ATS)\nMejóralo al instante\nSin registro · sin guardar tus datos · sin costo",
+    heroLine1: "Descubre cómo ven tu CV los expertos y sistemas de reclutamiento (ATS)",
+    heroLine2: "Mejóralo al instante sin registrarte, sin almacenar tu info y sin costo siempre.",
     placeholder: "Pega el texto de tu CV aquí o adjunta un PDF",
     attachPdf: "Adjuntar PDF",
-    targetRole: "Puesto al que aspiras (opcional)",
+    targetRole: "Puesto al que aspiras",
+    targetRoleOptional: "(Opcional)",
     btnAnalyze: "Analizar tu CV y recomendar mejoras",
     rateLimit: "Puedes analizar y mejorar tu CV hasta 7 veces cada hora",
     privacy: "Tu CV se analiza en línea por IA de frontera y se elimina de inmediato",
@@ -76,10 +78,12 @@ const UI = {
   en: {
     heroTitle: "Your next job starts with a great resume.",
     heroAccent: "100% anonymous professional AI analysis",
-    heroSub: "See how recruiters and applicant tracking systems (ATS) see your resume\nImprove it instantly\nNo sign-up · no data stored · no cost",
+    heroLine1: "See how recruiters and applicant tracking systems (ATS) see your resume",
+    heroLine2: "Improve it instantly — no sign-up, no data stored, always free.",
     placeholder: "Paste your resume text here or attach a PDF",
     attachPdf: "Attach PDF",
-    targetRole: "Target role (optional)",
+    targetRole: "Target role",
+    targetRoleOptional: "(Optional)",
     btnAnalyze: "Analyze your resume and suggest improvements",
     rateLimit: "You can analyze and improve your resume up to 7 times per hour",
     privacy: "Your resume is analyzed online by frontier AI and deleted immediately",
@@ -323,10 +327,9 @@ export function Analyzer({ lang, onLangDetected }: {
         <p className="text-sm sm:text-base text-accent font-medium hero-reveal-2">
           {t.heroAccent}
         </p>
-        <div className="text-sm text-ink-400 max-w-lg mx-auto leading-relaxed hero-reveal-3 text-center">
-          {t.heroSub.split("\n").map((line, i) => (
-            <span key={i} className="block">{line}</span>
-          ))}
+        <div className="text-sm text-ink-400 max-w-lg mx-auto leading-relaxed hero-reveal-3 text-center space-y-1">
+          <p>{t.heroLine1}</p>
+          <p>{t.heroLine2}</p>
         </div>
       </section>
 
@@ -400,12 +403,12 @@ export function Analyzer({ lang, onLangDetected }: {
           {/* Step 2: Target Role */}
           <div className="flex gap-3 items-center">
             <StepBadge n={2} />
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <input
                 type="text"
                 value={targetRole}
                 onChange={(e) => setTargetRole(e.target.value)}
-                placeholder={t.targetRole}
+                placeholder={`${t.targetRole} ${t.targetRoleOptional}`}
                 aria-label={t.targetRole}
                 maxLength={200}
                 className="w-full border border-ink-100 rounded-lg px-4 py-2.5 text-sm
@@ -695,7 +698,7 @@ export function Analyzer({ lang, onLangDetected }: {
           {/* Start over */}
           <div className="text-center">
             <button onClick={reset}
-                    className="text-sm text-ink-400 hover:text-ink-700 transition cursor-pointer">
+                    className="text-sm text-accent hover:text-accent-dim transition cursor-pointer">
               {t.tryAgain}
             </button>
           </div>

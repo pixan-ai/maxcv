@@ -1,11 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <defs>
-    <clipPath id="c">
-      <rect width="32" height="32"/>
-    </clipPath>
-  </defs>
-  <rect width="32" height="32" fill="#4938c5"/>
-  <g clip-path="url(#c)">
-    <polygon points="6.72,32 16,15.96 25.28,32" fill="white"/>
-  </g>
+  <rect width="32" height="32" rx="6" fill="oklch(50% 0.13 230)"/>
+  <polygon points="8,8 16,24 24,8" fill="none" stroke="white" stroke-width="3" stroke-linejoin="round"/>
 </svg>
