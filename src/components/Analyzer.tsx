@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { ResumeText } from "@/components/ResumeText";
 
-// ─── Types ─────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Types \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 type Improvement = {
   dimension: string;
   dimension_score: number;
@@ -31,57 +31,56 @@ type AnalysisResult = {
   improved_cv: { text: string; changes: string[] };
 };
 
-// ─── Bilingual strings ─────────────────────────────────────────────
+// \u2500\u2500\u2500 Bilingual strings \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 const UI = {
   es: {
-    heroTitle: "Tu próximo trabajo empieza con un gran CV.",
-    heroAccent: "Análisis profesional con IA 100% anónimo",
-    heroLine1: "Descubre cómo ven tu CV los expertos y sistemas de reclutamiento (ATS)",
-    heroLine2: "Mejóralo al instante sin registrarte, sin almacenar tu info y sin costo siempre.",
-    placeholder: "Pega el texto de tu CV aquí o adjunta un PDF",
+    heroTitle: "Tu pr\u00f3ximo trabajo empieza con un gran CV.",
+    heroAccent: "An\u00e1lisis profesional 100% an\u00f3nimo con IA de \u00faltima generaci\u00f3n",
+    heroLine1: "Descubre c\u00f3mo ven tu CV los expertos y sistemas de reclutamiento (ATS)",
+    heroLine2: "Mej\u00f3ralo al instante sin registrarte, sin almacenar tu info y sin costo siempre.",
+    placeholder: "Pega el texto de tu CV aqu\u00ed o adjunta un PDF",
     attachPdf: "Adjuntar PDF",
     targetRole: "Puesto al que aspiras",
     targetRoleOptional: "(Opcional)",
     btnAnalyze: "Analizar tu CV y recomendar mejoras",
     rateLimit: "Puedes analizar y mejorar tu CV hasta 7 veces cada hora",
-    privacy: "Tu CV se analiza en línea por IA de frontera y se elimina de inmediato",
+    privacy: "Tu CV se analiza en l\u00ednea por IA de frontera y se elimina de inmediato",
     analyzing: "Analizando tu CV...",
     uploadingPdf: "Subiendo tu PDF...",
     readingPdf: "Leyendo tu PDF...",
-    scoreMeta: "puntuación actual",
+    scoreMeta: "puntuaci\u00f3n actual",
     originalCvTitle: "Texto original de tu CV",
     targetRoleTitle: "Puesto al que aspiras",
-    analysisStepTitle: "Análisis de tu CV",
-    scoreSummaryTitle: "Score y resumen del análisis",
+    analysisStepTitle: "An\u00e1lisis de tu CV",
+    scoreSummaryTitle: "Score y resumen del an\u00e1lisis",
     strengthsTitle: "Lo que ya funciona bien",
     improvementsTitle: "Oportunidades de mejora",
     improvedStepTitle: "Tu nuevo CV mejorado (texto)",
     newTextTitle: "Nuevo texto (para copiar y pegar)",
     changesSubTitle: "Mejoras que aplicamos",
-    expandHint: "Expande cada sección para ver el detalle",
-    noteP1: "Revísalo y realiza las correcciones que consideres necesarias en tu CV.",
-    noteP2: "Si quieres, vuelve a subir el CV mejorado. Hasta 7 revisiones cada hora (ilimitadas por día).",
-    noteP3: "Sí, esto es gratis para ayudar a otros.",
-    noteP4: "Claude es IA y puede cometer errores. Por favor, verifica tu información antes de enviar tu CV.",
+    expandHint: "Expande cada secci\u00f3n para ver el detalle",
+    noteP1: "Rev\u00edsalo y realiza las correcciones que consideres necesarias en tu CV.",
+    noteP2: "Si quieres, vuelve a subir el CV mejorado. Hasta 7 revisiones cada hora (ilimitadas por d\u00eda).",
+    noteP3: "S\u00ed, esto es gratis para ayudar a otros.",
+    noteP4: "Claude es IA y puede cometer errores. Por favor, verifica tu informaci\u00f3n antes de enviar tu CV.",
     copy: "Copiar",
-    copied: "¡Copiado!",
-    donationText: "¿Te fue útil? Ayúdanos a mantenerlo gratis.",
-    donationBtn: "Invitar un café",
+    copied: "\u00a1Copiado!",
+    donationText: "\u00bfTe fue \u00fatil? Ay\u00fadanos a mantenerlo gratis.",
+    donationBtn: "Invitar un caf\u00e9",
     tryAgain: "Empezar de nuevo",
-    errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
-    errorLimit: "Límite alcanzado (7/hora). Intenta más tarde.",
-    errorConnection: "Error de conexión. Revisa tu internet.",
+    errorGeneric: "Algo sali\u00f3 mal. Int\u00e9ntalo de nuevo.",
+    errorLimit: "L\u00edmite alcanzado (7/hora). Intenta m\u00e1s tarde.",
+    errorConnection: "Error de conexi\u00f3n. Revisa tu internet.",
     errorLength: "Pega al menos 50 caracteres.",
     errorPdf: "No se pudo leer el PDF. Intenta pegando el texto directamente.",
     before: "Antes",
-    after: "Después",
-    howItWorks: "¿Cómo funciona?",
+    after: "Despu\u00e9s",
   },
   en: {
     heroTitle: "Your next job starts with a great resume.",
-    heroAccent: "100% anonymous professional AI analysis",
+    heroAccent: "100% anonymous professional analysis with cutting-edge AI",
     heroLine1: "See how recruiters and applicant tracking systems (ATS) see your resume",
-    heroLine2: "Improve it instantly — no sign-up, no data stored, always free.",
+    heroLine2: "Improve it instantly \u2014 no sign-up, no data stored, always free.",
     placeholder: "Paste your resume text here or attach a PDF",
     attachPdf: "Attach PDF",
     targetRole: "Target role",
@@ -119,7 +118,6 @@ const UI = {
     errorPdf: "Could not read the PDF. Try pasting the text directly.",
     before: "Before",
     after: "After",
-    howItWorks: "How does it work?",
   },
 };
 
@@ -132,7 +130,7 @@ const DIM_NAMES: Record<string, { en: string; es: string }> = {
   completeness: { en: "Completeness", es: "Completitud" },
 };
 
-// ─── Progress bar (asymptotic) ─────────────────────────────────────
+// \u2500\u2500\u2500 Progress bar (asymptotic) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function ProgressBar({ label, durationMs = 15000 }: { label: string; durationMs?: number }) {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
@@ -157,7 +155,7 @@ function ProgressBar({ label, durationMs = 15000 }: { label: string; durationMs?
   );
 }
 
-// ─── Step badge ────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Step badge \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function StepBadge({ n }: { n: number }) {
   return (
     <span className="flex-shrink-0 w-6 h-6 rounded-full bg-accent text-white text-xs
@@ -167,7 +165,7 @@ function StepBadge({ n }: { n: number }) {
   );
 }
 
-// ─── Collapsible section ───────────────────────────────────────────
+// \u2500\u2500\u2500 Collapsible section \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function Collapsible({ title, isOpen, onToggle, children, className: wrapperClass }: {
   title: string;
   isOpen: boolean;
@@ -186,7 +184,7 @@ function Collapsible({ title, isOpen, onToggle, children, className: wrapperClas
       >
         <span className="text-ink-400 text-sm transition-transform duration-200 leading-none"
               style={{ transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
-          ▶
+          \u25b6
         </span>
         {title}
       </button>
@@ -202,7 +200,7 @@ function Collapsible({ title, isOpen, onToggle, children, className: wrapperClas
   );
 }
 
-// ─── Main component ────────────────────────────────────────────────
+// \u2500\u2500\u2500 Main component \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 export function Analyzer({ lang, onLangDetected }: {
   lang: "en" | "es";
   onLangDetected: (l: "en" | "es") => void;
@@ -221,7 +219,6 @@ export function Analyzer({ lang, onLangDetected }: {
   const t = UI[lang];
   const ready = cvText.trim().length >= 50 && !loading && !parsing;
 
-  // ── PDF handling via backend ──
   const handleFile = useCallback(async (file: File) => {
     if (file.type !== "application/pdf") return;
     setParsing(true);
@@ -244,32 +241,26 @@ export function Analyzer({ lang, onLangDetected }: {
     }
   }, [t.errorPdf]);
 
-  // ── Analyze ──
   const analyze = async () => {
     if (!ready) return;
     setLoading(true);
     setError(null);
     setResult(null);
     setOpenSections(new Set());
-
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cvText, targetRole: targetRole || undefined }),
       });
-
       if (res.status === 429) { setError(t.errorLimit); return; }
       if (!res.ok) { setError(t.errorGeneric); return; }
-
       const data: AnalysisResult = await res.json();
       setResult(data);
       setOpenSections(new Set(["analysis", "improved", "newtext"]));
-
       if (data.detected_language === "en" || data.detected_language === "es") {
         onLangDetected(data.detected_language);
       }
-
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch {
       setError(t.errorConnection);
@@ -278,7 +269,6 @@ export function Analyzer({ lang, onLangDetected }: {
     }
   };
 
-  // ── Copy ──
   const copyToClipboard = async () => {
     if (!result) return;
     await navigator.clipboard.writeText(result.improved_cv.text);
@@ -306,24 +296,22 @@ export function Analyzer({ lang, onLangDetected }: {
 
   const dimName = (key: string) => DIM_NAMES[key]?.[lang] ?? key;
 
-  // ─── Render ──────────────────────────────────────────────────────
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Hero */}
-      <section className="text-center space-y-3 pt-4">
+      <section className="text-center space-y-2 pt-2">
         <h1 className="text-2xl sm:text-3xl font-medium text-ink-900 hero-reveal-1">
           {t.heroTitle}
         </h1>
         <p className="text-sm sm:text-base text-accent font-medium hero-reveal-2">
           {t.heroAccent}
         </p>
-        <div className="text-sm text-ink-400 max-w-lg mx-auto leading-relaxed hero-reveal-3 text-center space-y-1">
+        <div className="text-sm text-ink-400 max-w-lg mx-auto leading-relaxed hero-reveal-3 text-center space-y-0.5">
           <p>{t.heroLine1}</p>
           <p>{t.heroLine2}</p>
         </div>
       </section>
 
-      {/* Progress bar (above input) */}
       {(loading || parsing) && (
         <div aria-live="polite">
           <ProgressBar
@@ -333,24 +321,21 @@ export function Analyzer({ lang, onLangDetected }: {
         </div>
       )}
 
-      {/* Error */}
       {error && (
         <div role="alert" className="text-center py-3">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
 
-      {/* ═══════════ INPUT FORM ═══════════ */}
+      {/* INPUT FORM */}
       {!result && !loading && !parsing && (
-        <section className="space-y-5">
-          {/* Step 1: CV Input */}
+        <section className="space-y-4">
           <div className="flex gap-3 items-start">
             <div className="pt-3">
               <StepBadge n={1} />
             </div>
             <div className="flex-1">
               <div className="relative border border-ink-100 rounded-lg focus-within:border-accent transition">
-                {/* Attach PDF pill — top-right */}
                 <div className="absolute top-3 right-3 z-10">
                   <button
                     type="button"
@@ -383,14 +368,13 @@ export function Analyzer({ lang, onLangDetected }: {
                   placeholder={t.placeholder}
                   aria-label={t.placeholder}
                   aria-describedby="cv-hint"
-                  className="w-full min-h-[180px] p-4 pt-12 text-sm text-ink-700 bg-transparent
+                  className="w-full min-h-[160px] p-4 pt-12 text-sm text-ink-700 bg-transparent
                              placeholder:text-ink-300 resize-y focus:outline-none rounded-lg"
                 />
               </div>
             </div>
           </div>
 
-          {/* Step 2: Target Role */}
           <div className="flex gap-3 items-center">
             <StepBadge n={2} />
             <div className="flex-1">
@@ -408,7 +392,6 @@ export function Analyzer({ lang, onLangDetected }: {
             </div>
           </div>
 
-          {/* Step 3: CTA Button */}
           <div className="flex gap-3 items-center">
             <StepBadge n={3} />
             <div className="flex-1">
@@ -427,118 +410,72 @@ export function Analyzer({ lang, onLangDetected }: {
             </div>
           </div>
 
-          {/* Privacy + rate limit */}
           <div id="cv-hint" className="text-center space-y-1 pl-8">
             <p className="text-xs text-ink-300">{t.privacy}</p>
             <p className="text-xs text-ink-300">{t.rateLimit}</p>
           </div>
-
-          {/* Future sections placeholder */}
-          <div className="space-y-4 mt-8 pt-8 border-t border-ink-100">
-            <div className="text-center">
-              <p className="text-xs text-ink-300">{t.howItWorks}</p>
-            </div>
-          </div>
         </section>
       )}
 
-      {/* ═══════════ RESULTS ═══════════ */}
+      {/* RESULTS */}
       {result && (
         <div ref={resultsRef} className="space-y-3" aria-live="polite">
-
-          {/* Hint */}
           <p className="text-xs text-accent font-medium card-enter">
             {t.expandHint}
           </p>
 
-          {/* Step 1: Original CV text — collapsed */}
           <div className="card-enter">
             <div className="flex gap-3 items-center">
               <StepBadge n={1} />
               <div className="flex-1">
-                <Collapsible
-                  title={t.originalCvTitle}
-                  isOpen={openSections.has("original")}
-                  onToggle={() => toggleSection("original")}
-                >
-                  <div className="text-sm text-ink-500 whitespace-pre-wrap max-h-60 overflow-y-auto">
-                    {cvText}
-                  </div>
+                <Collapsible title={t.originalCvTitle} isOpen={openSections.has("original")} onToggle={() => toggleSection("original")}>
+                  <div className="text-sm text-ink-500 whitespace-pre-wrap max-h-60 overflow-y-auto">{cvText}</div>
                 </Collapsible>
               </div>
             </div>
           </div>
 
-          {/* Step 2: Target role — collapsed */}
           <div className="card-enter" style={{ animationDelay: "0.04s" }}>
             <div className="flex gap-3 items-center">
               <StepBadge n={2} />
               <div className="flex-1">
-                <Collapsible
-                  title={t.targetRoleTitle}
-                  isOpen={openSections.has("role")}
-                  onToggle={() => toggleSection("role")}
-                >
-                  <p className="text-sm text-ink-500">
-                    {targetRole || (lang === "es" ? "No especificado" : "Not specified")}
-                  </p>
+                <Collapsible title={t.targetRoleTitle} isOpen={openSections.has("role")} onToggle={() => toggleSection("role")}>
+                  <p className="text-sm text-ink-500">{targetRole || (lang === "es" ? "No especificado" : "Not specified")}</p>
                 </Collapsible>
               </div>
             </div>
           </div>
 
-          {/* Step 3: Analysis — expanded by default */}
           <div className="card-enter" style={{ animationDelay: "0.08s" }}>
             <div className="flex gap-3 items-center">
               <StepBadge n={3} />
               <div className="flex-1">
-                <Collapsible
-                  title={t.analysisStepTitle}
-                  isOpen={openSections.has("analysis")}
-                  onToggle={() => toggleSection("analysis")}
-                >
+                <Collapsible title={t.analysisStepTitle} isOpen={openSections.has("analysis")} onToggle={() => toggleSection("analysis")}>
                   <div className="space-y-4">
-                    {/* Discrete score */}
                     <div className="flex items-start justify-between">
-                      <h3 className="text-sm font-medium text-ink-900">
-                        {t.scoreSummaryTitle}
-                      </h3>
+                      <h3 className="text-sm font-medium text-ink-900">{t.scoreSummaryTitle}</h3>
                       <span className="font-[family-name:var(--font-mono)] text-[13px] text-ink-500 tracking-wide shrink-0 ml-4">
-                        {result.score.total}/100 — {t.scoreMeta}
+                        {result.score.total}/100 \u2014 {t.scoreMeta}
                       </span>
                     </div>
+                    <p className="text-sm text-ink-600 leading-relaxed">{result.score.summary}</p>
 
-                    {/* Summary */}
-                    <p className="text-sm text-ink-600 leading-relaxed">
-                      {result.score.summary}
-                    </p>
-
-                    {/* Strengths — collapsed, green background */}
                     {result.analysis.strengths.length > 0 && (
                       <div className="border border-positive/20 rounded-lg overflow-hidden bg-positive-ghost">
-                        <button
-                          type="button"
-                          onClick={() => toggleSection("strengths")}
-                          className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-ink-700
-                                     hover:bg-positive-ghost/80 transition cursor-pointer"
-                          aria-expanded={openSections.has("strengths")}
-                        >
+                        <button type="button" onClick={() => toggleSection("strengths")}
+                          className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-ink-700 hover:bg-positive-ghost/80 transition cursor-pointer"
+                          aria-expanded={openSections.has("strengths")}>
                           <span className="text-ink-400 text-sm transition-transform duration-200 leading-none"
-                                style={{ transform: openSections.has("strengths") ? "rotate(90deg)" : "rotate(0deg)" }}>
-                            ▶
-                          </span>
+                            style={{ transform: openSections.has("strengths") ? "rotate(90deg)" : "rotate(0deg)" }}>\u25b6</span>
                           {t.strengthsTitle}
                         </button>
-                        <div className="overflow-hidden transition-all duration-300 ease-in-out"
-                             style={{ maxHeight: openSections.has("strengths") ? "5000px" : "0" }}>
+                        <div className="overflow-hidden transition-all duration-300 ease-in-out" style={{ maxHeight: openSections.has("strengths") ? "5000px" : "0" }}>
                           <div className="px-4 pb-4 space-y-2">
                             {result.analysis.strengths.map((str, i) => (
                               <div key={i} className="border border-positive/20 rounded-lg p-3 bg-ink-000">
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-sm font-medium text-ink-700">{dimName(str.dimension)}</span>
-                                  <span className="font-[family-name:var(--font-mono)] text-[11px] text-positive tracking-wide">
-                                    {str.dimension_score}/100
-                                  </span>
+                                  <span className="font-[family-name:var(--font-mono)] text-[11px] text-positive tracking-wide">{str.dimension_score}/100</span>
                                 </div>
                                 <p className="text-sm text-ink-600">{str.detail}</p>
                               </div>
@@ -548,36 +485,25 @@ export function Analyzer({ lang, onLangDetected }: {
                       </div>
                     )}
 
-                    {/* Improvement opportunities — collapsed */}
                     {result.analysis.improvements.length > 0 && (
-                      <Collapsible
-                        title={t.improvementsTitle}
-                        isOpen={openSections.has("improvements")}
-                        onToggle={() => toggleSection("improvements")}
-                      >
+                      <Collapsible title={t.improvementsTitle} isOpen={openSections.has("improvements")} onToggle={() => toggleSection("improvements")}>
                         <div className="space-y-3 mt-1">
                           {result.analysis.improvements.map((imp, i) => (
                             <div key={i} className="border border-ink-100 rounded-lg p-3 space-y-2">
                               <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium text-ink-700">{dimName(imp.dimension)}</span>
-                                <span className="font-[family-name:var(--font-mono)] text-[11px] text-ink-400 tracking-wide uppercase">
-                                  {imp.dimension_score}/100
-                                </span>
+                                <span className="font-[family-name:var(--font-mono)] text-[11px] text-ink-400 tracking-wide uppercase">{imp.dimension_score}/100</span>
                               </div>
                               <p className="text-sm text-ink-600">{imp.issue}</p>
                               <p className="text-sm text-ink-500">{imp.suggestion}</p>
                               {imp.before && imp.after && (
                                 <div className="grid gap-2 text-xs">
                                   <div className="bg-ink-050 rounded-lg p-3">
-                                    <span className="font-[family-name:var(--font-mono)] text-ink-400 uppercase tracking-wide text-[11px]">
-                                      {t.before}
-                                    </span>
+                                    <span className="font-[family-name:var(--font-mono)] text-ink-400 uppercase tracking-wide text-[11px]">{t.before}</span>
                                     <p className="text-ink-500 mt-1">{imp.before}</p>
                                   </div>
                                   <div className="bg-positive-ghost rounded-lg p-3">
-                                    <span className="font-[family-name:var(--font-mono)] text-positive uppercase tracking-wide text-[11px]">
-                                      {t.after}
-                                    </span>
+                                    <span className="font-[family-name:var(--font-mono)] text-positive uppercase tracking-wide text-[11px]">{t.after}</span>
                                     <p className="text-ink-700 mt-1">{imp.after}</p>
                                   </div>
                                 </div>
@@ -593,75 +519,49 @@ export function Analyzer({ lang, onLangDetected }: {
             </div>
           </div>
 
-          {/* Step 4: Improved resume — expanded */}
           <div className="card-enter" style={{ animationDelay: "0.12s" }}>
             <div className="flex gap-3 items-center">
               <StepBadge n={4} />
               <div className="flex-1">
-                <Collapsible
-                  title={t.improvedStepTitle}
-                  isOpen={openSections.has("improved")}
-                  onToggle={() => toggleSection("improved")}
-                >
+                <Collapsible title={t.improvedStepTitle} isOpen={openSections.has("improved")} onToggle={() => toggleSection("improved")}>
                   <div className="space-y-3">
-                    {/* Changes applied — collapsed */}
                     {result.improved_cv.changes.length > 0 && (
-                      <Collapsible
-                        title={t.changesSubTitle}
-                        isOpen={openSections.has("changes")}
-                        onToggle={() => toggleSection("changes")}
-                      >
+                      <Collapsible title={t.changesSubTitle} isOpen={openSections.has("changes")} onToggle={() => toggleSection("changes")}>
                         <ul className="space-y-1 mt-1">
                           {result.improved_cv.changes.map((change, i) => (
                             <li key={i} className="flex gap-2 text-sm text-ink-500">
-                              <span className="text-positive shrink-0">+</span>
-                              {change}
+                              <span className="text-positive shrink-0">+</span>{change}
                             </li>
                           ))}
                         </ul>
                       </Collapsible>
                     )}
 
-                    {/* New text — collapsible, accent background, open by default */}
                     <div className="border border-accent/30 rounded-lg overflow-hidden bg-accent-ghost">
-                      <button
-                        type="button"
-                        onClick={() => toggleSection("newtext")}
-                        className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-accent
-                                   hover:bg-accent-ghost/80 transition cursor-pointer"
-                        aria-expanded={openSections.has("newtext")}
-                      >
+                      <button type="button" onClick={() => toggleSection("newtext")}
+                        className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-accent hover:bg-accent-ghost/80 transition cursor-pointer"
+                        aria-expanded={openSections.has("newtext")}>
                         <span className="text-accent/60 text-sm transition-transform duration-200 leading-none"
-                              style={{ transform: openSections.has("newtext") ? "rotate(90deg)" : "rotate(0deg)" }}>
-                          ▶
-                        </span>
+                          style={{ transform: openSections.has("newtext") ? "rotate(90deg)" : "rotate(0deg)" }}>\u25b6</span>
                         {t.newTextTitle}
                       </button>
-                      <div className="overflow-hidden transition-all duration-300 ease-in-out"
-                           style={{ maxHeight: openSections.has("newtext") ? "50000px" : "0" }}>
+                      <div className="overflow-hidden transition-all duration-300 ease-in-out" style={{ maxHeight: openSections.has("newtext") ? "50000px" : "0" }}>
                         <div className="px-4 pb-4">
                           <ResumeText text={result.improved_cv.text} />
                         </div>
                       </div>
                     </div>
 
-                    {/* Copy button below text box */}
                     <div className="flex justify-start">
-                      <button
-                        onClick={copyToClipboard}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-ink-200
-                                   text-sm text-ink-600 hover:border-accent hover:text-accent
-                                   transition cursor-pointer bg-ink-000"
-                      >
+                      <button onClick={copyToClipboard}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-ink-200 text-sm text-ink-600 hover:border-accent hover:text-accent transition cursor-pointer bg-ink-000">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round"
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                         {copied ? t.copied : t.copy}
                       </button>
                     </div>
 
-                    {/* 4-paragraph note */}
                     <div className="space-y-2">
                       <p className="text-xs text-ink-400 leading-relaxed">{t.noteP1}</p>
                       <p className="text-xs text-ink-400 leading-relaxed">{t.noteP2}</p>
@@ -674,34 +574,22 @@ export function Analyzer({ lang, onLangDetected }: {
             </div>
           </div>
 
-          {/* Donation CTA */}
-          <div className="text-center border border-ink-100 rounded-lg p-6 card-enter"
-               style={{ animationDelay: "0.18s" }}>
+          <div className="text-center border border-ink-100 rounded-lg p-6 card-enter" style={{ animationDelay: "0.18s" }}>
             <p className="text-sm text-ink-500 mb-3">{t.donationText}</p>
             <div className="flex justify-center gap-3">
               {process.env.NEXT_PUBLIC_STRIPE_DONATION_LINK && (
-                <a href={process.env.NEXT_PUBLIC_STRIPE_DONATION_LINK}
-                   target="_blank" rel="noopener noreferrer"
-                   className="bg-accent text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-accent-dim transition">
-                  {t.donationBtn}
-                </a>
+                <a href={process.env.NEXT_PUBLIC_STRIPE_DONATION_LINK} target="_blank" rel="noopener noreferrer"
+                  className="bg-accent text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-accent-dim transition">{t.donationBtn}</a>
               )}
               {process.env.NEXT_PUBLIC_PAYPAL_DONATION_LINK && (
-                <a href={process.env.NEXT_PUBLIC_PAYPAL_DONATION_LINK}
-                   target="_blank" rel="noopener noreferrer"
-                   className="border border-ink-100 px-5 py-2 rounded-lg text-sm text-ink-600 hover:border-ink-200 transition">
-                  PayPal
-                </a>
+                <a href={process.env.NEXT_PUBLIC_PAYPAL_DONATION_LINK} target="_blank" rel="noopener noreferrer"
+                  className="border border-ink-100 px-5 py-2 rounded-lg text-sm text-ink-600 hover:border-ink-200 transition">PayPal</a>
               )}
             </div>
           </div>
 
-          {/* Start over */}
           <div className="text-center">
-            <button onClick={reset}
-                    className="text-sm text-accent hover:text-accent-dim transition cursor-pointer">
-              {t.tryAgain}
-            </button>
+            <button onClick={reset} className="text-sm text-accent hover:text-accent-dim transition cursor-pointer">{t.tryAgain}</button>
           </div>
         </div>
       )}

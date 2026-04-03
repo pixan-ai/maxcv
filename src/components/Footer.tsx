@@ -2,14 +2,14 @@ import Link from "next/link";
 
 const LINKS = {
   es: {
-    tagline: "Análisis con Claude Opus 4.6 · Anthropic",
+    tagline: "An\u00e1lisis y optimizaci\u00f3n con Claude Opus 4.6 \u00b7 Anthropic",
     security: "Seguridad",
-    howItWorks: "¿Cómo funciona?",
+    howItWorks: "\u00bfC\u00f3mo funciona?",
     donate: "Donar",
-    about: "¿Quiénes somos?",
+    about: "\u00bfQui\u00e9nes somos?",
   },
   en: {
-    tagline: "Analysis powered by Claude Opus 4.6 · Anthropic",
+    tagline: "Analysis & optimization by Claude Opus 4.6 \u00b7 Anthropic",
     security: "Security",
     howItWorks: "How it works",
     donate: "Donate",

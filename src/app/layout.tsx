@@ -7,7 +7,7 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "maxcv — AI Resume Analyzer & Improver",
+  title: "\u25BC maxcv - AI Resume Improver",
   description:
     "Analyze and improve your resume with AI. Score across 6 dimensions + complete rewrite. Free, no sign-up.",
   icons: {
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     apple: "/favicon.svg",
   },
   openGraph: {
-    title: "maxcv — AI Resume Analyzer & Improver",
+    title: "maxcv - AI Resume Improver",
     description:
       "Analyze and improve your resume with AI. Score across 6 dimensions + complete rewrite. Free, no sign-up.",
     url: "https://maxcv.org",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "maxcv — AI Resume Analyzer & Improver",
+    title: "maxcv - AI Resume Improver",
     description:
       "Free AI-powered resume analyzer. Score + rewrite. No sign-up.",
   },
