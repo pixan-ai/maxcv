@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { ResumeText } from "@/components/ResumeText";
 
-// \u2500\u2500\u2500 Types \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// Types
 type Improvement = {
   dimension: string;
   dimension_score: number;
@@ -31,56 +31,54 @@ type AnalysisResult = {
   improved_cv: { text: string; changes: string[] };
 };
 
-// \u2500\u2500\u2500 Bilingual strings \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 const UI = {
   es: {
-    heroTitle: "Tu pr\u00f3ximo trabajo empieza con un gran CV.",
-    heroAccent: "An\u00e1lisis profesional 100% an\u00f3nimo con IA de \u00faltima generaci\u00f3n",
-    heroLine1: "Descubre c\u00f3mo ven tu CV los expertos y sistemas de reclutamiento (ATS)",
-    heroLine2: "Mej\u00f3ralo al instante sin registrarte, sin almacenar tu info y sin costo siempre.",
-    placeholder: "Pega el texto de tu CV aqu\u00ed o adjunta un PDF",
+    heroTitle: "Tu próximo trabajo empieza con un gran CV.",
+    heroAccent: "Análisis profesional 100% anónimo con IA de última generación",
+    heroLine1: "Descubre cómo ven tu CV los expertos y sistemas de reclutamiento (ATS)",
+    heroLine2: "Mejóralo al instante sin registrarte, sin almacenar tu info y sin costo siempre.",
+    placeholder: "Pega el texto de tu CV aquí o adjunta un PDF",
     attachPdf: "Adjuntar PDF",
     targetRole: "Puesto al que aspiras",
     targetRoleOptional: "(Opcional)",
     btnAnalyze: "Analizar tu CV y recomendar mejoras",
     rateLimit: "Puedes analizar y mejorar tu CV hasta 7 veces cada hora",
-    privacy: "Tu CV se analiza en l\u00ednea por IA de frontera y se elimina de inmediato",
+    privacy: "Tu CV se analiza en línea por IA de frontera y se elimina de inmediato",
     analyzing: "Analizando tu CV...",
-    uploadingPdf: "Subiendo tu PDF...",
-    readingPdf: "Leyendo tu PDF...",
-    scoreMeta: "puntuaci\u00f3n actual",
+    uploadingPdf: "Cargando tu PDF para extraer el texto...",
+    scoreMeta: "puntuación actual",
     originalCvTitle: "Texto original de tu CV",
     targetRoleTitle: "Puesto al que aspiras",
-    analysisStepTitle: "An\u00e1lisis de tu CV",
-    scoreSummaryTitle: "Score y resumen del an\u00e1lisis",
+    analysisStepTitle: "Análisis de tu CV",
+    scoreSummaryTitle: "Score y resumen del análisis",
     strengthsTitle: "Lo que ya funciona bien",
     improvementsTitle: "Oportunidades de mejora",
     improvedStepTitle: "Tu nuevo CV mejorado (texto)",
     newTextTitle: "Nuevo texto (para copiar y pegar)",
     changesSubTitle: "Mejoras que aplicamos",
-    expandHint: "Expande cada secci\u00f3n para ver el detalle",
-    noteP1: "Rev\u00edsalo y realiza las correcciones que consideres necesarias en tu CV.",
-    noteP2: "Si quieres, vuelve a subir el CV mejorado. Hasta 7 revisiones cada hora (ilimitadas por d\u00eda).",
-    noteP3: "S\u00ed, esto es gratis para ayudar a otros.",
-    noteP4: "Claude es IA y puede cometer errores. Por favor, verifica tu informaci\u00f3n antes de enviar tu CV.",
+    expandHint: "Expande cada sección para ver el detalle",
+    noteP1: "Revísalo y realiza las correcciones que consideres necesarias en tu CV.",
+    noteP2: "Hasta 7 revisiones de CV cada hora (ilimitadas por día).",
+    noteP3: "Sí, esto es gratis para ayudar a otros.",
+    noteP4: "Claude es IA y puede cometer errores. Por favor, verifica tu información antes de enviar tu CV.",
     copy: "Copiar",
-    copied: "\u00a1Copiado!",
-    donationText: "\u00bfTe fue \u00fatil? Ay\u00fadanos a mantenerlo gratis.",
-    donationBtn: "Invitar un caf\u00e9",
+    copied: "¡Copiado!",
+    donationText: "¿Te fue útil? Ayúdanos a mantenerlo gratis.",
+    donationBtn: "Invitar un café",
     tryAgain: "Empezar de nuevo",
-    errorGeneric: "Algo sali\u00f3 mal. Int\u00e9ntalo de nuevo.",
-    errorLimit: "L\u00edmite alcanzado (7/hora). Intenta m\u00e1s tarde.",
-    errorConnection: "Error de conexi\u00f3n. Revisa tu internet.",
+    errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
+    errorLimit: "Límite alcanzado (7/hora). Intenta más tarde.",
+    errorConnection: "Error de conexión. Revisa tu internet.",
     errorLength: "Pega al menos 50 caracteres.",
     errorPdf: "No se pudo leer el PDF. Intenta pegando el texto directamente.",
     before: "Antes",
-    after: "Despu\u00e9s",
+    after: "Después",
   },
   en: {
     heroTitle: "Your next job starts with a great resume.",
     heroAccent: "100% anonymous professional analysis with cutting-edge AI",
     heroLine1: "See how recruiters and applicant tracking systems (ATS) see your resume",
-    heroLine2: "Improve it instantly \u2014 no sign-up, no data stored, always free.",
+    heroLine2: "Improve it instantly — no sign-up, no data stored, always free.",
     placeholder: "Paste your resume text here or attach a PDF",
     attachPdf: "Attach PDF",
     targetRole: "Target role",
@@ -89,8 +87,7 @@ const UI = {
     rateLimit: "You can analyze and improve your resume up to 7 times per hour",
     privacy: "Your resume is analyzed online by frontier AI and deleted immediately",
     analyzing: "Analyzing your resume...",
-    uploadingPdf: "Uploading your PDF...",
-    readingPdf: "Reading your PDF...",
+    uploadingPdf: "Loading your PDF to extract text...",
     scoreMeta: "current score",
     originalCvTitle: "Your original resume text",
     targetRoleTitle: "Target role",
@@ -103,7 +100,7 @@ const UI = {
     changesSubTitle: "Improvements we applied",
     expandHint: "Expand each section for details",
     noteP1: "Review it and make any corrections you see fit in your resume.",
-    noteP2: "Want to refine further? Upload the improved resume again. Up to 7 reviews per hour (unlimited per day).",
+    noteP2: "Up to 7 resume reviews per hour (unlimited per day).",
     noteP3: "Yes, this is free to help others.",
     noteP4: "Claude is AI and can make mistakes. Please verify your information before sending your resume.",
     copy: "Copy",
@@ -130,7 +127,8 @@ const DIM_NAMES: Record<string, { en: string; es: string }> = {
   completeness: { en: "Completeness", es: "Completitud" },
 };
 
-// \u2500\u2500\u2500 Progress bar (asymptotic) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+const ARROW = "▶";
+
 function ProgressBar({ label, durationMs = 15000 }: { label: string; durationMs?: number }) {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
@@ -141,70 +139,42 @@ function ProgressBar({ label, durationMs = 15000 }: { label: string; durationMs?
     }, 100);
     return () => clearInterval(interval);
   }, [durationMs]);
-
   return (
     <div className="w-full max-w-sm mx-auto text-center py-8">
       <div className="h-1 bg-ink-100 rounded-full overflow-hidden mb-3">
-        <div
-          className="h-full bg-accent rounded-full transition-all duration-300 ease-out"
-          style={{ width: `${progress}%` }}
-        />
+        <div className="h-full bg-accent rounded-full transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
       </div>
       <p className="text-sm text-ink-400">{label}</p>
     </div>
   );
 }
 
-// \u2500\u2500\u2500 Step badge \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function StepBadge({ n }: { n: number }) {
   return (
-    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-accent text-white text-xs
-                     font-medium flex items-center justify-center">
-      {n}
-    </span>
+    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-accent text-white text-xs font-medium flex items-center justify-center">{n}</span>
   );
 }
 
-// \u2500\u2500\u2500 Collapsible section \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function Collapsible({ title, isOpen, onToggle, children, className: wrapperClass }: {
-  title: string;
-  isOpen: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-  className?: string;
+  title: string; isOpen: boolean; onToggle: () => void; children: React.ReactNode; className?: string;
 }) {
   return (
     <div className={`border border-ink-100 rounded-lg overflow-hidden ${wrapperClass ?? ""}`}>
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-ink-700
-                   hover:bg-ink-050 transition cursor-pointer"
-        aria-expanded={isOpen}
-      >
+      <button type="button" onClick={onToggle}
+        className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-ink-700 hover:bg-ink-050 transition cursor-pointer"
+        aria-expanded={isOpen}>
         <span className="text-ink-400 text-sm transition-transform duration-200 leading-none"
-              style={{ transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
-          \u25b6
-        </span>
+          style={{ transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>{ARROW}</span>
         {title}
       </button>
-      <div
-        className="overflow-hidden transition-all duration-300 ease-in-out"
-        style={{ maxHeight: isOpen ? "5000px" : "0" }}
-      >
-        <div className="px-4 pb-4">
-          {children}
-        </div>
+      <div className="overflow-hidden transition-all duration-300 ease-in-out" style={{ maxHeight: isOpen ? "5000px" : "0" }}>
+        <div className="px-4 pb-4">{children}</div>
       </div>
     </div>
   );
 }
 
-// \u2500\u2500\u2500 Main component \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-export function Analyzer({ lang, onLangDetected }: {
-  lang: "en" | "es";
-  onLangDetected: (l: "en" | "es") => void;
-}) {
+export function Analyzer({ lang, onLangDetected }: { lang: "en" | "es"; onLangDetected: (l: "en" | "es") => void; }) {
   const [cvText, setCvText] = useState("");
   const [targetRole, setTargetRole] = useState("");
   const [loading, setLoading] = useState(false);
@@ -218,39 +188,26 @@ export function Analyzer({ lang, onLangDetected }: {
 
   const t = UI[lang];
   const ready = cvText.trim().length >= 50 && !loading && !parsing;
+  const hasText = cvText.trim().length > 0;
 
   const handleFile = useCallback(async (file: File) => {
     if (file.type !== "application/pdf") return;
-    setParsing(true);
-    setError(null);
+    setParsing(true); setError(null);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      const formData = new FormData(); formData.append("file", file);
       const res = await fetch("/api/parse", { method: "POST", body: formData });
       if (!res.ok) { setError(t.errorPdf); return; }
       const data = await res.json();
-      if (data.text && data.text.trim().length > 10) {
-        setCvText(data.text);
-      } else {
-        setError(t.errorPdf);
-      }
-    } catch {
-      setError(t.errorPdf);
-    } finally {
-      setParsing(false);
-    }
+      if (data.text && data.text.trim().length > 10) { setCvText(data.text); } else { setError(t.errorPdf); }
+    } catch { setError(t.errorPdf); } finally { setParsing(false); }
   }, [t.errorPdf]);
 
   const analyze = async () => {
     if (!ready) return;
-    setLoading(true);
-    setError(null);
-    setResult(null);
-    setOpenSections(new Set());
+    setLoading(true); setError(null); setResult(null); setOpenSections(new Set());
     try {
       const res = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cvText, targetRole: targetRole || undefined }),
       });
       if (res.status === 429) { setError(t.errorLimit); return; }
@@ -258,54 +215,30 @@ export function Analyzer({ lang, onLangDetected }: {
       const data: AnalysisResult = await res.json();
       setResult(data);
       setOpenSections(new Set(["analysis", "improved", "newtext"]));
-      if (data.detected_language === "en" || data.detected_language === "es") {
-        onLangDetected(data.detected_language);
-      }
+      if (data.detected_language === "en" || data.detected_language === "es") { onLangDetected(data.detected_language); }
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    } catch {
-      setError(t.errorConnection);
-    } finally {
-      setLoading(false);
-    }
+    } catch { setError(t.errorConnection); } finally { setLoading(false); }
   };
 
   const copyToClipboard = async () => {
     if (!result) return;
     await navigator.clipboard.writeText(result.improved_cv.text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied(true); setTimeout(() => setCopied(false), 2000);
   };
 
-  const reset = () => {
-    setCvText("");
-    setTargetRole("");
-    setResult(null);
-    setError(null);
-    setCopied(false);
-    setOpenSections(new Set());
-  };
+  const reset = () => { setCvText(""); setTargetRole(""); setResult(null); setError(null); setCopied(false); setOpenSections(new Set()); };
 
   const toggleSection = (id: string) => {
-    setOpenSections(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setOpenSections(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   };
 
   const dimName = (key: string) => DIM_NAMES[key]?.[lang] ?? key;
 
   return (
     <div className="space-y-6">
-      {/* Hero */}
       <section className="text-center space-y-2 pt-2">
-        <h1 className="text-2xl sm:text-3xl font-medium text-ink-900 hero-reveal-1">
-          {t.heroTitle}
-        </h1>
-        <p className="text-sm sm:text-base text-accent font-medium hero-reveal-2">
-          {t.heroAccent}
-        </p>
+        <h1 className="text-2xl sm:text-3xl font-medium text-ink-900 hero-reveal-1">{t.heroTitle}</h1>
+        <p className="text-sm sm:text-base text-accent font-medium hero-reveal-2">{t.heroAccent}</p>
         <div className="text-sm text-ink-400 max-w-lg mx-auto leading-relaxed hero-reveal-3 text-center space-y-0.5">
           <p>{t.heroLine1}</p>
           <p>{t.heroLine2}</p>
@@ -314,63 +247,32 @@ export function Analyzer({ lang, onLangDetected }: {
 
       {(loading || parsing) && (
         <div aria-live="polite">
-          <ProgressBar
-            label={parsing ? t.uploadingPdf : t.analyzing}
-            durationMs={parsing ? 8000 : 30000}
-          />
+          <ProgressBar label={parsing ? t.uploadingPdf : t.analyzing} durationMs={parsing ? 8000 : 30000} />
         </div>
       )}
 
-      {error && (
-        <div role="alert" className="text-center py-3">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
-      )}
+      {error && (<div role="alert" className="text-center py-3"><p className="text-sm text-red-600">{error}</p></div>)}
 
-      {/* INPUT FORM */}
       {!result && !loading && !parsing && (
         <section className="space-y-4">
           <div className="flex gap-3 items-start">
-            <div className="pt-3">
-              <StepBadge n={1} />
-            </div>
+            <div className="pt-3"><StepBadge n={1} /></div>
             <div className="flex-1">
-              <div className="relative border border-ink-100 rounded-lg focus-within:border-accent transition">
+              <div className={`relative border border-ink-100 rounded-lg focus-within:border-accent transition mx-auto ${hasText ? "max-w-full" : "max-w-[70%] sm:max-w-full"}`}>
                 <div className="absolute top-3 right-3 z-10">
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-ink-200
-                               text-xs font-medium text-ink-600 hover:border-accent hover:text-accent
-                               transition cursor-pointer bg-ink-000"
-                  >
+                  <button type="button" onClick={() => fileRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-ink-200 text-xs font-medium text-ink-600 hover:border-accent hover:text-accent transition cursor-pointer bg-ink-000">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round"
-                        d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
                     </svg>
                     {t.attachPdf}
                   </button>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept=".pdf"
-                    aria-label="Upload PDF"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFile(file);
-                    }}
-                  />
+                  <input ref={fileRef} type="file" accept=".pdf" aria-label="Upload PDF" className="hidden"
+                    onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFile(file); }} />
                 </div>
-                <textarea
-                  value={cvText}
-                  onChange={(e) => setCvText(e.target.value)}
-                  placeholder={t.placeholder}
-                  aria-label={t.placeholder}
-                  aria-describedby="cv-hint"
-                  className="w-full min-h-[160px] p-4 pt-12 text-sm text-ink-700 bg-transparent
-                             placeholder:text-ink-300 resize-y focus:outline-none rounded-lg"
-                />
+                <textarea value={cvText} onChange={(e) => setCvText(e.target.value)}
+                  placeholder={t.placeholder} aria-label={t.placeholder} aria-describedby="cv-hint"
+                  className="w-full min-h-[120px] p-4 pt-12 text-sm text-ink-700 bg-transparent placeholder:text-ink-300 resize-y focus:outline-none rounded-lg" />
               </div>
             </div>
           </div>
@@ -378,33 +280,17 @@ export function Analyzer({ lang, onLangDetected }: {
           <div className="flex gap-3 items-center">
             <StepBadge n={2} />
             <div className="flex-1">
-              <input
-                type="text"
-                value={targetRole}
-                onChange={(e) => setTargetRole(e.target.value)}
-                placeholder={`${t.targetRole} ${t.targetRoleOptional}`}
-                aria-label={t.targetRole}
-                maxLength={200}
-                className="w-full border border-ink-100 rounded-lg px-4 py-2.5 text-sm
-                           text-ink-700 placeholder:text-ink-300 focus:outline-none
-                           focus:border-accent transition"
-              />
+              <input type="text" value={targetRole} onChange={(e) => setTargetRole(e.target.value)}
+                placeholder={`${t.targetRole} ${t.targetRoleOptional}`} aria-label={t.targetRole} maxLength={200}
+                className="w-full border border-ink-100 rounded-lg px-4 py-2.5 text-sm text-ink-700 placeholder:text-ink-300 focus:outline-none focus:border-accent transition" />
             </div>
           </div>
 
           <div className="flex gap-3 items-center">
             <StepBadge n={3} />
             <div className="flex-1">
-              <button
-                onClick={analyze}
-                disabled={!ready}
-                aria-disabled={!ready}
-                className={`w-full py-3 rounded-lg text-sm font-medium transition cursor-pointer ${
-                  ready
-                    ? "bg-accent text-white hover:bg-accent-dim soft-pulse"
-                    : "bg-ink-100 text-ink-300 cursor-not-allowed"
-                }`}
-              >
+              <button onClick={analyze} disabled={!ready} aria-disabled={!ready}
+                className={`w-full py-3 rounded-lg text-sm font-medium transition cursor-pointer ${ready ? "bg-accent text-white hover:bg-accent-dim soft-pulse" : "bg-ink-100 text-ink-300 cursor-not-allowed"}`}>
                 {t.btnAnalyze}
               </button>
             </div>
@@ -417,16 +303,12 @@ export function Analyzer({ lang, onLangDetected }: {
         </section>
       )}
 
-      {/* RESULTS */}
       {result && (
         <div ref={resultsRef} className="space-y-3" aria-live="polite">
-          <p className="text-xs text-accent font-medium card-enter">
-            {t.expandHint}
-          </p>
+          <p className="text-xs text-accent font-medium card-enter">{t.expandHint}</p>
 
           <div className="card-enter">
-            <div className="flex gap-3 items-center">
-              <StepBadge n={1} />
+            <div className="flex gap-3 items-center"><StepBadge n={1} />
               <div className="flex-1">
                 <Collapsible title={t.originalCvTitle} isOpen={openSections.has("original")} onToggle={() => toggleSection("original")}>
                   <div className="text-sm text-ink-500 whitespace-pre-wrap max-h-60 overflow-y-auto">{cvText}</div>
@@ -436,8 +318,7 @@ export function Analyzer({ lang, onLangDetected }: {
           </div>
 
           <div className="card-enter" style={{ animationDelay: "0.04s" }}>
-            <div className="flex gap-3 items-center">
-              <StepBadge n={2} />
+            <div className="flex gap-3 items-center"><StepBadge n={2} />
               <div className="flex-1">
                 <Collapsible title={t.targetRoleTitle} isOpen={openSections.has("role")} onToggle={() => toggleSection("role")}>
                   <p className="text-sm text-ink-500">{targetRole || (lang === "es" ? "No especificado" : "Not specified")}</p>
@@ -447,16 +328,13 @@ export function Analyzer({ lang, onLangDetected }: {
           </div>
 
           <div className="card-enter" style={{ animationDelay: "0.08s" }}>
-            <div className="flex gap-3 items-center">
-              <StepBadge n={3} />
+            <div className="flex gap-3 items-center"><StepBadge n={3} />
               <div className="flex-1">
                 <Collapsible title={t.analysisStepTitle} isOpen={openSections.has("analysis")} onToggle={() => toggleSection("analysis")}>
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
                       <h3 className="text-sm font-medium text-ink-900">{t.scoreSummaryTitle}</h3>
-                      <span className="font-[family-name:var(--font-mono)] text-[13px] text-ink-500 tracking-wide shrink-0 ml-4">
-                        {result.score.total}/100 \u2014 {t.scoreMeta}
-                      </span>
+                      <span className="font-[family-name:var(--font-mono)] text-[13px] text-ink-500 tracking-wide shrink-0 ml-4">{result.score.total}/100 — {t.scoreMeta}</span>
                     </div>
                     <p className="text-sm text-ink-600 leading-relaxed">{result.score.summary}</p>
 
@@ -466,7 +344,7 @@ export function Analyzer({ lang, onLangDetected }: {
                           className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-ink-700 hover:bg-positive-ghost/80 transition cursor-pointer"
                           aria-expanded={openSections.has("strengths")}>
                           <span className="text-ink-400 text-sm transition-transform duration-200 leading-none"
-                            style={{ transform: openSections.has("strengths") ? "rotate(90deg)" : "rotate(0deg)" }}>\u25b6</span>
+                            style={{ transform: openSections.has("strengths") ? "rotate(90deg)" : "rotate(0deg)" }}>{ARROW}</span>
                           {t.strengthsTitle}
                         </button>
                         <div className="overflow-hidden transition-all duration-300 ease-in-out" style={{ maxHeight: openSections.has("strengths") ? "5000px" : "0" }}>
@@ -520,8 +398,7 @@ export function Analyzer({ lang, onLangDetected }: {
           </div>
 
           <div className="card-enter" style={{ animationDelay: "0.12s" }}>
-            <div className="flex gap-3 items-center">
-              <StepBadge n={4} />
+            <div className="flex gap-3 items-center"><StepBadge n={4} />
               <div className="flex-1">
                 <Collapsible title={t.improvedStepTitle} isOpen={openSections.has("improved")} onToggle={() => toggleSection("improved")}>
                   <div className="space-y-3">
@@ -529,9 +406,7 @@ export function Analyzer({ lang, onLangDetected }: {
                       <Collapsible title={t.changesSubTitle} isOpen={openSections.has("changes")} onToggle={() => toggleSection("changes")}>
                         <ul className="space-y-1 mt-1">
                           {result.improved_cv.changes.map((change, i) => (
-                            <li key={i} className="flex gap-2 text-sm text-ink-500">
-                              <span className="text-positive shrink-0">+</span>{change}
-                            </li>
+                            <li key={i} className="flex gap-2 text-sm text-ink-500"><span className="text-positive shrink-0">+</span>{change}</li>
                           ))}
                         </ul>
                       </Collapsible>
@@ -542,24 +417,21 @@ export function Analyzer({ lang, onLangDetected }: {
                         className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-accent hover:bg-accent-ghost/80 transition cursor-pointer"
                         aria-expanded={openSections.has("newtext")}>
                         <span className="text-accent/60 text-sm transition-transform duration-200 leading-none"
-                          style={{ transform: openSections.has("newtext") ? "rotate(90deg)" : "rotate(0deg)" }}>\u25b6</span>
+                          style={{ transform: openSections.has("newtext") ? "rotate(90deg)" : "rotate(0deg)" }}>{ARROW}</span>
                         {t.newTextTitle}
                       </button>
                       <div className="overflow-hidden transition-all duration-300 ease-in-out" style={{ maxHeight: openSections.has("newtext") ? "50000px" : "0" }}>
-                        <div className="px-4 pb-4">
+                        <div className="px-4 pb-4 space-y-3">
                           <ResumeText text={result.improved_cv.text} />
+                          <button onClick={copyToClipboard}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-accent/30 text-sm text-accent hover:bg-accent/5 transition cursor-pointer">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            {copied ? t.copied : t.copy}
+                          </button>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="flex justify-start">
-                      <button onClick={copyToClipboard}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-ink-200 text-sm text-ink-600 hover:border-accent hover:text-accent transition cursor-pointer bg-ink-000">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        {copied ? t.copied : t.copy}
-                      </button>
                     </div>
 
                     <div className="space-y-2">
