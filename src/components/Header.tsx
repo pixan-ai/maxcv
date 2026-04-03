@@ -14,8 +14,8 @@ export function Header({ lang, onToggleLang }: {
             className="w-5 h-5"
             aria-hidden="true"
           >
-            <rect width="32" height="32" rx="6" fill="currentColor" className="text-accent" />
-            <polygon points="8,8 16,24 24,8" fill="none" stroke="white" strokeWidth="3" strokeLinejoin="round" />
+            <rect width="32" height="32" rx="4" fill="currentColor" className="text-accent" />
+            <polygon points="6,8 26,8 16,26" fill="white" />
           </svg>
           <span className="font-[family-name:var(--font-geist)] text-lg font-medium leading-none text-ink-900">
             maxcv

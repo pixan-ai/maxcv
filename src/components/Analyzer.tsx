@@ -59,10 +59,12 @@ const UI = {
     newTextTitle: "Nuevo texto (para copiar y pegar)",
     changesSubTitle: "Mejoras que aplicamos",
     expandHint: "Expande cada sección para ver el detalle",
-    improvedNote: "Revísalo y realiza las correcciones que consideres necesarias en tu documento. Si quieres, vuélvelo a subir — puedes hacer 7 revisiones cada hora, ilimitadas por día.",
+    noteP1: "Revísalo y realiza las correcciones que consideres necesarias en tu CV.",
+    noteP2: "Si quieres, vuelve a subir el CV mejorado. Hasta 7 revisiones cada hora (ilimitadas por día).",
+    noteP3: "Sí, esto es gratis para ayudar a otros.",
+    noteP4: "Claude es IA y puede cometer errores. Por favor, verifica tu información antes de enviar tu CV.",
     copy: "Copiar",
     copied: "¡Copiado!",
-    downloadWord: "Descargar para Word",
     donationText: "¿Te fue útil? Ayúdanos a mantenerlo gratis.",
     donationBtn: "Invitar un café",
     tryAgain: "Empezar de nuevo",
@@ -101,10 +103,12 @@ const UI = {
     newTextTitle: "New text (copy and paste)",
     changesSubTitle: "Improvements we applied",
     expandHint: "Expand each section for details",
-    improvedNote: "Review it and make any corrections you see fit. Want to refine further? Upload it again — 7 reviews per hour, unlimited per day.",
+    noteP1: "Review it and make any corrections you see fit in your resume.",
+    noteP2: "Want to refine further? Upload the improved resume again. Up to 7 reviews per hour (unlimited per day).",
+    noteP3: "Yes, this is free to help others.",
+    noteP4: "Claude is AI and can make mistakes. Please verify your information before sending your resume.",
     copy: "Copy",
     copied: "Copied!",
-    downloadWord: "Download for Word",
     donationText: "Found this useful? Help us keep it free.",
     donationBtn: "Buy us a coffee",
     tryAgain: "Start over",
@@ -282,20 +286,6 @@ export function Analyzer({ lang, onLangDetected }: {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const downloadForWord = () => {
-    if (!result) return;
-    const bom = "\uFEFF";
-    const blob = new Blob([bom + result.improved_cv.text], {
-      type: "text/plain;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "resume-maxcv.txt";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   const reset = () => {
     setCvText("");
     setTargetRole("");
@@ -403,7 +393,7 @@ export function Analyzer({ lang, onLangDetected }: {
           {/* Step 2: Target Role */}
           <div className="flex gap-3 items-center">
             <StepBadge n={2} />
-            <div className="flex-1 relative">
+            <div className="flex-1">
               <input
                 type="text"
                 value={targetRole}
@@ -613,7 +603,7 @@ export function Analyzer({ lang, onLangDetected }: {
                   isOpen={openSections.has("improved")}
                   onToggle={() => toggleSection("improved")}
                 >
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {/* Changes applied — collapsed */}
                     {result.improved_cv.changes.length > 0 && (
                       <Collapsible
@@ -632,41 +622,52 @@ export function Analyzer({ lang, onLangDetected }: {
                       </Collapsible>
                     )}
 
-                    {/* New text — always visible, accent background */}
-                    <div className="border border-accent/30 rounded-lg p-4 sm:p-6 bg-accent-ghost">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium text-accent">
-                          {t.newTextTitle}
-                        </h4>
-                        <button
-                          onClick={copyToClipboard}
-                          className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-ink-200
-                                     text-xs text-ink-500 hover:border-accent hover:text-accent
-                                     transition cursor-pointer bg-ink-000"
-                        >
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round"
-                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                          {copied ? t.copied : t.copy}
-                        </button>
+                    {/* New text — collapsible, accent background */}
+                    <div className="border border-accent/30 rounded-lg overflow-hidden bg-accent-ghost">
+                      <button
+                        type="button"
+                        onClick={() => toggleSection("newtext")}
+                        className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-accent
+                                   hover:bg-accent-ghost/80 transition cursor-pointer"
+                        aria-expanded={openSections.has("newtext")}
+                      >
+                        <span className="text-accent/60 text-sm transition-transform duration-200 leading-none"
+                              style={{ transform: openSections.has("newtext") ? "rotate(90deg)" : "rotate(0deg)" }}>
+                          ▶
+                        </span>
+                        {t.newTextTitle}
+                      </button>
+                      <div className="overflow-hidden transition-all duration-300 ease-in-out"
+                           style={{ maxHeight: openSections.has("newtext") ? "50000px" : "0" }}>
+                        <div className="px-4 pb-4">
+                          <ResumeText text={result.improved_cv.text} />
+                        </div>
                       </div>
-                      <ResumeText text={result.improved_cv.text} />
                     </div>
 
-                    {/* Download button */}
-                    <div className="flex gap-2">
+                    {/* Copy button below text box */}
+                    <div className="flex justify-start">
                       <button
-                        onClick={downloadForWord}
-                        className="border border-ink-100 rounded-lg px-4 py-2 text-sm text-ink-600
-                                   hover:border-ink-200 transition cursor-pointer"
+                        onClick={copyToClipboard}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-ink-200
+                                   text-sm text-ink-600 hover:border-accent hover:text-accent
+                                   transition cursor-pointer bg-ink-000"
                       >
-                        {t.downloadWord}
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        {copied ? t.copied : t.copy}
                       </button>
                     </div>
 
-                    {/* Resubmit note */}
-                    <p className="text-xs text-ink-400 leading-relaxed">{t.improvedNote}</p>
+                    {/* 4-paragraph note */}
+                    <div className="space-y-2">
+                      <p className="text-xs text-ink-400 leading-relaxed">{t.noteP1}</p>
+                      <p className="text-xs text-ink-400 leading-relaxed">{t.noteP2}</p>
+                      <p className="text-xs text-ink-400 leading-relaxed">{t.noteP3}</p>
+                      <p className="text-xs text-ink-300 leading-relaxed italic">{t.noteP4}</p>
+                    </div>
                   </div>
                 </Collapsible>
               </div>
