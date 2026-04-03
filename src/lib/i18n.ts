@@ -253,7 +253,7 @@ export const PRIVACY_UI: Record<Lang, PrivacyStrings> = {
     heroAccent: "Privacidad",
     heroSub: "Conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP 2025).",
     responsableTitle: "1. Responsable del tratamiento",
-    responsableBody: "MaxCV (operado por Pixan AI) es responsable del tratamiento de los datos personales que recabamos. Domicilio para oír y recibir notificaciones: Ciudad de México, México. Correo de contacto: privacidad@maxcv.org.",
+    responsableBody: "MaxCV (operado por Pixan AI) es responsable del tratamiento de los datos personales que recabamos. Domicilio para oír y recibir notificaciones: Ciudad de México, México. Correo de contacto: security@maxcv.org.",
     dataTitle: "2. Datos personales que tratamos",
     dataItems: [
       { icon: "📄", title: "Contenido de tu CV", body: "El texto o archivo PDF que subes para análisis. Este contenido se procesa en tiempo real y se descarta inmediatamente al finalizar el análisis. No se almacena en ningún servidor, base de datos ni respaldo." },
@@ -286,7 +286,7 @@ export const PRIVACY_UI: Record<Lang, PrivacyStrings> = {
       { letter: "C", name: "Cancelación", desc: "Solicitar la eliminación de tus datos personales de nuestros registros." },
       { letter: "O", name: "Oposición", desc: "Oponerte al tratamiento de tus datos personales para finalidades específicas." },
     ],
-    arcoHow: "Dado que MaxCV no almacena datos personales de forma persistente, en la práctica no existen datos sobre los cuales ejercer estos derechos después de que tu sesión finaliza. Sin embargo, puedes ejercer tus derechos ARCO o revocar tu consentimiento en cualquier momento enviando un correo a privacidad@maxcv.org.",
+    arcoHow: "Dado que MaxCV no almacena datos personales de forma persistente, en la práctica no existen datos sobre los cuales ejercer estos derechos después de que tu sesión finaliza. Sin embargo, puedes ejercer tus derechos ARCO o revocar tu consentimiento en cualquier momento enviando un correo a security@maxcv.org.",
     thirdPartyTitle: "6. Terceros y transferencias",
     thirdPartyBody: "El contenido de tu CV se envía a la API de Anthropic (Claude) exclusivamente para su análisis. Anthropic no utiliza los datos enviados a su API para entrenar modelos. No realizamos ninguna otra transferencia de datos personales a terceros nacionales o internacionales. MaxCV corre en la infraestructura de Vercel (respaldada por AWS), que procesa las solicitudes web sin almacenar el contenido de los CVs.",
     securityTitle: "7. Medidas de seguridad",
@@ -297,7 +297,7 @@ export const PRIVACY_UI: Record<Lang, PrivacyStrings> = {
     authorityBody: "Si consideras que tu derecho a la protección de datos personales ha sido vulnerado, puedes acudir a la Secretaría de Anticorrupción y Buen Gobierno, autoridad competente conforme a la LFPDPPP vigente desde el 21 de marzo de 2025.",
     contactTitle: "¿Dudas sobre privacidad?",
     contactBody: "Para ejercer tus derechos ARCO, revocar tu consentimiento, o cualquier consulta relacionada con el tratamiento de tus datos personales.",
-    contactEmail: "privacidad@maxcv.org",
+    contactEmail: "security@maxcv.org",
     updated: "Última actualización: Abril 2026",
   },
   en: {
@@ -305,7 +305,7 @@ export const PRIVACY_UI: Record<Lang, PrivacyStrings> = {
     heroAccent: "Notice",
     heroSub: "In compliance with Mexico's Federal Law on Protection of Personal Data Held by Private Parties (LFPDPPP 2025).",
     responsableTitle: "1. Data controller",
-    responsableBody: "MaxCV (operated by Pixan AI) is the data controller responsible for the personal data we collect. Address for notifications: Mexico City, Mexico. Contact email: privacidad@maxcv.org.",
+    responsableBody: "MaxCV (operated by Pixan AI) is the data controller responsible for the personal data we collect. Address for notifications: Mexico City, Mexico. Contact email: security@maxcv.org.",
     dataTitle: "2. Personal data we process",
     dataItems: [
       { icon: "📄", title: "Your resume content", body: "The text or PDF file you upload for analysis. This content is processed in real time and discarded immediately after analysis. It is not stored on any server, database, or backup." },
@@ -338,7 +338,7 @@ export const PRIVACY_UI: Record<Lang, PrivacyStrings> = {
       { letter: "C", name: "Cancellation", desc: "Request deletion of your personal data from our records." },
       { letter: "O", name: "Opposition", desc: "Object to the processing of your personal data for specific purposes." },
     ],
-    arcoHow: "Since MaxCV does not persistently store personal data, in practice there is no data to exercise these rights on after your session ends. However, you may exercise your ARCO rights or revoke your consent at any time by emailing privacidad@maxcv.org.",
+    arcoHow: "Since MaxCV does not persistently store personal data, in practice there is no data to exercise these rights on after your session ends. However, you may exercise your ARCO rights or revoke your consent at any time by emailing security@maxcv.org.",
     thirdPartyTitle: "6. Third parties and transfers",
     thirdPartyBody: "Your resume content is sent to Anthropic's API (Claude) exclusively for analysis. Anthropic does not use data sent to its API to train models. We do not make any other transfers of personal data to domestic or international third parties. MaxCV runs on Vercel's infrastructure (backed by AWS), which processes web requests without storing resume content.",
     securityTitle: "7. Security measures",
@@ -349,7 +349,7 @@ export const PRIVACY_UI: Record<Lang, PrivacyStrings> = {
     authorityBody: "If you believe your right to personal data protection has been violated, you may contact Mexico's Secretaría de Anticorrupción y Buen Gobierno, the competent authority under the LFPDPPP effective since March 21, 2025.",
     contactTitle: "Privacy questions?",
     contactBody: "To exercise your ARCO rights, revoke your consent, or for any inquiry related to the processing of your personal data.",
-    contactEmail: "privacidad@maxcv.org",
+    contactEmail: "security@maxcv.org",
     updated: "Last updated: April 2026",
   },
 };
@@ -433,7 +433,7 @@ export const TERMS_UI: Record<Lang, TermsStrings> = {
     ],
     contactTitle: "¿Preguntas sobre estos términos?",
     contactBody: "Si tienes dudas sobre nuestros términos de uso, contáctanos.",
-    contactEmail: "contacto@maxcv.org",
+    contactEmail: "security@maxcv.org",
     updated: "Última actualización: Abril 2026",
   },
   en: {
@@ -496,7 +496,7 @@ export const TERMS_UI: Record<Lang, TermsStrings> = {
     ],
     contactTitle: "Questions about these terms?",
     contactBody: "If you have questions about our terms of use, contact us.",
-    contactEmail: "contacto@maxcv.org",
+    contactEmail: "security@maxcv.org",
     updated: "Last updated: April 2026",
   },
 };
