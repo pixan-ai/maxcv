@@ -1,7 +1,5 @@
 # MaxCV Internal Docs
 
-Strategic documentation (project bible, backlog, competitors, improvement plan, and internal specs) has been moved to a private repository.
-
 The following public docs remain in this directory:
 - `MAXCV_PRINCIPLES_PAGE.md` — Content for the /principles page
 - `MAXCV_STYLE_GUIDE.md` — Design system and style guide
