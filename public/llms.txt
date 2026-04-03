@@ -24,12 +24,14 @@ Users upload a PDF resume and receive:
 
 ## Pages
 - https://maxcv.org — Main app (analyze + improve CV)
+- https://maxcv.org/how — How it works (technical architecture, open source)
 - https://maxcv.org/security — Security & Privacy practices
-- https://maxcv.org/privacy — Privacy Notice (LFPDPPP 2025, Mexico)
+- https://maxcv.org/privacy — Privacy Notice (LFPDPPP, GDPR, LGPD, CCPA, PIPEDA)
 - https://maxcv.org/terms — Terms of Use
 
 ## Tech stack
-Next.js, Tailwind CSS 4, Vercel, Claude API (Anthropic)
+Next.js 16, React 19, Tailwind CSS 4, Vercel, Claude API (Anthropic SDK)
+6 production dependencies, 0 external UI libraries, MIT license
 
 ## Contact
 security@maxcv.org

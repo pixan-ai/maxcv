@@ -8,7 +8,7 @@ export function Footer({ lang }: { lang: Lang }) {
     <footer className="w-full border-t border-ink-100 bg-ink-000">
       <div className="max-w-2xl mx-auto px-5 py-6 flex flex-col items-center gap-3">
         <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-xs text-ink-400">
-          <Link href="/#how" className="hover:text-ink-700 transition">{t.howItWorks}</Link>
+          <Link href="/how" className="hover:text-ink-700 transition">{t.howItWorks}</Link>
           <Link href="/#donate" className="hover:text-ink-700 transition">{t.donate}</Link>
           <Link href="/" className="hover:text-ink-700 transition">Home</Link>
           <Link href="/security" className="hover:text-ink-700 transition">{t.security}</Link>
