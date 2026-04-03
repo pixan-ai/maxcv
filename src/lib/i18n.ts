@@ -445,3 +445,107 @@ export const TERMS_UI: Record<Lang, TermsStrings> = {
     updated: "Last updated: April 2026",
   },
 };
+
+// ─── Donate page strings ───────────────────────────────────────────
+type DonateWhyItem = {
+  icon: string;
+  title: string;
+  body: string;
+};
+
+type DonateCoversItem = {
+  icon: string;
+  label: string;
+  desc: string;
+};
+
+type DonateStrings = {
+  heroTitle: string;
+  heroAccent: string;
+  heroSub: string;
+  whyTitle: string;
+  whyItems: DonateWhyItem[];
+  ctaTitle: string;
+  ctaSub: string;
+  ctaBtn: string;
+  ctaNote: string;
+  coversTitle: string;
+  coversItems: DonateCoversItem[];
+  promiseTitle: string;
+  promiseItems: string[];
+  bottomTitle: string;
+  bottomBody: string;
+  bottomLink: string;
+  updated: string;
+};
+
+export const DONATE_UI: Record<Lang, DonateStrings> = {
+  es: {
+    heroTitle: "Apoya",
+    heroAccent: "maxcv",
+    heroSub: "Este servicio existe porque alguien decide que siga existiendo. Sin publicidad, sin datos vendidos, sin trucos. Solo personas ayudando a personas.",
+    whyTitle: "¿Por qué es gratis?",
+    whyItems: [
+      { icon: "🎯", title: "Creemos que mejorar tu CV no debería costar dinero", body: "Buscar trabajo ya es difícil. No deberías pagar para tener un CV decente. maxcv usa IA de frontera (Claude, de Anthropic) para darte análisis de nivel profesional sin cobrarte un centavo." },
+      { icon: "🔓", title: "Sin registro, sin datos, sin compromisos", body: "No pedimos tu email, no creamos cuentas, no almacenamos tu CV. Llegas, mejoras tu CV, y te vas. Así de simple." },
+      { icon: "💡", title: "Pero mantenerlo tiene un costo real", body: "Cada análisis usa la API de Claude (IA de Anthropic), que tiene un costo por uso. La infraestructura, el dominio y el desarrollo también cuestan. Tu donación cubre directamente estos costos operativos." },
+    ],
+    ctaTitle: "Invítanos un café",
+    ctaSub: "Cualquier monto ayuda a mantener el servicio funcionando para la siguiente persona que lo necesite.",
+    ctaBtn: "Donar en Buy Me a Coffee",
+    ctaNote: "Procesado de forma segura por Buy Me a Coffee. Pago único, sin suscripción.",
+    coversTitle: "¿En qué se usa tu donación?",
+    coversItems: [
+      { icon: "🤖", label: "API de Claude (Anthropic)", desc: "cada análisis de CV consume tokens de IA" },
+      { icon: "🌐", label: "Infraestructura (Vercel)", desc: "hosting, CDN, y funciones serverless" },
+      { icon: "🔒", label: "Dominio y seguridad", desc: "maxcv.org, certificados SSL, DNS" },
+      { icon: "⚡", label: "Desarrollo continuo", desc: "nuevas funciones, mejoras de prompts, optimizaciones" },
+    ],
+    promiseTitle: "Nuestra promesa",
+    promiseItems: [
+      "maxcv siempre será gratuito para quien lo necesite",
+      "Nunca pondremos un paywall ni limitaremos funciones por pago",
+      "Nunca venderemos datos ni mostraremos publicidad",
+      "El código seguirá siendo open source y auditable",
+      "Cada peso de donación va directo a costos operativos",
+    ],
+    bottomTitle: "¿Te ayudó maxcv?",
+    bottomBody: "Si maxcv te ayudó a mejorar tu CV, considera compartirlo con alguien que esté buscando trabajo. Eso también es una forma de apoyar.",
+    bottomLink: "Donar en Buy Me a Coffee",
+    updated: "Última actualización: Abril 2026",
+  },
+  en: {
+    heroTitle: "Support",
+    heroAccent: "maxcv",
+    heroSub: "This service exists because someone decides it should. No ads, no data sold, no tricks. Just people helping people.",
+    whyTitle: "Why is it free?",
+    whyItems: [
+      { icon: "🎯", title: "We believe improving your resume shouldn't cost money", body: "Job searching is hard enough. You shouldn't have to pay for a decent resume. maxcv uses frontier AI (Claude, by Anthropic) to give you professional-level analysis at zero cost." },
+      { icon: "🔓", title: "No sign-up, no data, no strings attached", body: "We don't ask for your email, don't create accounts, don't store your resume. You arrive, improve your resume, and leave. That simple." },
+      { icon: "💡", title: "But keeping it running has a real cost", body: "Every analysis uses Claude's API (Anthropic's AI), which has a per-use cost. Infrastructure, the domain, and development also cost money. Your donation directly covers these operational costs." },
+    ],
+    ctaTitle: "Buy us a coffee",
+    ctaSub: "Any amount helps keep the service running for the next person who needs it.",
+    ctaBtn: "Donate on Buy Me a Coffee",
+    ctaNote: "Securely processed by Buy Me a Coffee. One-time payment, no subscription.",
+    coversTitle: "What does your donation cover?",
+    coversItems: [
+      { icon: "🤖", label: "Claude API (Anthropic)", desc: "every resume analysis consumes AI tokens" },
+      { icon: "🌐", label: "Infrastructure (Vercel)", desc: "hosting, CDN, and serverless functions" },
+      { icon: "🔒", label: "Domain and security", desc: "maxcv.org, SSL certificates, DNS" },
+      { icon: "⚡", label: "Ongoing development", desc: "new features, prompt improvements, optimizations" },
+    ],
+    promiseTitle: "Our promise",
+    promiseItems: [
+      "maxcv will always be free for anyone who needs it",
+      "We will never put up a paywall or limit features behind payment",
+      "We will never sell data or show advertising",
+      "The code will remain open source and auditable",
+      "Every donation goes directly to operational costs",
+    ],
+    bottomTitle: "Did maxcv help you?",
+    bottomBody: "If maxcv helped you improve your resume, consider sharing it with someone who's job searching. That's also a way to support us.",
+    bottomLink: "Donate on Buy Me a Coffee",
+    updated: "Last updated: April 2026",
+  },
+};
