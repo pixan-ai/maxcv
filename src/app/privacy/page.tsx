@@ -129,6 +129,27 @@ export default function PrivacyPage() {
           </div>
         </section>
 
+        {/* Internacional */}
+        <section className="mb-8">
+          <h2 className="text-lg font-medium text-ink-900 mb-3">{t.internationalTitle}</h2>
+          <p className="text-sm text-ink-500 leading-relaxed mb-3">{t.internationalBody}</p>
+          <div className="space-y-3">
+            {t.internationalRights.map((right, i) => (
+              <div key={i} className="border border-ink-100 rounded-xl p-5 sm:p-6">
+                <div className="flex items-start gap-3.5">
+                  <span className="text-lg leading-none mt-0.5 shrink-0">{right.icon}</span>
+                  <div>
+                    <h3 className="text-sm font-medium text-ink-900 mb-0.5">{right.region}</h3>
+                    <p className="text-xs text-ink-400 mb-2">{right.law}</p>
+                    <p className="text-sm text-ink-500 leading-relaxed">{right.body}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-ink-500 mt-4 leading-relaxed">{t.internationalNote}</p>
+        </section>
+
         {/* Contacto */}
         <div className="bg-ink-050 rounded-xl p-6 sm:p-8 mb-6">
           <h2 className="text-sm font-medium text-ink-900 mb-1">{t.contactTitle}</h2>
