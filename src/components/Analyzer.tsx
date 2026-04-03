@@ -2,179 +2,17 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { ResumeText } from "@/components/ResumeText";
-
-// Types
-type Improvement = {
-  dimension: string;
-  dimension_score: number;
-  issue: string;
-  suggestion: string;
-  before?: string;
-  after?: string;
-};
-
-type Strength = {
-  dimension: string;
-  dimension_score: number;
-  detail: string;
-};
-
-type AnalysisResult = {
-  detected_language: string;
-  inferred_role?: string;
-  score: { total: number; summary: string };
-  analysis: {
-    top_actions: string[];
-    improvements: Improvement[];
-    strengths: Strength[];
-  };
-  improved_cv: { text: string; changes: string[] };
-};
-
-const UI = {
-  es: {
-    heroTitle: "Tu próximo trabajo empieza con un gran CV.",
-    heroAccent: "Análisis profesional 100% anónimo con IA de última generación",
-    heroLine1: "Descubre cómo ven tu CV los expertos y sistemas de reclutamiento (ATS)",
-    heroLine2: "Mejóralo al instante sin registrarte, sin almacenar tu info y sin costo siempre.",
-    placeholder: "Pega el texto de tu CV aquí o adjunta un PDF",
-    attachPdf: "Adjuntar PDF",
-    targetRole: "Puesto al que aspiras",
-    targetRoleOptional: "(Opcional)",
-    btnAnalyze: "Analizar tu CV y recomendar mejoras",
-    rateLimit: "Puedes analizar y mejorar tu CV hasta 7 veces cada hora",
-    privacy: "Tu CV se analiza en línea por IA de frontera y se elimina de inmediato",
-    analyzing: "Analizando tu CV...",
-    uploadingPdf: "Cargando tu PDF para extraer el texto...",
-    scoreMeta: "puntuación actual",
-    originalCvTitle: "Texto original de tu CV",
-    targetRoleTitle: "Puesto al que aspiras",
-    analysisStepTitle: "Análisis de tu CV",
-    scoreSummaryTitle: "Score y resumen del análisis",
-    strengthsTitle: "Lo que ya funciona bien",
-    improvementsTitle: "Oportunidades de mejora",
-    improvedStepTitle: "Tu nuevo CV mejorado (texto)",
-    newTextTitle: "Nuevo texto (para copiar y pegar)",
-    changesSubTitle: "Mejoras que aplicamos",
-    expandHint: "Expande cada sección para ver el detalle",
-    noteP1: "Revísalo y realiza las correcciones que consideres necesarias en tu CV.",
-    noteP2: "Hasta 7 revisiones de CV cada hora (ilimitadas por día).",
-    noteP3: "Sí, esto es gratis para ayudar a otros.",
-    noteP4: "Claude es IA y puede cometer errores. Por favor, verifica tu información antes de enviar tu CV.",
-    copy: "Copiar",
-    copied: "¡Copiado!",
-    donationText: "¿Te fue útil? Ayúdanos a mantenerlo gratis.",
-    donationBtn: "Invitar un café",
-    tryAgain: "Empezar de nuevo",
-    errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
-    errorLimit: "Límite alcanzado (7/hora). Intenta más tarde.",
-    errorConnection: "Error de conexión. Revisa tu internet.",
-    errorLength: "Pega al menos 50 caracteres.",
-    errorPdf: "No se pudo leer el PDF. Intenta pegando el texto directamente.",
-    before: "Antes",
-    after: "Después",
-  },
-  en: {
-    heroTitle: "Your next job starts with a great resume.",
-    heroAccent: "100% anonymous professional analysis with cutting-edge AI",
-    heroLine1: "See how recruiters and applicant tracking systems (ATS) see your resume",
-    heroLine2: "Improve it instantly — no sign-up, no data stored, always free.",
-    placeholder: "Paste your resume text here or attach a PDF",
-    attachPdf: "Attach PDF",
-    targetRole: "Target role",
-    targetRoleOptional: "(Optional)",
-    btnAnalyze: "Analyze your resume and suggest improvements",
-    rateLimit: "You can analyze and improve your resume up to 7 times per hour",
-    privacy: "Your resume is analyzed online by frontier AI and deleted immediately",
-    analyzing: "Analyzing your resume...",
-    uploadingPdf: "Loading your PDF to extract text...",
-    scoreMeta: "current score",
-    originalCvTitle: "Your original resume text",
-    targetRoleTitle: "Target role",
-    analysisStepTitle: "Analysis of your resume",
-    scoreSummaryTitle: "Score and analysis summary",
-    strengthsTitle: "What already works well",
-    improvementsTitle: "Improvement opportunities",
-    improvedStepTitle: "Your improved resume (text)",
-    newTextTitle: "New text (copy and paste)",
-    changesSubTitle: "Improvements we applied",
-    expandHint: "Expand each section for details",
-    noteP1: "Review it and make any corrections you see fit in your resume.",
-    noteP2: "Up to 7 resume reviews per hour (unlimited per day).",
-    noteP3: "Yes, this is free to help others.",
-    noteP4: "Claude is AI and can make mistakes. Please verify your information before sending your resume.",
-    copy: "Copy",
-    copied: "Copied!",
-    donationText: "Found this useful? Help us keep it free.",
-    donationBtn: "Buy us a coffee",
-    tryAgain: "Start over",
-    errorGeneric: "Something went wrong. Please try again.",
-    errorLimit: "Limit reached (7/hour). Try again later.",
-    errorConnection: "Connection error. Check your internet.",
-    errorLength: "Please paste at least 50 characters.",
-    errorPdf: "Could not read the PDF. Try pasting the text directly.",
-    before: "Before",
-    after: "After",
-  },
-};
-
-const DIM_NAMES: Record<string, { en: string; es: string }> = {
-  ats_compatibility: { en: "ATS Compatibility", es: "Compatibilidad ATS" },
-  achievement_impact: { en: "Achievement Impact", es: "Impacto de Logros" },
-  structure_format: { en: "Structure & Format", es: "Estructura y Formato" },
-  keyword_relevance: { en: "Keyword Relevance", es: "Palabras Clave" },
-  writing_clarity: { en: "Writing Clarity", es: "Claridad de Escritura" },
-  completeness: { en: "Completeness", es: "Completitud" },
-};
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { StepBadge } from "@/components/ui/StepBadge";
+import { Collapsible } from "@/components/ui/Collapsible";
+import { ANALYZER_UI, DIM_NAMES } from "@/lib/i18n";
+import type { Lang } from "@/lib/i18n";
+import type { AnalysisResult } from "@/types/analysis";
 
 const ARROW = "▶";
+const DEFAULT_OPEN = new Set(["analysis", "improved", "newtext"]);
 
-function ProgressBar({ label, durationMs = 15000 }: { label: string; durationMs?: number }) {
-  const [progress, setProgress] = useState(0);
-  useEffect(() => {
-    const start = Date.now();
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - start;
-      setProgress(Math.min(90, (elapsed / durationMs) * 90));
-    }, 100);
-    return () => clearInterval(interval);
-  }, [durationMs]);
-  return (
-    <div className="w-full max-w-sm mx-auto text-center py-8">
-      <div className="h-1 bg-ink-100 rounded-full overflow-hidden mb-3">
-        <div className="h-full bg-accent rounded-full transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
-      </div>
-      <p className="text-sm text-ink-400">{label}</p>
-    </div>
-  );
-}
-
-function StepBadge({ n }: { n: number }) {
-  return (
-    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-accent text-white text-xs font-medium flex items-center justify-center">{n}</span>
-  );
-}
-
-function Collapsible({ title, isOpen, onToggle, children, className: wrapperClass }: {
-  title: string; isOpen: boolean; onToggle: () => void; children: React.ReactNode; className?: string;
-}) {
-  return (
-    <div className={`border border-ink-100 rounded-lg overflow-hidden ${wrapperClass ?? ""}`}>
-      <button type="button" onClick={onToggle}
-        className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-ink-700 hover:bg-ink-050 transition cursor-pointer"
-        aria-expanded={isOpen}>
-        <span className="text-ink-400 text-sm transition-transform duration-200 leading-none"
-          style={{ transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>{ARROW}</span>
-        {title}
-      </button>
-      <div className="overflow-hidden transition-all duration-300 ease-in-out" style={{ maxHeight: isOpen ? "5000px" : "0" }}>
-        <div className="px-4 pb-4">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-export function Analyzer({ lang, onLangDetected }: { lang: "en" | "es"; onLangDetected: (l: "en" | "es") => void; }) {
+export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected: (l: Lang) => void }) {
   const [cvText, setCvText] = useState("");
   const [targetRole, setTargetRole] = useState("");
   const [loading, setLoading] = useState(false);
@@ -186,9 +24,16 @@ export function Analyzer({ lang, onLangDetected }: { lang: "en" | "es"; onLangDe
   const fileRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  const t = UI[lang];
+  const t = ANALYZER_UI[lang];
   const ready = cvText.trim().length >= 50 && !loading && !parsing;
   const hasText = cvText.trim().length > 0;
+  const isOpen = (id: string) => openSections.has(id);
+
+  const toggle = (id: string) => {
+    setOpenSections(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  };
+
+  const dimName = (key: string) => DIM_NAMES[key]?.[lang] ?? key;
 
   const handleFile = useCallback(async (file: File) => {
     if (file.type !== "application/pdf") return;
@@ -214,7 +59,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: "en" | "es"; onLangDe
       if (!res.ok) { setError(t.errorGeneric); return; }
       const data: AnalysisResult = await res.json();
       setResult(data);
-      setOpenSections(new Set(["analysis", "improved", "newtext"]));
+      setOpenSections(new Set(DEFAULT_OPEN));
       if (data.detected_language === "en" || data.detected_language === "es") { onLangDetected(data.detected_language); }
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch { setError(t.errorConnection); } finally { setLoading(false); }
@@ -227,12 +72,6 @@ export function Analyzer({ lang, onLangDetected }: { lang: "en" | "es"; onLangDe
   };
 
   const reset = () => { setCvText(""); setTargetRole(""); setResult(null); setError(null); setCopied(false); setOpenSections(new Set()); };
-
-  const toggleSection = (id: string) => {
-    setOpenSections(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-  };
-
-  const dimName = (key: string) => DIM_NAMES[key]?.[lang] ?? key;
 
   return (
     <div className="space-y-6">
@@ -310,7 +149,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: "en" | "es"; onLangDe
           <div className="card-enter">
             <div className="flex gap-3 items-center"><StepBadge n={1} />
               <div className="flex-1">
-                <Collapsible title={t.originalCvTitle} isOpen={openSections.has("original")} onToggle={() => toggleSection("original")}>
+                <Collapsible title={t.originalCvTitle} isOpen={isOpen("original")} onToggle={() => toggle("original")}>
                   <div className="text-sm text-ink-500 whitespace-pre-wrap max-h-60 overflow-y-auto">{cvText}</div>
                 </Collapsible>
               </div>
@@ -320,8 +159,8 @@ export function Analyzer({ lang, onLangDetected }: { lang: "en" | "es"; onLangDe
           <div className="card-enter" style={{ animationDelay: "0.04s" }}>
             <div className="flex gap-3 items-center"><StepBadge n={2} />
               <div className="flex-1">
-                <Collapsible title={t.targetRoleTitle} isOpen={openSections.has("role")} onToggle={() => toggleSection("role")}>
-                  <p className="text-sm text-ink-500">{targetRole || (lang === "es" ? "No especificado" : "Not specified")}</p>
+                <Collapsible title={t.targetRoleTitle} isOpen={isOpen("role")} onToggle={() => toggle("role")}>
+                  <p className="text-sm text-ink-500">{targetRole || t.notSpecified}</p>
                 </Collapsible>
               </div>
             </div>
@@ -330,7 +169,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: "en" | "es"; onLangDe
           <div className="card-enter" style={{ animationDelay: "0.08s" }}>
             <div className="flex gap-3 items-center"><StepBadge n={3} />
               <div className="flex-1">
-                <Collapsible title={t.analysisStepTitle} isOpen={openSections.has("analysis")} onToggle={() => toggleSection("analysis")}>
+                <Collapsible title={t.analysisStepTitle} isOpen={isOpen("analysis")} onToggle={() => toggle("analysis")}>
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
                       <h3 className="text-sm font-medium text-ink-900">{t.scoreSummaryTitle}</h3>
@@ -340,14 +179,14 @@ export function Analyzer({ lang, onLangDetected }: { lang: "en" | "es"; onLangDe
 
                     {result.analysis.strengths.length > 0 && (
                       <div className="border border-positive/20 rounded-lg overflow-hidden bg-positive-ghost">
-                        <button type="button" onClick={() => toggleSection("strengths")}
+                        <button type="button" onClick={() => toggle("strengths")}
                           className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-ink-700 hover:bg-positive-ghost/80 transition cursor-pointer"
-                          aria-expanded={openSections.has("strengths")}>
+                          aria-expanded={isOpen("strengths")}>
                           <span className="text-ink-400 text-sm transition-transform duration-200 leading-none"
-                            style={{ transform: openSections.has("strengths") ? "rotate(90deg)" : "rotate(0deg)" }}>{ARROW}</span>
+                            style={{ transform: isOpen("strengths") ? "rotate(90deg)" : "rotate(0deg)" }}>{ARROW}</span>
                           {t.strengthsTitle}
                         </button>
-                        <div className="overflow-hidden transition-all duration-300 ease-in-out" style={{ maxHeight: openSections.has("strengths") ? "5000px" : "0" }}>
+                        <div className="overflow-hidden transition-all duration-300 ease-in-out" style={{ maxHeight: isOpen("strengths") ? "5000px" : "0" }}>
                           <div className="px-4 pb-4 space-y-2">
                             {result.analysis.strengths.map((str, i) => (
                               <div key={i} className="border border-positive/20 rounded-lg p-3 bg-ink-000">
@@ -364,7 +203,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: "en" | "es"; onLangDe
                     )}
 
                     {result.analysis.improvements.length > 0 && (
-                      <Collapsible title={t.improvementsTitle} isOpen={openSections.has("improvements")} onToggle={() => toggleSection("improvements")}>
+                      <Collapsible title={t.improvementsTitle} isOpen={isOpen("improvements")} onToggle={() => toggle("improvements")}>
                         <div className="space-y-3 mt-1">
                           {result.analysis.improvements.map((imp, i) => (
                             <div key={i} className="border border-ink-100 rounded-lg p-3 space-y-2">
@@ -400,10 +239,10 @@ export function Analyzer({ lang, onLangDetected }: { lang: "en" | "es"; onLangDe
           <div className="card-enter" style={{ animationDelay: "0.12s" }}>
             <div className="flex gap-3 items-center"><StepBadge n={4} />
               <div className="flex-1">
-                <Collapsible title={t.improvedStepTitle} isOpen={openSections.has("improved")} onToggle={() => toggleSection("improved")}>
+                <Collapsible title={t.improvedStepTitle} isOpen={isOpen("improved")} onToggle={() => toggle("improved")}>
                   <div className="space-y-3">
                     {result.improved_cv.changes.length > 0 && (
-                      <Collapsible title={t.changesSubTitle} isOpen={openSections.has("changes")} onToggle={() => toggleSection("changes")}>
+                      <Collapsible title={t.changesSubTitle} isOpen={isOpen("changes")} onToggle={() => toggle("changes")}>
                         <ul className="space-y-1 mt-1">
                           {result.improved_cv.changes.map((change, i) => (
                             <li key={i} className="flex gap-2 text-sm text-ink-500"><span className="text-positive shrink-0">+</span>{change}</li>
@@ -413,14 +252,14 @@ export function Analyzer({ lang, onLangDetected }: { lang: "en" | "es"; onLangDe
                     )}
 
                     <div className="border border-accent/30 rounded-lg overflow-hidden bg-accent-ghost">
-                      <button type="button" onClick={() => toggleSection("newtext")}
+                      <button type="button" onClick={() => toggle("newtext")}
                         className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-accent hover:bg-accent-ghost/80 transition cursor-pointer"
-                        aria-expanded={openSections.has("newtext")}>
+                        aria-expanded={isOpen("newtext")}>
                         <span className="text-accent/60 text-sm transition-transform duration-200 leading-none"
-                          style={{ transform: openSections.has("newtext") ? "rotate(90deg)" : "rotate(0deg)" }}>{ARROW}</span>
+                          style={{ transform: isOpen("newtext") ? "rotate(90deg)" : "rotate(0deg)" }}>{ARROW}</span>
                         {t.newTextTitle}
                       </button>
-                      <div className="overflow-hidden transition-all duration-300 ease-in-out" style={{ maxHeight: openSections.has("newtext") ? "50000px" : "0" }}>
+                      <div className="overflow-hidden transition-all duration-300 ease-in-out" style={{ maxHeight: isOpen("newtext") ? "50000px" : "0" }}>
                         <div className="px-4 pb-4 space-y-3">
                           <ResumeText text={result.improved_cv.text} />
                           <button onClick={copyToClipboard}

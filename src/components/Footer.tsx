@@ -1,12 +1,9 @@
 import Link from "next/link";
+import { FOOTER_UI } from "@/lib/i18n";
+import type { Lang } from "@/lib/i18n";
 
-const LINKS = {
-  es: { security: "Seguridad", howItWorks: "¿Cómo funciona?", donate: "Donar", about: "¿Quiénes somos?" },
-  en: { security: "Security", howItWorks: "How it works", donate: "Donate", about: "About us" },
-};
-
-export function Footer({ lang }: { lang: "en" | "es" }) {
-  const t = LINKS[lang];
+export function Footer({ lang }: { lang: Lang }) {
+  const t = FOOTER_UI[lang];
   return (
     <footer className="w-full border-t border-ink-100 bg-ink-000">
       <div className="max-w-2xl mx-auto px-5 py-6 flex flex-col items-center gap-3">

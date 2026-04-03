@@ -1,12 +1,9 @@
 import Link from "next/link";
+import { HEADER_UI } from "@/lib/i18n";
+import type { Lang } from "@/lib/i18n";
 
-const HEADER_TEXT = {
-  es: { powered: "Análisis y optimización con Claude Opus 4.6 · Anthropic" },
-  en: { powered: "Analysis & optimization by Claude Opus 4.6 · Anthropic" },
-};
-
-export function Header({ lang, onToggleLang }: { lang: "en" | "es"; onToggleLang: () => void; }) {
-  const t = HEADER_TEXT[lang];
+export function Header({ lang, onToggleLang }: { lang: Lang; onToggleLang: () => void }) {
+  const t = HEADER_UI[lang];
   return (
     <header className="w-full border-b border-ink-100 bg-ink-000">
       <div className="max-w-2xl mx-auto px-5 py-3.5 flex items-center justify-between">
