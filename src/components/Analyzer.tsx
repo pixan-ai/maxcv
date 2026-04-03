@@ -122,7 +122,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
               <div className={`relative border border-ink-100 rounded-lg focus-within:border-accent transition mx-auto ${hasText ? "max-w-full" : "max-w-[70%] sm:max-w-full"}`}>
                 <div className="absolute top-3 right-3 z-10">
                   <button type="button" onClick={() => fileRef.current?.click()}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-ink-200 text-xs font-medium text-ink-600 hover:border-accent hover:text-accent transition cursor-pointer bg-ink-000">
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-ink-200 text-xs font-medium text-ink-600 hover:border-accent hover:text-accent transition cursor-pointer bg-ink-000 focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
                     </svg>
@@ -133,7 +133,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
                 </div>
                 <textarea value={cvText} onChange={(e) => handleTextChange(e.target.value)}
                   placeholder={t.placeholder} aria-label={t.placeholder} aria-describedby="cv-hint"
-                  className="w-full min-h-[120px] p-4 pt-12 text-sm text-ink-700 bg-transparent placeholder:text-ink-300 resize-y focus:outline-none rounded-lg" />
+                  className="w-full min-h-[120px] p-4 pt-12 text-sm text-ink-700 bg-transparent placeholder:text-ink-300 resize-y focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-lg" />
               </div>
             </div>
           </div>
@@ -143,7 +143,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
             <div className="flex-1">
               <input type="text" value={targetRole} onChange={(e) => setTargetRole(e.target.value)}
                 placeholder={`${t.targetRole} ${t.targetRoleOptional}`} aria-label={t.targetRole} maxLength={200}
-                className="w-full border border-ink-100 rounded-lg px-4 py-2.5 text-sm text-ink-700 placeholder:text-ink-300 focus:outline-none focus:border-accent transition" />
+                className="w-full border border-ink-100 rounded-lg px-4 py-2.5 text-sm text-ink-700 placeholder:text-ink-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus:border-accent transition" />
             </div>
           </div>
 
@@ -151,7 +151,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
             <StepBadge n={3} />
             <div className="flex-1">
               <button onClick={analyze} disabled={!ready} aria-disabled={!ready}
-                className={`w-full py-3 rounded-lg text-sm font-medium transition cursor-pointer ${ready ? "bg-accent text-white hover:bg-accent-dim soft-pulse" : "bg-ink-100 text-ink-300 cursor-not-allowed"}`}>
+                className={`w-full py-3 rounded-lg text-sm font-medium transition cursor-pointer focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none ${ready ? "bg-accent text-white hover:bg-accent-dim soft-pulse" : "bg-ink-100 text-ink-300 cursor-not-allowed"}`}>
                 {t.btnAnalyze}
               </button>
             </div>
@@ -202,7 +202,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
                     {result.analysis.strengths.length > 0 && (
                       <div className="border border-positive/20 rounded-lg overflow-hidden bg-positive-ghost">
                         <button type="button" onClick={() => toggle("strengths")}
-                          className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-ink-700 hover:bg-positive-ghost/80 transition cursor-pointer"
+                          className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-ink-700 hover:bg-positive-ghost/80 transition cursor-pointer focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none"
                           aria-expanded={isOpen("strengths")}>
                           <span className="text-ink-400 text-sm transition-transform duration-200 leading-none"
                             style={{ transform: isOpen("strengths") ? "rotate(90deg)" : "rotate(0deg)" }}>{ARROW}</span>
@@ -275,7 +275,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
 
                     <div className="border border-accent/30 rounded-lg overflow-hidden bg-accent-ghost">
                       <button type="button" onClick={() => toggle("newtext")}
-                        className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-accent hover:bg-accent-ghost/80 transition cursor-pointer"
+                        className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-accent hover:bg-accent-ghost/80 transition cursor-pointer focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none"
                         aria-expanded={isOpen("newtext")}>
                         <span className="text-accent/60 text-sm transition-transform duration-200 leading-none"
                           style={{ transform: isOpen("newtext") ? "rotate(90deg)" : "rotate(0deg)" }}>{ARROW}</span>
@@ -285,7 +285,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
                         <div className="px-4 pb-4 space-y-3">
                           <ResumeText text={result.improved_cv.text} />
                           <button onClick={copyToClipboard}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-accent/30 text-sm text-accent hover:bg-accent/5 transition cursor-pointer">
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-accent/30 text-sm text-accent hover:bg-accent/5 transition cursor-pointer focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none">
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                             </svg>
@@ -324,7 +324,7 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
           </div>
 
           <div className="text-center">
-            <button onClick={reset} className="text-sm text-accent hover:text-accent-dim transition cursor-pointer">{t.tryAgain}</button>
+            <button onClick={reset} className="text-sm text-accent hover:text-accent-dim transition cursor-pointer focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none rounded-lg px-2 py-1">{t.tryAgain}</button>
           </div>
         </div>
       )}
