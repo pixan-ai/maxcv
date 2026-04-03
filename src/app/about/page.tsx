@@ -59,19 +59,9 @@ export default function AboutPage() {
           ))}
         </div>
 
-        {/* Signature with photo */}
-        <div className="flex items-center gap-4 mb-8">
-          <img
-            src="/alfredo.png"
-            alt="Alfredo Arenas"
-            width={64}
-            height={64}
-            className="rounded-full opacity-90"
-          />
-          <div>
-            <p className="text-sm font-medium text-ink-900">{t.signature}</p>
-            <p className="text-xs text-ink-400">{t.location}</p>
-          </div>
+        {/* Signature */}
+        <div className="mb-8">
+          <p className="text-sm text-ink-500">— {t.signature} · {t.location}</p>
         </div>
       </main>
 
