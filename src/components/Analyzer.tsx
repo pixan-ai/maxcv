@@ -264,7 +264,7 @@ export function Analyzer({ lang, onLangDetected }: {
 
       const data: AnalysisResult = await res.json();
       setResult(data);
-      setOpenSections(new Set(["analysis", "improved"]));
+      setOpenSections(new Set(["analysis", "improved", "newtext"]));
 
       if (data.detected_language === "en" || data.detected_language === "es") {
         onLangDetected(data.detected_language);
@@ -278,7 +278,7 @@ export function Analyzer({ lang, onLangDetected }: {
     }
   };
 
-  // ── Copy & Download ──
+  // ── Copy ──
   const copyToClipboard = async () => {
     if (!result) return;
     await navigator.clipboard.writeText(result.improved_cv.text);
@@ -622,7 +622,7 @@ export function Analyzer({ lang, onLangDetected }: {
                       </Collapsible>
                     )}
 
-                    {/* New text — collapsible, accent background */}
+                    {/* New text — collapsible, accent background, open by default */}
                     <div className="border border-accent/30 rounded-lg overflow-hidden bg-accent-ghost">
                       <button
                         type="button"
