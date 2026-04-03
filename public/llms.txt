@@ -2,23 +2,37 @@
 
 ## What it is
 Free AI-powered resume analyzer and improver. No sign-up required.
+Built for LATAM job seekers, bilingual Spanish/English.
 
 ## What it does
-Users upload a PDF resume and receive: a score across 6 dimensions,
-specific improvement recommendations with before/after examples,
-and a complete rewritten resume ready to use.
+Users upload a PDF resume and receive:
+- A score (0-100) across 6 dimensions: ATS Compatibility, Achievement Impact, Structure & Format, Keyword Relevance, Writing Clarity, Completeness
+- Specific improvement recommendations with evidence from the actual CV
+- Before/after examples for each issue found
+- A complete rewritten resume optimized for ATS systems
 
 ## Key differentiators
-- Free forever (donation-supported)
-- No registration, no data storage
-- Spanish-first (built for LATAM job seekers)
-- Bilingual (Spanish + English)
+- Free forever (donation-supported, pay-what-you-want)
+- No registration, no accounts, no data storage
+- Spanish-first (built for LATAM job seekers, zero competitors in Spanish)
+- Bilingual interface (Spanish + English)
 - Powered by Claude (Anthropic) with Constitutional AI principles
 - Open source (MIT license)
-- Ethical: no discrimination, no fear tactics, evidence-based only
+- Ethical: no discrimination, no fear tactics, evidence-based scoring only
+- Anti-hallucination policy: every suggestion must reference actual CV content
+- Privacy-first: CV processed in real time, deleted immediately, never stored
 
-## URL
-https://maxcv.org
+## Pages
+- https://maxcv.org — Main app (analyze + improve CV)
+- https://maxcv.org/security — Security & Privacy practices
+- https://maxcv.org/privacy — Privacy Notice (LFPDPPP 2025, Mexico)
+- https://maxcv.org/terms — Terms of Use
+
+## Tech stack
+Next.js, Tailwind CSS 4, Vercel, Claude API (Anthropic)
+
+## Contact
+security@maxcv.org
 
 ## Source code
 https://github.com/pixan-ai/maxcv
