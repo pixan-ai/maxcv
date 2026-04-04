@@ -252,6 +252,30 @@ export function Analyzer({ lang, onLangDetected }: { lang: Lang; onLangDetected:
                         </div>
                       </Collapsible>
                     )}
+
+                    {result.analysis.ats_warnings && result.analysis.ats_warnings.length > 0 && (
+                      <Collapsible title={t.atsWarningsTitle} isOpen={isOpen("atswarnings")} onToggle={() => toggle("atswarnings")}>
+                        <ul className="space-y-1.5 mt-1">
+                          {result.analysis.ats_warnings.map((warning, i) => (
+                            <li key={i} className="flex gap-2 text-sm text-ink-600">
+                              <span className="text-warning shrink-0">⚠</span>{warning}
+                            </li>
+                          ))}
+                        </ul>
+                      </Collapsible>
+                    )}
+
+                    {result.analysis.keyword_gaps && result.analysis.keyword_gaps.length > 0 && (
+                      <Collapsible title={t.keywordGapsTitle} isOpen={isOpen("keywordgaps")} onToggle={() => toggle("keywordgaps")}>
+                        <ul className="space-y-1.5 mt-1">
+                          {result.analysis.keyword_gaps.map((gap, i) => (
+                            <li key={i} className="flex gap-2 text-sm text-ink-600">
+                              <span className="text-accent shrink-0">+</span>{gap}
+                            </li>
+                          ))}
+                        </ul>
+                      </Collapsible>
+                    )}
                   </div>
                 </Collapsible>
               </div>

@@ -21,6 +21,8 @@ export type AnalysisResult = {
     top_actions: string[];
     improvements: Improvement[];
     strengths: Strength[];
+    ats_warnings?: string[];
+    keyword_gaps?: string[];
   };
   improved_cv: { text: string; changes: string[] };
 };

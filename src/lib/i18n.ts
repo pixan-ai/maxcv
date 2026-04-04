@@ -44,6 +44,8 @@ export const ANALYZER_UI = {
     before: "Antes",
     after: "Después",
     notSpecified: "No especificado",
+    atsWarningsTitle: "Alertas de compatibilidad ATS",
+    keywordGapsTitle: "Palabras clave faltantes para el puesto",
   },
   en: {
     heroTitle: "Your next job starts with a great resume.",
@@ -87,6 +89,8 @@ export const ANALYZER_UI = {
     before: "Before",
     after: "After",
     notSpecified: "Not specified",
+    atsWarningsTitle: "ATS compatibility warnings",
+    keywordGapsTitle: "Missing keywords for target role",
   },
 } as const;
 
